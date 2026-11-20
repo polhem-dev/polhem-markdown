@@ -13,7 +13,9 @@ and applies the safety policy; a viewer package for each UI framework renders th
 | `Polhem.Markdown.Avalonia` | A viewer control for Avalonia |
 | `Polhem.Markdown.Blazor` | A viewer component for Blazor, rendering semantic HTML styled with CSS variables |
 
-The packages are in development and not yet published; their API is not settled.
+The packages are published on [nuget.org](https://www.nuget.org/packages?q=Polhem.Markdown); the changes of each release
+are in the [CHANGELOG](CHANGELOG.md). They are at 0.x: a minor version may still change the API, and the CHANGELOG says
+when it does.
 
 ## Samples
 
