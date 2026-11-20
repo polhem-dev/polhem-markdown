@@ -14,6 +14,23 @@
 
 這些套件仍在開發中，尚未發佈，API 也還沒定案。
 
+## 範例
+
+`samples/MarkdownGallery` 以 Semi 主題（亮色或暗色）展示每一種節點，並可「重播」：把文字分段打出來，模擬串流回覆。
+
+```bash
+dotnet run --project samples/MarkdownGallery.Desktop
+```
+
+iOS head 需要 iOS workload，所以不在 solution 裡。在 Mac 上建置並於模擬器啟動：
+
+```bash
+dotnet build samples/MarkdownGallery.iOS -c Release -p:RuntimeIdentifier=iossimulator-arm64
+dotnet build samples/MarkdownGallery.iOS -c Release -t:Run -p:RuntimeIdentifier=iossimulator-arm64 -p:_DeviceName=":v2:udid=<模擬器 UDID>"
+```
+
+若建置訊息說 iOS workload 需要另一個 Xcode 版本，建置時以 `DEVELOPER_DIR` 指向該版本。
+
 ## 建置
 
 ```bash

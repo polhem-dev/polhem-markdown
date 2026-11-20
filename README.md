@@ -15,6 +15,24 @@ and applies the safety policy; a viewer package for each UI framework renders th
 
 The packages are in development and not yet published; their API is not settled.
 
+## Samples
+
+`samples/MarkdownGallery` shows every kind of node on a Semi theme, light or dark, with a replay that types the text in
+chunks as a streamed reply arrives.
+
+```bash
+dotnet run --project samples/MarkdownGallery.Desktop
+```
+
+The iOS head is not in the solution, because it needs the iOS workload. On a Mac, build and start it on a simulator:
+
+```bash
+dotnet build samples/MarkdownGallery.iOS -c Release -p:RuntimeIdentifier=iossimulator-arm64
+dotnet build samples/MarkdownGallery.iOS -c Release -t:Run -p:RuntimeIdentifier=iossimulator-arm64 -p:_DeviceName=":v2:udid=<simulator UDID>"
+```
+
+If the build says the iOS workload needs another Xcode version, point `DEVELOPER_DIR` at that version for the build.
+
 ## Building
 
 ```bash

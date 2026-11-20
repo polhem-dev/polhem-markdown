@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    The gallery shared by the desktop and iOS heads: every kind of node on a Semi theme, light or dark, and a replay that
+    types the text in chunks to show the viewer rebuilding only the blocks that change. It uses the Avalonia version
+    applications use, newer than the viewer's minimum.
+  -->
+
+  <ItemGroup>
+    <PackageReference Include="Avalonia" Version="12.1.6" />
+    <PackageReference Include="Semi.Avalonia" Version="12.1.0.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Polhem.Markdown.Avalonia\Polhem.Markdown.Avalonia.csproj" />
+  </ItemGroup>
+
+</Project>
