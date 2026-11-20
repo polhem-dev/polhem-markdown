@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <Description>A Markdown viewer control for Avalonia, rendering the same model as Polhem.Markdown.Blazor so both front ends show a text the same way.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- The lowest Avalonia version the viewer supports, not the newest: it becomes the minimum for every consumer. -->
+    <PackageReference Include="Avalonia" Version="12.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- TODO: pack turns this into a minimum-version dependency. The viewer uses internals of Polhem.Markdown, so the
+         package must depend on exactly the same version; make pack write an exact range before the first release. -->
+    <ProjectReference Include="..\Polhem.Markdown\Polhem.Markdown.csproj" />
+  </ItemGroup>
+
+</Project>
