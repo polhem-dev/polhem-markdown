@@ -17,6 +17,7 @@
     <InternalsVisibleTo Include="Polhem.Markdown.Blazor" />
     <InternalsVisibleTo Include="Polhem.Markdown.UnitTests" />
     <InternalsVisibleTo Include="Polhem.Markdown.AotSmoke" />
+    <InternalsVisibleTo Include="Polhem.Markdown.Avalonia.UnitTests" />
   </ItemGroup>
 
 </Project>

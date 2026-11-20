@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.4.0" />
+    <PackageReference Include="xunit" Version="2.9.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.5">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <!-- NOTE: the headless platform, the theme and Skia stay on the Avalonia version the viewer references, so the tests
+       run against the lowest version the viewer supports. Skia lays out real text: the headless platform's stand-in
+       text layout never returns when a wrapping text block with a line break is measured with unbounded height, and
+       the link tests need real character positions anyway. -->
+  <ItemGroup>
+    <PackageReference Include="Avalonia.Headless" Version="12.0.0" />
+    <PackageReference Include="Avalonia.Themes.Simple" Version="12.0.0" />
+    <PackageReference Include="Avalonia.Skia" Version="12.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Polhem.Markdown.Avalonia\Polhem.Markdown.Avalonia.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\Shared\ModelNodeTypes.cs" Link="Shared\ModelNodeTypes.cs" />
+    <None Include="..\Shared\AllNodes.md" Link="AllNodes.md" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+</Project>
