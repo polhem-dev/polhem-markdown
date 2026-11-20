@@ -1,0 +1,143 @@
+/*
+  Styles of Polhem.Markdown.Blazor's MarkdownViewer. Everything is scoped under .pmd. The font and the text color come
+  from the surrounding page; these variables set the rest, with defaults that read on light and dark pages and match
+  the Avalonia viewer:
+
+    --pmd-link       link color
+    --pmd-code-bg    background of inline code, code blocks and table headers
+    --pmd-rule       rules, table borders and the bar beside a quote
+    --pmd-code-font  font of inline code and code blocks
+*/
+
+.pmd {
+  overflow-wrap: anywhere;
+}
+
+/* Blocks carry no margins of their own; space between siblings comes from the rule after this one. */
+.pmd :where(p, h1, h2, h3, h4, h5, h6, ul, ol, li, blockquote, pre, table, hr, .pmd-code, .pmd-table) {
+  margin: 0;
+}
+
+.pmd :where(p, h1, h2, h3, h4, h5, h6, ul, ol, blockquote, hr, .pmd-code, .pmd-table)
+  + :where(p, h1, h2, h3, h4, h5, h6, ul, ol, blockquote, hr, .pmd-code, .pmd-table) {
+  margin-top: 8px;
+}
+
+.pmd :where(h1, h2, h3, h4, h5, h6) {
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.pmd h1 { font-size: 1.5em; }
+.pmd h2 { font-size: 1.3em; }
+.pmd h3 { font-size: 1.15em; }
+.pmd :where(h4, h5, h6) { font-size: 1em; }
+
+.pmd :where(ul, ol) {
+  padding-left: 1.6em;
+}
+
+.pmd :where(li) + :where(li) {
+  margin-top: 2px;
+}
+
+.pmd .pmd-loose > li + li {
+  margin-top: 8px;
+}
+
+.pmd li > :where(ul, ol) {
+  margin-top: 2px;
+}
+
+.pmd a {
+  color: var(--pmd-link, #3b82f6);
+  text-decoration: underline;
+}
+
+.pmd code {
+  font-family: var(--pmd-code-font, "Cascadia Mono", Consolas, Menlo, ui-monospace, monospace);
+  font-size: 0.95em;
+  background: var(--pmd-code-bg, rgba(128, 128, 128, 0.12));
+  border-radius: 3px;
+  padding: 0 0.25em;
+}
+
+.pmd blockquote {
+  border-left: 3px solid var(--pmd-rule, rgba(128, 128, 128, 0.35));
+  padding: 2px 0 2px 10px;
+}
+
+.pmd hr {
+  border: 0;
+  height: 1px;
+  background: var(--pmd-rule, rgba(128, 128, 128, 0.35));
+}
+
+.pmd .pmd-code {
+  background: var(--pmd-code-bg, rgba(128, 128, 128, 0.12));
+  border-radius: 4px;
+}
+
+.pmd .pmd-code-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 2px 2px 0 10px;
+  font-size: 0.85em;
+}
+
+.pmd .pmd-code-lang {
+  opacity: 0.7;
+}
+
+.pmd .pmd-copy {
+  display: inline-flex;
+  border: 0;
+  border-radius: 4px;
+  padding: 4px 6px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+
+.pmd .pmd-copy:hover {
+  background: rgba(128, 128, 128, 0.2);
+}
+
+.pmd .pmd-copy svg {
+  width: 14px;
+  height: 14px;
+  fill: currentColor;
+}
+
+.pmd .pmd-code pre {
+  overflow-x: auto;
+  padding: 0 10px 8px;
+}
+
+.pmd .pmd-code pre code {
+  background: none;
+  border-radius: 0;
+  padding: 0;
+  font-size: 0.95em;
+  white-space: pre;
+}
+
+.pmd .pmd-table {
+  overflow-x: auto;
+}
+
+.pmd table {
+  border-collapse: collapse;
+}
+
+.pmd :where(th, td) {
+  border: 1px solid var(--pmd-rule, rgba(128, 128, 128, 0.35));
+  padding: 4px 8px;
+  text-align: left;
+}
+
+.pmd th {
+  font-weight: 600;
+  background: var(--pmd-code-bg, rgba(128, 128, 128, 0.12));
+}

@@ -11,7 +11,7 @@ internal static class Packages
     {
         ["Polhem.Markdown"] = ["Markdig"],
         ["Polhem.Markdown.Avalonia"] = ["Polhem.Markdown", "Avalonia"],
-        ["Polhem.Markdown.Blazor"] = ["Polhem.Markdown", "Microsoft.AspNetCore.Components"],
+        ["Polhem.Markdown.Blazor"] = ["Polhem.Markdown", "Microsoft.AspNetCore.Components", "Microsoft.JSInterop"],
     };
 
     public static TheoryData<string> Names => [.. AllowedReferences.Keys];

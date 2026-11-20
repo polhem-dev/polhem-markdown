@@ -1,0 +1,47 @@
+@page "/"
+@implements IDisposable
+
+<div class="gallery @(_dark ? "dark" : "")">
+    <div class="bar">
+        <label><input type="checkbox" @bind="_dark" /> Dark</label>
+        <button type="button" @onclick="Replay">Replay</button>
+        <span class="status">@_status</span>
+    </div>
+    <MarkdownViewer Markdown="@_markdown" Options="_options" OnLinkActivated="OnLinkActivated" />
+</div>
+
+@code {
+    private const int ReplayChunk = 12;
+
+    private readonly MarkdownOptions _options = CreateOptions();
+    private string _markdown = MarkdownGallery.SampleText.Markdown;
+    private string? _status;
+    private bool _dark;
+    private CancellationTokenSource? _replay;
+
+    private static MarkdownOptions CreateOptions()
+    {
+        var options = new MarkdownOptions();
+        options.AllowedLinkSchemes.Add("polhem");
+        return options;
+    }
+
+    private void OnLinkActivated(MarkdownLinkActivatedEventArgs e) => _status = "Opened " + e.Uri;
+
+    private async Task Replay()
+    {
+        _replay?.Cancel();
+        _replay = new CancellationTokenSource();
+        var token = _replay.Token;
+        var text = MarkdownGallery.SampleText.Markdown;
+        for (var shown = 0; shown < text.Length && !token.IsCancellationRequested;)
+        {
+            shown = Math.Min(shown + ReplayChunk, text.Length);
+            _markdown = text[..shown];
+            StateHasChanged();
+            await Task.Delay(30, CancellationToken.None);
+        }
+    }
+
+    public void Dispose() => _replay?.Cancel();
+}

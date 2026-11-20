@@ -16,3 +16,5 @@ Notable changes to the Polhem.Markdown packages. The format follows [Keep a Chan
 - `Polhem.Markdown.Avalonia` adds `MarkdownViewer`, a control that shows a Markdown text with selectable text,
   clickable links (the bubbling `LinkActivated` event), code blocks with a copy button, and tables. It rebuilds only the
   blocks whose source changed.
+- `Polhem.Markdown.Blazor` adds `MarkdownViewer`, a component that renders a Markdown text as semantic HTML, with
+  `OnLinkActivated` for links, code blocks with a copy button, and a stylesheet set through `--pmd-*` CSS variables.

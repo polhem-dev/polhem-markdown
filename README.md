@@ -22,7 +22,10 @@ chunks as a streamed reply arrives.
 
 ```bash
 dotnet run --project samples/MarkdownGallery.Desktop
+dotnet run --project samples/MarkdownGallery.Blazor
 ```
+
+The Blazor gallery shows the same text, so the two viewers can be compared side by side.
 
 The iOS head is not in the solution, because it needs the iOS workload. On a Mac, build and start it on a simulator:
 
