@@ -5,6 +5,7 @@
     <Project Path="src/Polhem.Markdown.Blazor/Polhem.Markdown.Blazor.csproj" />
   </Folder>
   <Folder Name="/tests/">
+    <Project Path="tests/Polhem.Markdown.AotSmoke/Polhem.Markdown.AotSmoke.csproj" />
     <Project Path="tests/Polhem.Markdown.UnitTests/Polhem.Markdown.UnitTests.csproj" />
   </Folder>
 </Solution>

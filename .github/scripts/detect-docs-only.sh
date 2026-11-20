@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Writes `build=false` to $GITHUB_OUTPUT when a pull request changes only `.md` files, and `build=true` otherwise.
-# The `build` job of build-ci.yml runs it right after checkout and gates its remaining steps on the result.
+# Every job of build-ci.yml runs it right after checkout and gates its remaining steps on the result.
 #
 # `build` is a required check of the branch protection on `main`, so the pull_request trigger cannot carry a
 # `paths-ignore`: a required check that never starts leaves a documentation-only pull request waiting forever. The skip

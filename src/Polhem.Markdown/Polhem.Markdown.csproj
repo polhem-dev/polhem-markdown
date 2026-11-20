@@ -2,10 +2,21 @@
 
   <PropertyGroup>
     <Description>Parses Markdown with Markdig into the model that the Polhem.Markdown viewers render, and applies one safety policy for both: raw HTML shown as text, links checked against allowed schemes.</Description>
+    <!-- The viewers run on iOS, Android and WebAssembly. The trim and AOT analyzers turn every incompatible call into a
+         build error, and tests/Polhem.Markdown.AotSmoke runs the parser after a Native AOT publish. -->
+    <IsAotCompatible>true</IsAotCompatible>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Markdig" Version="1.6.0" />
+  </ItemGroup>
+
+  <!-- The model is internal so that it can change without a breaking change; the viewers render it, so they see it. -->
+  <ItemGroup>
+    <InternalsVisibleTo Include="Polhem.Markdown.Avalonia" />
+    <InternalsVisibleTo Include="Polhem.Markdown.Blazor" />
+    <InternalsVisibleTo Include="Polhem.Markdown.UnitTests" />
+    <InternalsVisibleTo Include="Polhem.Markdown.AotSmoke" />
   </ItemGroup>
 
 </Project>
