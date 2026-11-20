@@ -34,4 +34,4 @@ Link the stylesheet in the host page, then use the component:
 
 The defaults read on light and dark pages and match the Avalonia viewer.
 
-The package is in preview; its API is not settled yet. See the [repository](https://github.com/polhem-dev/polhem-markdown).
+The package is at 0.x: a minor version may still change the API. See the [repository](https://github.com/polhem-dev/polhem-markdown).

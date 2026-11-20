@@ -26,4 +26,15 @@
            Text="$(MSBuildProjectName) may depend only on .NET, the other packages of this repository and its own external package ($(_PolhemMarkdownAllowedPackage)), because every dependency flows to every consumer. Unexpected reference(s): @(_PolhemMarkdownConsumerPackage, ', ')@(_PolhemMarkdownFramework, ', '). If it is really needed, open an issue first." />
   </Target>
 
+  <!--
+    The viewers use internals of Polhem.Markdown, so each package must depend on exactly the version of Polhem.Markdown
+    it was built with. Pack writes a project reference as a minimum version ("0.1.0" meaning 0.1.0 or later); this target
+    turns it into an exact range ("[0.1.0]") before the nuspec is written. The release workflow checks the packed nuspec.
+  -->
+  <Target Name="PolhemMarkdownExactProjectReferenceVersions" AfterTargets="_GetProjectReferenceVersions">
+    <ItemGroup>
+      <_ProjectReferencesWithVersions Update="@(_ProjectReferencesWithVersions)" ProjectVersion="[%(ProjectVersion)]" />
+    </ItemGroup>
+  </Target>
+
 </Project>

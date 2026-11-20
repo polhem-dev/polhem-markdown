@@ -1,0 +1,32 @@
+#nullable enable
+Polhem.Markdown.Avalonia.MarkdownLinkActivatedEventArgs
+Polhem.Markdown.Avalonia.MarkdownLinkActivatedEventArgs.MarkdownLinkActivatedEventArgs(System.Uri! uri) -> void
+Polhem.Markdown.Avalonia.MarkdownLinkActivatedEventArgs.Uri.get -> System.Uri!
+Polhem.Markdown.Avalonia.MarkdownViewer
+Polhem.Markdown.Avalonia.MarkdownViewer.CodeBackground.get -> Avalonia.Media.IBrush!
+Polhem.Markdown.Avalonia.MarkdownViewer.CodeBackground.set -> void
+Polhem.Markdown.Avalonia.MarkdownViewer.CodeFontFamily.get -> Avalonia.Media.FontFamily!
+Polhem.Markdown.Avalonia.MarkdownViewer.CodeFontFamily.set -> void
+Polhem.Markdown.Avalonia.MarkdownViewer.CopyCodeLabel.get -> string!
+Polhem.Markdown.Avalonia.MarkdownViewer.CopyCodeLabel.set -> void
+Polhem.Markdown.Avalonia.MarkdownViewer.LinkActivated -> System.EventHandler<Polhem.Markdown.Avalonia.MarkdownLinkActivatedEventArgs!>?
+Polhem.Markdown.Avalonia.MarkdownViewer.LinkForeground.get -> Avalonia.Media.IBrush!
+Polhem.Markdown.Avalonia.MarkdownViewer.LinkForeground.set -> void
+Polhem.Markdown.Avalonia.MarkdownViewer.Markdown.get -> string?
+Polhem.Markdown.Avalonia.MarkdownViewer.Markdown.set -> void
+Polhem.Markdown.Avalonia.MarkdownViewer.MarkdownViewer() -> void
+Polhem.Markdown.Avalonia.MarkdownViewer.Options.get -> Polhem.Markdown.MarkdownOptions?
+Polhem.Markdown.Avalonia.MarkdownViewer.Options.set -> void
+Polhem.Markdown.Avalonia.MarkdownViewer.RuleBrush.get -> Avalonia.Media.IBrush!
+Polhem.Markdown.Avalonia.MarkdownViewer.RuleBrush.set -> void
+override Polhem.Markdown.Avalonia.MarkdownViewer.ArrangeOverride(Avalonia.Size finalSize) -> Avalonia.Size
+override Polhem.Markdown.Avalonia.MarkdownViewer.MeasureOverride(Avalonia.Size availableSize) -> Avalonia.Size
+override Polhem.Markdown.Avalonia.MarkdownViewer.OnPropertyChanged(Avalonia.AvaloniaPropertyChangedEventArgs! change) -> void
+static readonly Polhem.Markdown.Avalonia.MarkdownViewer.CodeBackgroundProperty -> Avalonia.StyledProperty<Avalonia.Media.IBrush!>!
+static readonly Polhem.Markdown.Avalonia.MarkdownViewer.CodeFontFamilyProperty -> Avalonia.StyledProperty<Avalonia.Media.FontFamily!>!
+static readonly Polhem.Markdown.Avalonia.MarkdownViewer.CopyCodeLabelProperty -> Avalonia.StyledProperty<string!>!
+static readonly Polhem.Markdown.Avalonia.MarkdownViewer.LinkActivatedEvent -> Avalonia.Interactivity.RoutedEvent<Polhem.Markdown.Avalonia.MarkdownLinkActivatedEventArgs!>!
+static readonly Polhem.Markdown.Avalonia.MarkdownViewer.LinkForegroundProperty -> Avalonia.StyledProperty<Avalonia.Media.IBrush!>!
+static readonly Polhem.Markdown.Avalonia.MarkdownViewer.MarkdownProperty -> Avalonia.StyledProperty<string?>!
+static readonly Polhem.Markdown.Avalonia.MarkdownViewer.OptionsProperty -> Avalonia.StyledProperty<Polhem.Markdown.MarkdownOptions?>!
+static readonly Polhem.Markdown.Avalonia.MarkdownViewer.RuleBrushProperty -> Avalonia.StyledProperty<Avalonia.Media.IBrush!>!

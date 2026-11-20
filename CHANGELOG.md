@@ -7,6 +7,8 @@ Notable changes to the Polhem.Markdown packages. The format follows [Keep a Chan
 
 ## [Unreleased]
 
+## [0.1.0] - 2026-11-21
+
 ### Added
 
 - `Polhem.Markdown` parses Markdown with Markdig into the model the viewers render: headings, paragraphs, emphasis,
@@ -18,3 +20,6 @@ Notable changes to the Polhem.Markdown packages. The format follows [Keep a Chan
   blocks whose source changed.
 - `Polhem.Markdown.Blazor` adds `MarkdownViewer`, a component that renders a Markdown text as semantic HTML, with
   `OnLinkActivated` for links, code blocks with a copy button, and a stylesheet set through `--pmd-*` CSS variables.
+
+[Unreleased]: https://github.com/polhem-dev/polhem-markdown/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/polhem-dev/polhem-markdown/releases/tag/v0.1.0

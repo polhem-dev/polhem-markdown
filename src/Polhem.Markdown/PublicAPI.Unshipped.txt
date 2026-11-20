@@ -1,4 +1,1 @@
 #nullable enable
-Polhem.Markdown.MarkdownOptions
-Polhem.Markdown.MarkdownOptions.AllowedLinkSchemes.get -> System.Collections.Generic.ISet<string!>!
-Polhem.Markdown.MarkdownOptions.MarkdownOptions() -> void

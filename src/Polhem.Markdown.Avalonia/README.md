@@ -19,4 +19,4 @@ Blazor front end show the same text the same way.
 - **Updates**: when `Markdown` changes, only the top-level blocks whose source changed are rebuilt, so a reply that
   grows as it arrives does not flicker.
 
-The package is in preview; its API is not settled yet. See the [repository](https://github.com/polhem-dev/polhem-markdown).
+The package is at 0.x: a minor version may still change the API. See the [repository](https://github.com/polhem-dev/polhem-markdown).

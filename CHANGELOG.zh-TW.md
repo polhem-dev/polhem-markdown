@@ -7,6 +7,8 @@ Polhem.Markdown 各套件值得注意的變更。格式依循 [Keep a Changelog]
 
 ## [Unreleased]
 
+## [0.1.0] - 2026-11-21
+
 ### 新增
 
 - `Polhem.Markdown` 以 Markdig 解析 Markdown，轉成檢視器呈現的模型：標題、段落、強調、行內程式碼、連結、清單、
@@ -16,3 +18,6 @@ Polhem.Markdown 各套件值得注意的變更。格式依循 [Keep a Changelog]
   `LinkActivated` 事件）、程式碼區塊附複製鈕，並支援表格。內容變更時只重建原文有變動的區塊。
 - `Polhem.Markdown.Blazor` 新增 `MarkdownViewer` 元件，把 Markdown 文字呈現為語意化 HTML：連結以 `OnLinkActivated`
   交給宿主、程式碼區塊附複製鈕，樣式以 `--pmd-*` CSS 變數設定。
+
+[Unreleased]: https://github.com/polhem-dev/polhem-markdown/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/polhem-dev/polhem-markdown/releases/tag/v0.1.0

@@ -12,7 +12,8 @@
 | `Polhem.Markdown.Avalonia` | Avalonia 的檢視器控制項 |
 | `Polhem.Markdown.Blazor` | Blazor 的檢視器元件，輸出以 CSS 變數設定樣式的語意化 HTML |
 
-這些套件仍在開發中，尚未發佈，API 也還沒定案。
+套件發佈在 [nuget.org](https://www.nuget.org/packages?q=Polhem.Markdown)，各版變更見 [CHANGELOG](CHANGELOG.zh-TW.md)。
+目前是 0.x：minor 版仍可能變更 API，CHANGELOG 會寫明。
 
 ## 範例
 
