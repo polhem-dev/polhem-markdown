@@ -1,1 +1,18 @@
 #nullable enable
+Polhem.Markdown.Blazor.MarkdownLinkActivatedEventArgs
+Polhem.Markdown.Blazor.MarkdownLinkActivatedEventArgs.MarkdownLinkActivatedEventArgs(System.Uri! uri) -> void
+Polhem.Markdown.Blazor.MarkdownLinkActivatedEventArgs.Uri.get -> System.Uri!
+Polhem.Markdown.Blazor.MarkdownViewer
+Polhem.Markdown.Blazor.MarkdownViewer.Class.get -> string?
+Polhem.Markdown.Blazor.MarkdownViewer.Class.set -> void
+Polhem.Markdown.Blazor.MarkdownViewer.CopyCodeLabel.get -> string!
+Polhem.Markdown.Blazor.MarkdownViewer.CopyCodeLabel.set -> void
+Polhem.Markdown.Blazor.MarkdownViewer.Markdown.get -> string?
+Polhem.Markdown.Blazor.MarkdownViewer.Markdown.set -> void
+Polhem.Markdown.Blazor.MarkdownViewer.MarkdownViewer() -> void
+Polhem.Markdown.Blazor.MarkdownViewer.OnLinkActivated.get -> Microsoft.AspNetCore.Components.EventCallback<Polhem.Markdown.Blazor.MarkdownLinkActivatedEventArgs!>
+Polhem.Markdown.Blazor.MarkdownViewer.OnLinkActivated.set -> void
+Polhem.Markdown.Blazor.MarkdownViewer.Options.get -> Polhem.Markdown.MarkdownOptions?
+Polhem.Markdown.Blazor.MarkdownViewer.Options.set -> void
+override Polhem.Markdown.Blazor.MarkdownViewer.BuildRenderTree(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder! builder) -> void
+override Polhem.Markdown.Blazor.MarkdownViewer.OnParametersSet() -> void

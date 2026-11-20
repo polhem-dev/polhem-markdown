@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <!-- The gallery on Blazor, with interactive server rendering: the same text as the Avalonia gallery, so the two
+       viewers can be compared side by side. -->
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Polhem.Markdown.Blazor\Polhem.Markdown.Blazor.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\MarkdownGallery\SampleText.cs" Link="SampleText.cs" />
+  </ItemGroup>
+
+</Project>
