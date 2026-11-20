@@ -9,4 +9,8 @@
     <Project Path="tests/Polhem.Markdown.Avalonia.UnitTests/Polhem.Markdown.Avalonia.UnitTests.csproj" />
     <Project Path="tests/Polhem.Markdown.UnitTests/Polhem.Markdown.UnitTests.csproj" />
   </Folder>
+  <Folder Name="/samples/">
+    <Project Path="samples/MarkdownGallery/MarkdownGallery.csproj" />
+    <Project Path="samples/MarkdownGallery.Desktop/MarkdownGallery.Desktop.csproj" />
+  </Folder>
 </Solution>

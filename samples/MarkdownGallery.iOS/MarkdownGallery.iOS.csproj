@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    The gallery on iOS, to check the viewer under the SDK's default trim and without dynamic code. It is not in the
+    solution, because CI builds on Linux without the iOS workload; build it on a Mac as the README shows. Trim warnings
+    from the dependencies are expected here, so this head does not treat warnings as errors.
+  -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0-ios</TargetFramework>
+    <SupportedOSPlatformVersion>15.0</SupportedOSPlatformVersion>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Avalonia.iOS" Version="12.1.6" />
+    <PackageReference Include="Avalonia.Fonts.Inter" Version="12.1.6" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\MarkdownGallery\MarkdownGallery.csproj" />
+  </ItemGroup>
+
+</Project>
