@@ -13,3 +13,6 @@ Notable changes to the Polhem.Markdown packages. The format follows [Keep a Chan
   inline code, links, lists, code blocks, quotes, tables and rules. Raw HTML shows as text, images as their alternative
   text, and only links with an allowed scheme stay clickable (`MarkdownOptions.AllowedLinkSchemes`, by default `http`,
   `https` and `mailto`).
+- `Polhem.Markdown.Avalonia` adds `MarkdownViewer`, a control that shows a Markdown text with selectable text,
+  clickable links (the bubbling `LinkActivated` event), code blocks with a copy button, and tables. It rebuilds only the
+  blocks whose source changed.

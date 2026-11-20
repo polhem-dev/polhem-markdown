@@ -10,6 +10,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <InternalsVisibleTo Include="Polhem.Markdown.Avalonia.UnitTests" />
+  </ItemGroup>
+
+  <ItemGroup>
     <!-- TODO: pack turns this into a minimum-version dependency. The viewer uses internals of Polhem.Markdown, so the
          package must depend on exactly the same version; make pack write an exact range before the first release. -->
     <ProjectReference Include="..\Polhem.Markdown\Polhem.Markdown.csproj" />

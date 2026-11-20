@@ -6,6 +6,7 @@
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/Polhem.Markdown.AotSmoke/Polhem.Markdown.AotSmoke.csproj" />
+    <Project Path="tests/Polhem.Markdown.Avalonia.UnitTests/Polhem.Markdown.Avalonia.UnitTests.csproj" />
     <Project Path="tests/Polhem.Markdown.UnitTests/Polhem.Markdown.UnitTests.csproj" />
   </Folder>
 </Solution>
