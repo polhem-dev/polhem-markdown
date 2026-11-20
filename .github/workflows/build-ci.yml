@@ -44,3 +44,34 @@ jobs:
       - name: Test
         if: steps.changes.outputs.build == 'true'
         run: dotnet test Polhem.Markdown.slnx --configuration Release --no-build
+
+  # Native AOT: publishes the smoke test, which parses a text with every kind of node the model has, with Native AOT and
+  # runs it. Every AOT warning is an error, so a change that breaks AOT compatibility fails here even when the analyzers
+  # of a normal build do not see it.
+  aot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+        with:
+          fetch-depth: 2
+
+      - name: Detect documentation-only pull request
+        id: changes
+        run: bash .github/scripts/detect-docs-only.sh
+
+      - name: Setup .NET
+        if: steps.changes.outputs.build == 'true'
+        uses: actions/setup-dotnet@c2fa09f4bde5ebb9d1777cf28262a3eb3db3ced7  # v5.2.0
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Publish with Native AOT
+        if: steps.changes.outputs.build == 'true'
+        run: dotnet publish tests/Polhem.Markdown.AotSmoke/Polhem.Markdown.AotSmoke.csproj --configuration Release --output aot-smoke
+
+      - name: Run
+        if: steps.changes.outputs.build == 'true'
+        run: ./aot-smoke/Polhem.Markdown.AotSmoke

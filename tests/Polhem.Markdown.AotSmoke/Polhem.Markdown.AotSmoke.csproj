@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Native AOT smoke test for Polhem.Markdown. The viewers run on iOS, Android and WebAssembly, where code is compiled
+    ahead of time, so the parser and the model built from it must work without dynamic code. The AOT analyzers run on
+    every build of this project; the "aot" job of .github/workflows/build-ci.yml publishes it with Native AOT and runs it.
+  -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <PublishAot>true</PublishAot>
+    <InvariantGlobalization>true</InvariantGlobalization>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Polhem.Markdown\Polhem.Markdown.csproj" />
+  </ItemGroup>
+
+</Project>

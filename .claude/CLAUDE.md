@@ -39,6 +39,9 @@ The design decisions are recorded in polhem-dev/polhem#529.
 dotnet build Polhem.Markdown.slnx --configuration Release
 dotnet test Polhem.Markdown.slnx --configuration Release --no-build
 ./check-md-links.sh
+# Native AOT: what the `aot` job of build-ci.yml runs
+dotnet publish tests/Polhem.Markdown.AotSmoke/Polhem.Markdown.AotSmoke.csproj --configuration Release --output aot-smoke
+./aot-smoke/Polhem.Markdown.AotSmoke
 ```
 
 ## Workflow
