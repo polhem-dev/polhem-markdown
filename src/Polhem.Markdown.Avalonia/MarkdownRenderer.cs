@@ -62,7 +62,9 @@ internal sealed class MarkdownRenderer
     private Grid List(ListNode list, int depth)
     {
         _rendered.Add(typeof(ListItemNode));
-        var grid = new Grid { ColumnDefinitions = new ColumnDefinitions("Auto,*"), RowSpacing = list.IsLoose ? 8 : 2 };
+        var grid = new Grid { RowSpacing = list.IsLoose ? 8 : 2 };
+        grid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Auto));
+        grid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
         for (var index = 0; index < list.Items.Count; index++)
         {
             grid.RowDefinitions.Add(new RowDefinition(GridLength.Auto));

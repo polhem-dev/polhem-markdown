@@ -56,7 +56,9 @@ internal sealed class CodeBlockView : Border
         ToolTip.SetTip(CopyButton, viewer.CopyCodeLabel);
         CopyButton.Click += async (_, _) => await CopyAsync();
 
-        var header = new Grid { ColumnDefinitions = new ColumnDefinitions("*,Auto"), Margin = new Thickness(10, 2, 2, 0) };
+        var header = new Grid { Margin = new Thickness(10, 2, 2, 0) };
+        header.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
+        header.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Auto));
         header.Children.Add(language);
         Grid.SetColumn(CopyButton, 1);
         header.Children.Add(CopyButton);
