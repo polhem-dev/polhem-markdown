@@ -1,0 +1,46 @@
+name: Build CI
+
+# A push that changes only `.md` files starts no run; docs-check.yml checks their links. The pull_request trigger has
+# no `paths-ignore`, because `build` is a required check and a required check that never starts leaves a
+# documentation-only pull request waiting forever. The job recognizes such a pull request itself instead, with
+# .github/scripts/detect-docs-only.sh, and ends successfully without building.
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - '**.md'
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    # A hung test or restore ends the run instead of holding the runner for the default six hours.
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+        with:
+          fetch-depth: 2
+
+      - name: Detect documentation-only pull request
+        id: changes
+        run: bash .github/scripts/detect-docs-only.sh
+
+      - name: Setup .NET
+        if: steps.changes.outputs.build == 'true'
+        uses: actions/setup-dotnet@c2fa09f4bde5ebb9d1777cf28262a3eb3db3ced7  # v5.2.0
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Build
+        if: steps.changes.outputs.build == 'true'
+        run: dotnet build Polhem.Markdown.slnx --configuration Release
+
+      - name: Test
+        if: steps.changes.outputs.build == 'true'
+        run: dotnet test Polhem.Markdown.slnx --configuration Release --no-build

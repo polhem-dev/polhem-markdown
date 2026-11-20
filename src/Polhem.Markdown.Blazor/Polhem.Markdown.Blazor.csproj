@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+  <PropertyGroup>
+    <Description>A Markdown viewer component for Blazor that renders semantic HTML styled with CSS variables, rendering the same model as Polhem.Markdown.Avalonia so both front ends show a text the same way.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="10.0.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- TODO: pack turns this into a minimum-version dependency. The viewer uses internals of Polhem.Markdown, so the
+         package must depend on exactly the same version; make pack write an exact range before the first release. -->
+    <ProjectReference Include="..\Polhem.Markdown\Polhem.Markdown.csproj" />
+  </ItemGroup>
+
+</Project>

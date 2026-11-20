@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <Description>Parses Markdown with Markdig into the model that the Polhem.Markdown viewers render, and applies one safety policy for both: raw HTML shown as text, links checked against allowed schemes.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Markdig" Version="1.6.0" />
+  </ItemGroup>
+
+</Project>

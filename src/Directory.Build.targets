@@ -1,0 +1,29 @@
+<Project>
+
+  <!--
+    Dependency gate. Each package may take only the one external package that does its job: Markdig for the parser,
+    Avalonia for the Avalonia viewer, and the Blazor component library for the Blazor viewer. Every package reference
+    flows to every consumer, so one that is not on the list fails the build.
+
+    Only references that flow to consumers count: a package with PrivateAssets="all" (SourceLink, analyzers) does not
+    appear in the nuspec. tests/Polhem.Markdown.UnitTests/DependencyGateTests.cs checks the assemblies each package
+    actually references, and that every package under src is listed there.
+  -->
+  <PropertyGroup>
+    <_PolhemMarkdownAllowedPackage Condition="'$(MSBuildProjectName)' == 'Polhem.Markdown'">Markdig</_PolhemMarkdownAllowedPackage>
+    <_PolhemMarkdownAllowedPackage Condition="'$(MSBuildProjectName)' == 'Polhem.Markdown.Avalonia'">Avalonia</_PolhemMarkdownAllowedPackage>
+    <_PolhemMarkdownAllowedPackage Condition="'$(MSBuildProjectName)' == 'Polhem.Markdown.Blazor'">Microsoft.AspNetCore.Components.Web</_PolhemMarkdownAllowedPackage>
+  </PropertyGroup>
+
+  <Target Name="PolhemMarkdownDependencyGate" BeforeTargets="CoreCompile">
+    <ItemGroup>
+      <_PolhemMarkdownConsumerPackage Include="@(PackageReference)" Condition="'%(PackageReference.PrivateAssets)' != 'all'" />
+      <_PolhemMarkdownConsumerPackage Remove="$(_PolhemMarkdownAllowedPackage)" />
+      <_PolhemMarkdownFramework Include="@(FrameworkReference)" Exclude="Microsoft.NETCore.App" />
+    </ItemGroup>
+    <Error Code="MARKDOWN9001"
+           Condition="'@(_PolhemMarkdownConsumerPackage)' != '' or '@(_PolhemMarkdownFramework)' != ''"
+           Text="$(MSBuildProjectName) may depend only on .NET, the other packages of this repository and its own external package ($(_PolhemMarkdownAllowedPackage)), because every dependency flows to every consumer. Unexpected reference(s): @(_PolhemMarkdownConsumerPackage, ', ')@(_PolhemMarkdownFramework, ', '). If it is really needed, open an issue first." />
+  </Target>
+
+</Project>

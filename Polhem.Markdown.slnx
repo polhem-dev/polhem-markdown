@@ -1,0 +1,10 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Polhem.Markdown/Polhem.Markdown.csproj" />
+    <Project Path="src/Polhem.Markdown.Avalonia/Polhem.Markdown.Avalonia.csproj" />
+    <Project Path="src/Polhem.Markdown.Blazor/Polhem.Markdown.Blazor.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Polhem.Markdown.UnitTests/Polhem.Markdown.UnitTests.csproj" />
+  </Folder>
+</Solution>
