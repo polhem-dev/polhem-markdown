@@ -16,6 +16,9 @@ const string Markdown = """
 
     > quoted
 
+    > [!TIP]
+    > An alert.
+
     ```csharp
     var x = 1;
     ```
@@ -37,7 +40,7 @@ foreach (var block in document.Blocks)
 
 Type[] expected =
 [
-    typeof(HeadingNode), typeof(ParagraphNode), typeof(ListNode), typeof(ListItemNode), typeof(QuoteNode),
+    typeof(HeadingNode), typeof(ParagraphNode), typeof(ListNode), typeof(ListItemNode), typeof(QuoteNode), typeof(AlertNode),
     typeof(CodeBlockNode), typeof(TableNode), typeof(TableRowNode), typeof(TableCellNode), typeof(ThematicBreakNode),
     typeof(TextNode), typeof(EmphasisNode), typeof(CodeSpanNode), typeof(LinkNode), typeof(LineBreakNode),
 ];
@@ -61,6 +64,7 @@ void Collect(MarkdownNode node)
         ListNode list => list.Items,
         ListItemNode item => item.Blocks,
         QuoteNode quote => quote.Blocks,
+        AlertNode alert => alert.Blocks,
         TableNode table => table.HeaderRows.Concat(table.Rows),
         TableRowNode row => row.Cells,
         TableCellNode cell => cell.Inlines,

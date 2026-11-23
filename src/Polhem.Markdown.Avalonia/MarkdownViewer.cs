@@ -14,7 +14,8 @@ namespace Polhem.Markdown.Avalonia;
 /// <remarks>
 /// When <see cref="Markdown"/> changes, only the top-level blocks whose source changed are rebuilt, so a text that grows
 /// while it arrives does not flicker. The colors work on light and dark themes; set <see cref="LinkForeground"/>,
-/// <see cref="CodeBackground"/> and <see cref="RuleBrush"/> to match a theme.
+/// <see cref="CodeBackground"/>, <see cref="RuleBrush"/> and the alert brushes (such as <see cref="AlertNoteBrush"/>) to
+/// match a theme.
 /// </remarks>
 public class MarkdownViewer : Control
 {
@@ -37,6 +38,26 @@ public class MarkdownViewer : Control
     /// <summary>Defines the <see cref="RuleBrush"/> property.</summary>
     public static readonly StyledProperty<IBrush> RuleBrushProperty =
         AvaloniaProperty.Register<MarkdownViewer, IBrush>(nameof(RuleBrush), new SolidColorBrush(Color.FromArgb(0x59, 0x80, 0x80, 0x80)));
+
+    /// <summary>Defines the <see cref="AlertNoteBrush"/> property.</summary>
+    public static readonly StyledProperty<IBrush> AlertNoteBrushProperty =
+        AvaloniaProperty.Register<MarkdownViewer, IBrush>(nameof(AlertNoteBrush), new SolidColorBrush(Color.FromRgb(0x3B, 0x82, 0xF6)));
+
+    /// <summary>Defines the <see cref="AlertTipBrush"/> property.</summary>
+    public static readonly StyledProperty<IBrush> AlertTipBrushProperty =
+        AvaloniaProperty.Register<MarkdownViewer, IBrush>(nameof(AlertTipBrush), new SolidColorBrush(Color.FromRgb(0x22, 0xA3, 0x5A)));
+
+    /// <summary>Defines the <see cref="AlertImportantBrush"/> property.</summary>
+    public static readonly StyledProperty<IBrush> AlertImportantBrushProperty =
+        AvaloniaProperty.Register<MarkdownViewer, IBrush>(nameof(AlertImportantBrush), new SolidColorBrush(Color.FromRgb(0x8B, 0x5C, 0xF6)));
+
+    /// <summary>Defines the <see cref="AlertWarningBrush"/> property.</summary>
+    public static readonly StyledProperty<IBrush> AlertWarningBrushProperty =
+        AvaloniaProperty.Register<MarkdownViewer, IBrush>(nameof(AlertWarningBrush), new SolidColorBrush(Color.FromRgb(0xD9, 0x77, 0x06)));
+
+    /// <summary>Defines the <see cref="AlertCautionBrush"/> property.</summary>
+    public static readonly StyledProperty<IBrush> AlertCautionBrushProperty =
+        AvaloniaProperty.Register<MarkdownViewer, IBrush>(nameof(AlertCautionBrush), new SolidColorBrush(Color.FromRgb(0xE5, 0x48, 0x4D)));
 
     /// <summary>Defines the <see cref="CodeFontFamily"/> property.</summary>
     public static readonly StyledProperty<FontFamily> CodeFontFamilyProperty =
@@ -97,6 +118,41 @@ public class MarkdownViewer : Control
     {
         get => GetValue(RuleBrushProperty);
         set => SetValue(RuleBrushProperty, value);
+    }
+
+    /// <summary>Gets or sets the brush of the bar, icon and title of a note (<c>&gt; [!NOTE]</c>).</summary>
+    public IBrush AlertNoteBrush
+    {
+        get => GetValue(AlertNoteBrushProperty);
+        set => SetValue(AlertNoteBrushProperty, value);
+    }
+
+    /// <summary>Gets or sets the brush of the bar, icon and title of a tip (<c>&gt; [!TIP]</c>).</summary>
+    public IBrush AlertTipBrush
+    {
+        get => GetValue(AlertTipBrushProperty);
+        set => SetValue(AlertTipBrushProperty, value);
+    }
+
+    /// <summary>Gets or sets the brush of the bar, icon and title of an important alert (<c>&gt; [!IMPORTANT]</c>).</summary>
+    public IBrush AlertImportantBrush
+    {
+        get => GetValue(AlertImportantBrushProperty);
+        set => SetValue(AlertImportantBrushProperty, value);
+    }
+
+    /// <summary>Gets or sets the brush of the bar, icon and title of a warning (<c>&gt; [!WARNING]</c>).</summary>
+    public IBrush AlertWarningBrush
+    {
+        get => GetValue(AlertWarningBrushProperty);
+        set => SetValue(AlertWarningBrushProperty, value);
+    }
+
+    /// <summary>Gets or sets the brush of the bar, icon and title of a caution (<c>&gt; [!CAUTION]</c>).</summary>
+    public IBrush AlertCautionBrush
+    {
+        get => GetValue(AlertCautionBrushProperty);
+        set => SetValue(AlertCautionBrushProperty, value);
     }
 
     /// <summary>Gets or sets the font of inline code and code blocks.</summary>

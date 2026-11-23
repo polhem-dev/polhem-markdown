@@ -11,6 +11,9 @@ and the next line, with ~~struck~~ text.
 
 > A quote.
 
+> [!WARNING]
+> An alert.
+
 ```csharp
 var x = 1;
 ```

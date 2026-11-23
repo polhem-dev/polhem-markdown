@@ -36,6 +36,7 @@ internal sealed class MarkdownRenderer
             ListNode list => List(list, depth),
             CodeBlockNode code => new CodeBlockView(_viewer, code),
             QuoteNode quote => Quote(quote, depth),
+            AlertNode alert => Alert(alert, depth),
             TableNode table => Table(table),
             ThematicBreakNode => Rule(),
             _ => null,
@@ -115,6 +116,47 @@ internal sealed class MarkdownRenderer
             Child = Blocks(quote.Blocks, depth, spacing: 8),
         };
         border.Bind(Border.BorderBrushProperty, _viewer.GetObservable(MarkdownViewer.RuleBrushProperty));
+        return border;
+    }
+
+    private Border Alert(AlertNode alert, int depth)
+    {
+        var brush = _viewer.GetObservable(alert.Kind switch
+        {
+            AlertKind.Tip => MarkdownViewer.AlertTipBrushProperty,
+            AlertKind.Important => MarkdownViewer.AlertImportantBrushProperty,
+            AlertKind.Warning => MarkdownViewer.AlertWarningBrushProperty,
+            AlertKind.Caution => MarkdownViewer.AlertCautionBrushProperty,
+            _ => MarkdownViewer.AlertNoteBrushProperty,
+        });
+
+        var icon = new global::Avalonia.Controls.Shapes.Path
+        {
+            Data = Geometry.Parse("F0 " + AlertGlyphs.IconPath(alert.Kind)),
+            Width = 16,
+            Height = 16,
+            VerticalAlignment = VerticalAlignment.Center,
+        };
+        icon.Bind(global::Avalonia.Controls.Shapes.Shape.FillProperty, brush);
+
+        var title = new TextBlock
+        {
+            Text = AlertGlyphs.Title(alert.Kind),
+            FontWeight = FontWeight.SemiBold,
+            VerticalAlignment = VerticalAlignment.Center,
+        };
+        title.Bind(TextBlock.ForegroundProperty, brush);
+
+        var content = Blocks(alert.Blocks, depth, spacing: 8);
+        content.Children.Insert(0, new StackPanel { Orientation = Orientation.Horizontal, Spacing = 6, Children = { icon, title } });
+
+        var border = new Border
+        {
+            BorderThickness = new Thickness(3, 0, 0, 0),
+            Padding = new Thickness(10, 2, 0, 2),
+            Child = content,
+        };
+        border.Bind(Border.BorderBrushProperty, brush);
         return border;
     }
 

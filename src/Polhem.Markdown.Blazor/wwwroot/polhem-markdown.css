@@ -7,6 +7,8 @@
     --pmd-code-bg    background of inline code, code blocks and table headers
     --pmd-rule       rules, table borders and the bar beside a quote
     --pmd-code-font  font of inline code and code blocks
+    --pmd-alert-note, --pmd-alert-tip, --pmd-alert-important, --pmd-alert-warning, --pmd-alert-caution
+                     bar, icon and title of each kind of alert (> [!NOTE] and so on)
 */
 
 .pmd {
@@ -152,4 +154,34 @@
   left: -1.4em;
   top: 0.3em;
   margin: 0;
+}
+
+.pmd :where(p, h1, h2, h3, h4, h5, h6, ul, ol, blockquote, hr, .pmd-code, .pmd-table, .pmd-alert) + .pmd-alert,
+.pmd .pmd-alert + :where(p, h1, h2, h3, h4, h5, h6, ul, ol, blockquote, hr, .pmd-code, .pmd-table) {
+  margin-top: 8px;
+}
+
+.pmd .pmd-alert {
+  border-left: 3px solid var(--pmd-alert-color);
+  padding: 2px 0 2px 10px;
+}
+
+.pmd .pmd-alert-note { --pmd-alert-color: var(--pmd-alert-note, #3b82f6); }
+.pmd .pmd-alert-tip { --pmd-alert-color: var(--pmd-alert-tip, #22a35a); }
+.pmd .pmd-alert-important { --pmd-alert-color: var(--pmd-alert-important, #8b5cf6); }
+.pmd .pmd-alert-warning { --pmd-alert-color: var(--pmd-alert-warning, #d97706); }
+.pmd .pmd-alert-caution { --pmd-alert-color: var(--pmd-alert-caution, #e5484d); }
+
+.pmd .pmd-alert-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--pmd-alert-color);
+  font-weight: 600;
+}
+
+.pmd .pmd-alert-title svg {
+  width: 16px;
+  height: 16px;
+  fill: currentColor;
 }

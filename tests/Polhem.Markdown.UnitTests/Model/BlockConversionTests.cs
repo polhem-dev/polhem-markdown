@@ -135,6 +135,44 @@ public class BlockConversionTests
         Assert.Equal("quoted", Text(Assert.IsType<ParagraphNode>(Assert.Single(quote.Blocks)).Inlines));
     }
 
+    [Theory(DisplayName = "A quote that starts with a GitHub alert marker becomes an alert of that kind, without the marker")]
+    [InlineData("NOTE", nameof(AlertKind.Note))]
+    [InlineData("TIP", nameof(AlertKind.Tip))]
+    [InlineData("IMPORTANT", nameof(AlertKind.Important))]
+    [InlineData("WARNING", nameof(AlertKind.Warning))]
+    [InlineData("CAUTION", nameof(AlertKind.Caution))]
+    public void Build_Alert_KeepsKindAndBlocks(string marker, string kind)
+    {
+        var markdown = $"> [!{marker}]\n> Back up **first**.\n>\n> - one";
+
+        var alert = Single<AlertNode>(Parse(markdown));
+
+        Assert.Equal(Enum.Parse<AlertKind>(kind), alert.Kind);
+        Assert.Equal(markdown, markdown.Substring(alert.Range.Start, alert.Range.Length));
+        Assert.Equal("Back up first.", Text(Assert.IsType<ParagraphNode>(alert.Blocks[0]).Inlines));
+        Assert.IsType<ListNode>(alert.Blocks[1]);
+    }
+
+    [Fact(DisplayName = "An alert marker GitHub does not know leaves an ordinary quote that shows the marker")]
+    public void Build_UnknownAlert_IsQuoteWithMarker()
+    {
+        const string Markdown = "> [!FOO]\n> body";
+
+        var quote = Single<QuoteNode>(Parse(Markdown));
+
+        var paragraph = Assert.IsType<ParagraphNode>(Assert.Single(quote.Blocks));
+        Assert.Equal("[!FOO] body", Text(paragraph.Inlines));
+        Assert.Equal("[!FOO]", Markdown.Substring(paragraph.Inlines[0].Range.Start, paragraph.Inlines[0].Range.Length));
+    }
+
+    [Fact(DisplayName = "An unknown alert marker with nothing after it still shows the marker")]
+    public void Build_UnknownAlertAlone_ShowsMarker()
+    {
+        var quote = Single<QuoteNode>(Parse("> [!FOO]"));
+
+        Assert.Equal("[!FOO]", Text(Assert.IsType<ParagraphNode>(Assert.Single(quote.Blocks)).Inlines));
+    }
+
     [Fact(DisplayName = "A thematic break becomes a rule")]
     public void Build_ThematicBreak_BecomesRule()
     {
