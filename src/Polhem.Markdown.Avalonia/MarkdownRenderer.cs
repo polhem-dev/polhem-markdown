@@ -57,12 +57,14 @@ internal sealed class MarkdownRenderer
         return control;
     }
 
-    /// <summary>A diagram at its own size, scaled down to the viewer's width when it is wider, never up.</summary>
+    /// <summary>
+    /// A diagram at its own size, centered, and scaled down to the viewer's width when it is wider, never up.
+    /// </summary>
     private Viewbox Diagram(DiagramNode diagram) => new()
     {
         Stretch = Stretch.Uniform,
         StretchDirection = StretchDirection.DownOnly,
-        HorizontalAlignment = HorizontalAlignment.Left,
+        HorizontalAlignment = HorizontalAlignment.Center,
         Child = new DiagramView(_viewer, diagram, _renderedShapes),
     };
 

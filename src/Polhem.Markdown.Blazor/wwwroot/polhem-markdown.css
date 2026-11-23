@@ -185,9 +185,10 @@
   height: 16px;
   fill: currentColor;
 }
-/* A diagram keeps the size it was laid out at and scales down, text included, when the viewer is narrower. */
+/* A diagram keeps the size it was laid out at, centered, and scales down, text included, when the viewer is narrower. */
 .pmd .pmd-diagram svg {
   display: block;
+  margin: 0 auto;
   max-width: 100%;
   height: auto;
 }
