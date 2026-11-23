@@ -49,6 +49,12 @@ public class MarkdownViewerTests : BunitContext
         Assert.Empty(viewer.FindAll("blockquote"));
     }
 
+    [Fact(DisplayName = "Front matter is not rendered, and an emoji shortcode renders the emoji")]
+    public void Render_FrontMatterAndEmoji()
+    {
+        Show("---\ntitle: x\n---\nDone :tada:").MarkupMatches("<div class=\"pmd\"><p>Done \U0001F389</p></div>");
+    }
+
     [Fact(DisplayName = "Struck-through text renders as a del element")]
     public void Render_Strikethrough_IsDel()
     {

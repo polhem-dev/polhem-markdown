@@ -182,6 +182,15 @@ public class MarkdownViewerTests(HeadlessSession session)
         Assert.Equal("Do not delete.", Assert.Single(Descendants<MarkdownTextBlock>(border)).Inlines!.Text);
     });
 
+    [Fact(DisplayName = "Front matter is not shown, and an emoji shortcode shows the emoji")]
+    public Task Render_FrontMatterAndEmoji() => session.RunAsync(() =>
+    {
+        var (_, viewer) = Show("---\ntitle: x\n---\nDone :tada:");
+
+        var text = Assert.IsType<MarkdownTextBlock>(Assert.Single(Blocks(viewer)));
+        Assert.Equal("Done \U0001F389", text.Inlines!.Text);
+    });
+
     [Fact(DisplayName = "Struck-through text is drawn with a line through it")]
     public Task Render_Strikethrough_HasLineThrough() => session.RunAsync(() =>
     {

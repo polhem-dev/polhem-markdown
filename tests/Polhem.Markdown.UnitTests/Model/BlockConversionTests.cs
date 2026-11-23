@@ -173,6 +173,26 @@ public class BlockConversionTests
         Assert.Equal("[!FOO]", Text(Assert.IsType<ParagraphNode>(Assert.Single(quote.Blocks)).Inlines));
     }
 
+    [Fact(DisplayName = "YAML front matter at the start of the text is hidden")]
+    public void Build_FrontMatter_IsHidden()
+    {
+        const string Markdown = "---\ntitle: Install\ntags: [a, b]\n---\n# Install\n\nText.";
+
+        var document = Parse(Markdown);
+
+        Assert.Equal(2, document.Blocks.Count);
+        Assert.Equal("Install", Text(Assert.IsType<HeadingNode>(document.Blocks[0]).Inlines));
+        Assert.DoesNotContain(AllNodes(document).OfType<TextNode>(), text => text.Text.Contains("title", StringComparison.Ordinal));
+    }
+
+    [Fact(DisplayName = "Rules later in the text are not taken for front matter")]
+    public void Build_RulesAfterStart_AreNotFrontMatter()
+    {
+        var document = Parse("Intro\n\n---\n\nkey: value\n\n---");
+
+        Assert.Equal(["ParagraphNode", "ThematicBreakNode", "ParagraphNode", "ThematicBreakNode"], document.Blocks.Select(block => block.GetType().Name));
+    }
+
     [Fact(DisplayName = "A thematic break becomes a rule")]
     public void Build_ThematicBreak_BecomesRule()
     {
