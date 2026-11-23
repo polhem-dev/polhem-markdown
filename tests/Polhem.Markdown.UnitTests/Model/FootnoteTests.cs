@@ -129,6 +129,37 @@ public class FootnoteTests
         Assert.Equal(Assert.Single(AllNodes(document).OfType<FootnoteReferenceNode>()).Id, back.ReferenceId);
     }
 
+    [Fact(DisplayName = "Notes are numbered by the first reference a reader sees, not one hidden in an image")]
+    public void Build_NumberingSkipsHiddenReferences()
+    {
+        var document = Parse("![i[^a]](https://example.com/i.png) text[^b] more[^a].\n\n[^a]: A.\n\n[^b]: B.");
+
+        Assert.Equal([1, 2], AllNodes(document).OfType<FootnoteReferenceNode>().Select(reference => reference.Number));
+        Assert.Equal(["B. \u21A9", "A. \u21A9"], Assert.IsType<FootnotesNode>(document.Blocks[^1]).Notes.Select(NoteText));
+    }
+
+    [Theory(DisplayName = "A note reached only through a note that is not shown is not shown either")]
+    [InlineData("![i[^a]](https://example.com/i.png) x.\n\n[^a]: A see [^b].\n\n[^b]: B.")]
+    [InlineData("x.\n\n[^a]: A see [^b].\n\n[^b]: B.")]
+    public void Build_NoteReachedOnlyThroughHiddenNote_IsNotShown(string markdown)
+    {
+        var document = Parse(markdown);
+
+        Assert.DoesNotContain(document.Blocks, block => block is FootnotesNode);
+        Assert.DoesNotContain(AllNodes(document), node => node is FootnoteBackLinkNode);
+    }
+
+    [Fact(DisplayName = "A note referenced from a shown note and from one that is not keeps only the back link that leads somewhere")]
+    public void Build_ReferenceInHiddenNote_DropsItsBackLink()
+    {
+        var document = Parse("x[^a]\n\n[^a]: A[^c].\n\n[^b]: B[^c].\n\n[^c]: C.");
+
+        var notes = Assert.IsType<FootnotesNode>(document.Blocks[^1]).Notes;
+        Assert.Equal(["A[2]. \u21A9", "C. \u21A9"], notes.Select(NoteText));
+        var referenceIds = AllNodes(document).OfType<FootnoteReferenceNode>().Select(reference => reference.Id).ToHashSet();
+        Assert.All(AllNodes(document).OfType<FootnoteBackLinkNode>(), back => Assert.Contains(back.ReferenceId, referenceIds));
+    }
+
     [Fact(DisplayName = "Many references to one note parse in linear time")]
     public void Build_ManyReferencesToOneNote_ParseQuickly()
     {

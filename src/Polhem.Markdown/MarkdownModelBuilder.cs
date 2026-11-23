@@ -211,12 +211,14 @@ internal sealed class MarkdownModelBuilder
     }
 
     /// <summary>
-    /// Numbers the notes that a shown reference refers to, by first reference, and gives each back link its position
-    /// among its note's shown references, in one pass.
+    /// Numbers the notes a reader can reach, in the order they are first reached: references in the text, in order, then
+    /// references inside the notes so numbered. Each back link gets its position among its note's shown references.
+    /// Every note and every reference is visited once.
     /// </summary>
     /// <remarks>
     /// Markdig's own numbers count references this builder does not show: one in an image's alternative text, which
-    /// shows as plain text. Such a reference would leave a note, or a back link, that nothing in the text leads to.
+    /// shows as plain text, and one inside a note that is not shown. Either would leave a note, or a back link, that
+    /// nothing in the text leads to.
     /// </remarks>
     private void NumberFootnotes(MarkdownDocument document)
     {
@@ -225,23 +227,49 @@ internal sealed class MarkdownModelBuilder
             .SelectMany(image => image.Descendants<FootnoteLink>())
             .Select(link => link.Index)
             .ToHashSet();
-        var notes = document.Descendants<FootnoteGroup>()
-            .SelectMany(group => group.OfType<Footnote>())
-            .Where(note => note.Order > 0)
-            .OrderBy(note => note.Order);
-        foreach (var note in notes)
+        var shown = new HashSet<int>();
+        var reached = new Queue<Footnote>();
+
+        void Visit(IEnumerable<FootnoteLink> links)
+        {
+            foreach (var link in links)
+            {
+                if (link.IsBackLink || link.Footnote is not { } note || hidden.Contains(link.Index))
+                {
+                    continue;
+                }
+                shown.Add(link.Index);
+                if (_noteNumbers.TryAdd(note, _noteNumbers.Count + 1))
+                {
+                    reached.Enqueue(note);
+                }
+            }
+        }
+
+        Visit(document.Where(block => block is not FootnoteGroup).SelectMany(FootnoteLinks));
+        while (reached.TryDequeue(out var note))
+        {
+            Visit(FootnoteLinks(note));
+        }
+
+        foreach (var note in _noteNumbers.Keys)
         {
             var position = 0;
-            foreach (var link in note.Links.Where(link => !hidden.Contains(link.Index)))
+            foreach (var link in note.Links.Where(link => shown.Contains(link.Index)))
             {
                 _backLinkPositions[link.Index] = ++position;
             }
-            if (position > 0)
-            {
-                _noteNumbers[note] = _noteNumbers.Count + 1;
-            }
         }
     }
+
+    /// <summary>The footnote links in a block and the blocks inside it, in document order.</summary>
+    /// <remarks>Markdig's block descendants stop at blocks, so the inlines of each leaf block are walked here.</remarks>
+    private static IEnumerable<FootnoteLink> FootnoteLinks(Block block) => block switch
+    {
+        LeafBlock { Inline: { } inline } => inline.Descendants<FootnoteLink>(),
+        ContainerBlock container => container.SelectMany(FootnoteLinks),
+        _ => [],
+    };
 
     // NOTE: a colon never appears in a heading id (see `HeadingSlugger`), so these ids cannot match a heading.
     private string NoteId(Footnote note) => "fn:" + _noteNumbers[note].ToString(CultureInfo.InvariantCulture);
