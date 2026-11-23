@@ -1,1 +1,3 @@
 #nullable enable
+Polhem.Markdown.MarkdownOptions.RenderMermaidDiagrams.get -> bool
+Polhem.Markdown.MarkdownOptions.RenderMermaidDiagrams.set -> void

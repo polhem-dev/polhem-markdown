@@ -16,12 +16,12 @@
 }
 
 /* Blocks carry no margins of their own; space between siblings comes from the rule after this one. */
-.pmd :where(p, h1, h2, h3, h4, h5, h6, ul, ol, li, blockquote, pre, table, hr, .pmd-code, .pmd-table) {
+.pmd :where(p, h1, h2, h3, h4, h5, h6, ul, ol, li, blockquote, pre, table, hr, .pmd-code, .pmd-table, .pmd-diagram) {
   margin: 0;
 }
 
-.pmd :where(p, h1, h2, h3, h4, h5, h6, ul, ol, blockquote, hr, .pmd-code, .pmd-table)
-  + :where(p, h1, h2, h3, h4, h5, h6, ul, ol, blockquote, hr, .pmd-code, .pmd-table) {
+.pmd :where(p, h1, h2, h3, h4, h5, h6, ul, ol, blockquote, hr, .pmd-code, .pmd-table, .pmd-diagram)
+  + :where(p, h1, h2, h3, h4, h5, h6, ul, ol, blockquote, hr, .pmd-code, .pmd-table, .pmd-diagram) {
   margin-top: 8px;
 }
 
@@ -156,8 +156,8 @@
   margin: 0;
 }
 
-.pmd :where(p, h1, h2, h3, h4, h5, h6, ul, ol, blockquote, hr, .pmd-code, .pmd-table, .pmd-alert) + .pmd-alert,
-.pmd .pmd-alert + :where(p, h1, h2, h3, h4, h5, h6, ul, ol, blockquote, hr, .pmd-code, .pmd-table) {
+.pmd :where(p, h1, h2, h3, h4, h5, h6, ul, ol, blockquote, hr, .pmd-code, .pmd-table, .pmd-diagram, .pmd-alert) + .pmd-alert,
+.pmd .pmd-alert + :where(p, h1, h2, h3, h4, h5, h6, ul, ol, blockquote, hr, .pmd-code, .pmd-table, .pmd-diagram) {
   margin-top: 8px;
 }
 
@@ -184,4 +184,35 @@
   width: 16px;
   height: 16px;
   fill: currentColor;
+}
+/* A diagram keeps the size it was laid out at and scales down, text included, when the viewer is narrower. */
+.pmd .pmd-diagram svg {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+.pmd .pmd-diagram .pmd-d-box {
+  fill: var(--pmd-code-bg, rgba(128, 128, 128, 0.12));
+  stroke: currentColor;
+}
+
+.pmd .pmd-diagram .pmd-d-line {
+  fill: none;
+  stroke: currentColor;
+  stroke-linejoin: round;
+}
+
+.pmd .pmd-diagram .pmd-d-rule {
+  stroke: var(--pmd-rule, rgba(128, 128, 128, 0.35));
+}
+
+.pmd .pmd-diagram .pmd-d-arrow {
+  fill: currentColor;
+}
+
+.pmd .pmd-diagram text {
+  fill: currentColor;
+  text-anchor: middle;
+  dominant-baseline: central;
 }

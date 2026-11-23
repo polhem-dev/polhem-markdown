@@ -7,6 +7,7 @@ using Markdig.Extensions.TaskLists;
 using Markdig.Extensions.Yaml;
 using Markdig.Syntax;
 using Markdig.Syntax.Inlines;
+using Polhem.Markdown.Diagrams;
 using Polhem.Markdown.Model;
 
 namespace Polhem.Markdown;
@@ -17,9 +18,10 @@ namespace Polhem.Markdown;
 /// </summary>
 /// <remarks>
 /// The policy: raw HTML is never interpreted and shows as the text it was written as; an image shows as its alternative
-/// text; a link whose target is not an absolute URI with an allowed scheme shows as its text; a node this builder does
-/// not know shows as its source text. Link reference definitions are not shown, as in any Markdown renderer, and
-/// neither is YAML front matter.
+/// text; a Mermaid diagram is laid out here and drawn by the viewers from shapes, never by running a script; a link
+/// whose target is not an absolute URI with an allowed scheme shows as its text; a node this builder does not know
+/// shows as its source text. Link reference definitions are not shown, as in any Markdown renderer, and neither is YAML
+/// front matter.
 /// </remarks>
 internal sealed class MarkdownModelBuilder
 {
@@ -95,7 +97,7 @@ internal sealed class MarkdownModelBuilder
         // NOTE: front matter is metadata for tools, not part of the document, so it is hidden. GitHub shows it as a
         // table; hiding it is a deliberate difference. Markdig reads it as a kind of code block, so it comes first.
         YamlFrontMatterBlock => null,
-        FencedCodeBlock fenced => new CodeBlockNode(Range(fenced), fenced.Info ?? "", fenced.Lines.ToString()),
+        FencedCodeBlock fenced => FencedCode(fenced),
         CodeBlock code => new CodeBlockNode(Range(code), "", code.Lines.ToString()),
         AlertBlock alert => Alert(alert),
         QuoteBlock quote => new QuoteNode(Range(quote), Blocks(quote)),
@@ -146,6 +148,19 @@ internal sealed class MarkdownModelBuilder
         "CAUTION" => AlertKind.Caution,
         _ => null,
     };
+
+    private BlockNode FencedCode(FencedCodeBlock fenced)
+    {
+        var language = fenced.Info ?? "";
+        var code = fenced.Lines.ToString();
+        if (_options.RenderMermaidDiagrams
+            && string.Equals(language, "mermaid", StringComparison.OrdinalIgnoreCase)
+            && MermaidDiagram.TryDraw(code, out var drawing))
+        {
+            return new DiagramNode(Range(fenced), drawing);
+        }
+        return new CodeBlockNode(Range(fenced), language, code);
+    }
 
     private ListNode List(ListBlock list)
     {

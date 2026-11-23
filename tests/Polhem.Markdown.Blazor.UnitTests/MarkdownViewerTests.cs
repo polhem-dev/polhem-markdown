@@ -21,6 +21,57 @@ public class MarkdownViewerTests : BunitContext
         Assert.Equal(ModelNodeTypes.All.OrderBy(type => type.Name), viewer.Instance.RenderedNodeTypes.OrderBy(type => type.Name));
     }
 
+    [Fact(DisplayName = "The viewer draws every diagram shape type, so diagrams cannot drift apart between the front ends")]
+    public void Render_AllNodesSample_DrawsEveryShapeType()
+    {
+        var viewer = Show(ModelNodeTypes.AllNodesMarkdown());
+
+        Assert.Equal(ModelNodeTypes.Shapes.OrderBy(type => type.Name), viewer.Instance.RenderedShapeTypes.OrderBy(type => type.Name));
+    }
+
+    [Fact(DisplayName = "A diagram renders as inline SVG with its text as content, and no script")]
+    public void Render_Diagram_IsInlineSvg()
+    {
+        var viewer = Show("```mermaid\nflowchart LR\n  A[\"<script>alert(1)</script>\"] -.->|go| B{Done?}\n```");
+
+        var svg = viewer.Find("div.pmd-diagram > svg");
+        Assert.StartsWith("0 0 ", svg.GetAttribute("viewBox"), StringComparison.Ordinal);
+        var texts = svg.QuerySelectorAll("text").Select(text => text.TextContent).ToList();
+        Assert.Contains("<script>alert(1)</script>", texts);
+        Assert.Contains("go", texts);
+        Assert.Empty(viewer.FindAll("script"));
+        Assert.Equal("3", svg.QuerySelector("polyline")!.GetAttribute("stroke-dasharray"));
+        Assert.Single(svg.QuerySelectorAll("polygon.pmd-d-arrow"));
+        Assert.Single(svg.QuerySelectorAll("polygon.pmd-d-box"));
+    }
+
+    [Fact(DisplayName = "Diagram coordinates are written with a period, whatever the current culture")]
+    public void Render_Diagram_InvariantNumbers()
+    {
+        var culture = System.Globalization.CultureInfo.CurrentCulture;
+        System.Globalization.CultureInfo.CurrentCulture = new System.Globalization.CultureInfo("de-DE");
+        try
+        {
+            var viewer = Show("```mermaid\nflowchart TD\n  A((Ring)) --> B\n```");
+
+            Assert.DoesNotContain(",", viewer.Find("div.pmd-diagram > svg").GetAttribute("viewBox"), StringComparison.Ordinal);
+            Assert.All(viewer.FindAll("text"), text => Assert.DoesNotContain(",", text.GetAttribute("x"), StringComparison.Ordinal));
+        }
+        finally
+        {
+            System.Globalization.CultureInfo.CurrentCulture = culture;
+        }
+    }
+
+    [Fact(DisplayName = "With diagrams turned off a mermaid block renders as code")]
+    public void Render_DiagramsOff_RendersCode()
+    {
+        var viewer = Show("```mermaid\nflowchart TD\n  A --> B\n```", new MarkdownOptions { RenderMermaidDiagrams = false });
+
+        viewer.Find("div.pmd-code");
+        Assert.Empty(viewer.FindAll("div.pmd-diagram"));
+    }
+
     [Theory(DisplayName = "No text, or null, renders an empty container")]
     [InlineData(null)]
     [InlineData("")]

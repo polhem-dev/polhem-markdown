@@ -18,6 +18,34 @@ public class MarkdownViewerTests(HeadlessSession session)
         Assert.Equal(ModelNodeTypes.All.OrderBy(type => type.Name), viewer.RenderedNodeTypes.OrderBy(type => type.Name));
     });
 
+    [Fact(DisplayName = "The viewer draws every diagram shape type, so diagrams cannot drift apart between the front ends")]
+    public Task Render_AllNodesSample_DrawsEveryShapeType() => session.RunAsync(() =>
+    {
+        var (_, viewer) = Show(ModelNodeTypes.AllNodesMarkdown());
+
+        Assert.Equal(ModelNodeTypes.Shapes.OrderBy(type => type.Name), viewer.RenderedShapeTypes.OrderBy(type => type.Name));
+    });
+
+    [Fact(DisplayName = "A diagram is drawn at its own size and scaled down, never up, to the viewer's width")]
+    public Task Render_Diagram_ScalesDownOnly() => session.RunAsync(() =>
+    {
+        var (_, viewer) = Show("```mermaid\nsequenceDiagram\n  Alice->>Bob: hello\n```");
+
+        var box = Assert.IsType<Viewbox>(Assert.Single(Blocks(viewer)));
+        Assert.Equal(StretchDirection.DownOnly, box.StretchDirection);
+        var diagram = Assert.IsType<DiagramView>(box.Child);
+        Assert.Contains("hello", diagram.Texts);
+        Assert.True(diagram.Bounds.Width > 0);
+    });
+
+    [Fact(DisplayName = "With diagrams turned off a mermaid block shows as code")]
+    public Task Render_DiagramsOff_ShowsCode() => session.RunAsync(() =>
+    {
+        var (_, viewer) = Show("```mermaid\nflowchart TD\n  A --> B\n```", new MarkdownOptions { RenderMermaidDiagrams = false });
+
+        Assert.IsType<CodeBlockView>(Assert.Single(Blocks(viewer)));
+    });
+
     [Fact(DisplayName = "No text, or null, shows nothing")]
     public Task Render_NullMarkdown_ShowsNothing() => session.RunAsync(() =>
     {

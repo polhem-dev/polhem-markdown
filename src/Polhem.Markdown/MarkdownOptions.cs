@@ -20,4 +20,14 @@ public sealed class MarkdownOptions
         "https",
         "mailto",
     };
+
+    /// <summary>
+    /// Gets or sets whether <c>mermaid</c> code blocks are drawn as diagrams. The default is <see langword="true"/>.
+    /// </summary>
+    /// <remarks>
+    /// Flowcharts and sequence diagrams are drawn by the viewer itself; no script runs. A diagram of another type, or one
+    /// that uses syntax the viewers do not support, shows as its code, as every block does when this is
+    /// <see langword="false"/>.
+    /// </remarks>
+    public bool RenderMermaidDiagrams { get; set; } = true;
 }

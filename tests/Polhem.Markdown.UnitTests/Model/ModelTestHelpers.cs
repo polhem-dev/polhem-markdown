@@ -38,7 +38,7 @@ internal static class ModelTestHelpers
             TableCellNode cell => cell.Inlines,
             EmphasisNode emphasis => emphasis.Inlines,
             LinkNode link => link.Inlines,
-            CodeBlockNode or ThematicBreakNode or TextNode or CodeSpanNode or LineBreakNode => [],
+            CodeBlockNode or DiagramNode or ThematicBreakNode or TextNode or CodeSpanNode or LineBreakNode => [],
             _ => throw new ArgumentOutOfRangeException(nameof(node), node.GetType().Name),
         };
         return children.SelectMany(Walk).Prepend(node);
