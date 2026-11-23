@@ -35,8 +35,9 @@
 .pmd h3 { font-size: 1.15em; }
 .pmd :where(h4, h5, h6) { font-size: 1em; }
 
-/* A link to a heading moves focus there. The browser draws no ring after a mouse click, and keeps it for the keyboard. */
-.pmd :where(h1, h2, h3, h4, h5, h6)[tabindex="-1"]:focus:not(:focus-visible) {
+/* A link to a heading or a footnote moves focus there. The browser draws no ring after a mouse click, and keeps it for
+   the keyboard. */
+.pmd :where(h1, h2, h3, h4, h5, h6, li)[tabindex="-1"]:focus:not(:focus-visible) {
   outline: none;
 }
 
@@ -221,4 +222,32 @@
   fill: currentColor;
   text-anchor: middle;
   dominant-baseline: central;
+}
+
+/* Footnotes: a superscript reference, and the notes after a rule at the end, a little smaller. */
+.pmd .pmd-fnref {
+  font-size: 0.75em;
+  line-height: 0;
+}
+
+.pmd .pmd-fnref > a {
+  text-decoration: none;
+}
+
+.pmd * + .pmd-footnotes {
+  margin-top: 8px;
+}
+
+.pmd .pmd-footnotes {
+  border-top: 1px solid var(--pmd-rule, rgba(128, 128, 128, 0.35));
+  padding-top: 8px;
+  font-size: 0.875em;
+}
+
+.pmd .pmd-footnotes li + li {
+  margin-top: 4px;
+}
+
+.pmd .pmd-fnback {
+  text-decoration: none;
 }

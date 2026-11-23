@@ -27,8 +27,8 @@ public class MarkdownViewer : ComponentBase, IAsyncDisposable
     private string? _parsedMarkdown;
     private MarkdownOptions? _parsedOptions;
     private CodeBlockNode? _copiedBlock;
-    // Keyed by heading id; string keys compare ordinally by default.
-    private readonly Dictionary<string, ElementReference> _headings = [];
+    // Keyed by anchor id; string keys compare ordinally by default.
+    private readonly Dictionary<string, ElementReference> _anchors = [];
     private Task<IJSObjectReference>? _module;
 
     /// <summary>Gets or sets the Markdown text to show.</summary>
@@ -80,28 +80,28 @@ public class MarkdownViewer : ComponentBase, IAsyncDisposable
             _document = string.IsNullOrEmpty(Markdown) ? s_empty : MarkdownModelBuilder.Build(Markdown, Options ?? new MarkdownOptions());
             _parsedMarkdown = Markdown;
             _parsedOptions = Options;
-            ForgetRemovedHeadings();
+            ForgetRemovedAnchors();
         }
     }
 
     /// <summary>
-    /// Drops the elements of headings the text no longer has. While a heading arrives its id changes with every chunk
+    /// Drops the elements of anchors the text no longer has. While a heading arrives its id changes with every chunk
     /// (<c>u</c>, <c>us</c>, <c>usa</c>), and each id would otherwise stay for the life of the viewer.
     /// </summary>
-    private void ForgetRemovedHeadings()
+    private void ForgetRemovedAnchors()
     {
-        if (_headings.Count == 0)
+        if (_anchors.Count == 0)
         {
             return;
         }
         var ids = _document.Blocks
             .SelectMany(NodeTree.SelfAndDescendants)
-            .OfType<HeadingNode>()
-            .Select(heading => heading.Id)
+            .Select(NodeTree.AnchorId)
+            .OfType<string>()
             .ToHashSet(StringComparer.Ordinal);
-        foreach (var id in _headings.Keys.Where(id => !ids.Contains(id)).ToList())
+        foreach (var id in _anchors.Keys.Where(id => !ids.Contains(id)).ToList())
         {
-            _headings.Remove(id);
+            _anchors.Remove(id);
         }
     }
 
@@ -119,7 +119,7 @@ public class MarkdownViewer : ComponentBase, IAsyncDisposable
     internal bool IsCopied(CodeBlockNode block) => ReferenceEquals(block, _copiedBlock);
 
     /// <summary>
-    /// The href of a link to the heading with <paramref name="id"/>: the current page with the id as its fragment.
+    /// The href of a link to the anchor with <paramref name="id"/>: the current page with the id as its fragment.
     /// </summary>
     /// <remarks>
     /// NOTE: a bare <c>#id</c> resolves against a <c>base</c> element, which usually names the site root, so before the
@@ -147,28 +147,31 @@ public class MarkdownViewer : ComponentBase, IAsyncDisposable
         return "#" + id;
     }
 
-    /// <summary>Records the element of the heading with <paramref name="id"/>, as Blazor captures it.</summary>
-    internal void SetHeadingElement(string id, ElementReference element) => _headings[id] = element;
+    /// <summary>
+    /// Records the element of the anchor with <paramref name="id"/> (a heading, a footnote, or a reference to one), as
+    /// Blazor captures it.
+    /// </summary>
+    internal void SetAnchorElement(string id, ElementReference element) => _anchors[id] = element;
 
     /// <summary>
-    /// Scrolls the heading with <paramref name="id"/> to the top of the view, as GitHub does and as the Avalonia viewer
+    /// Scrolls the anchor with <paramref name="id"/> to the top of the view, as GitHub does and as the Avalonia viewer
     /// does, and moves focus to it so a screen reader follows.
     /// </summary>
-    internal async Task FocusHeadingAsync(string id)
+    internal async Task MoveToAnchorAsync(string id)
     {
-        if (!_headings.TryGetValue(id, out var element))
+        if (!_anchors.TryGetValue(id, out var element))
         {
             return;
         }
         try
         {
-            // NOTE: `ElementReference.FocusAsync` alone does not scroll when the heading already has focus, as it does
+            // NOTE: `ElementReference.FocusAsync` alone does not scroll when the target already has focus, as it does
             // after a second click on the same link, and Blazor offers no call that scrolls an element, so the module
             // does both.
             // The task, not its result, is kept, so two quick clicks import the module once.
             _module ??= JS.InvokeAsync<IJSObjectReference>("import", ModulePath).AsTask();
             var module = await _module;
-            await module.InvokeVoidAsync("scrollToHeading", element);
+            await module.InvokeVoidAsync("scrollToAnchor", element);
         }
         catch (JSException)
         {

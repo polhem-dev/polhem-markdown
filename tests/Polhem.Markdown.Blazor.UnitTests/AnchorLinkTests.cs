@@ -14,14 +14,14 @@ public class AnchorLinkTests : BunitContext
     public AnchorLinkTests()
     {
         _module = JSInterop.SetupModule(ModulePath);
-        _module.SetupVoid("scrollToHeading", _ => true).SetVoidResult();
+        _module.SetupVoid("scrollToAnchor", _ => true).SetVoidResult();
     }
 
     private IRenderedComponent<MarkdownViewer> Show(string markdown) =>
         Render<MarkdownViewer>(parameters => parameters.Add(viewer => viewer.Markdown, markdown));
 
     /// <summary>The ids of the headings the module scrolled to and focused so far, in order.</summary>
-    private List<string> ScrolledIds() => _module.Invocations["scrollToHeading"]
+    private List<string> ScrolledIds() => _module.Invocations["scrollToAnchor"]
         .Select(invocation => Assert.IsType<ElementReference>(invocation.Arguments[0]).Id)
         .ToList();
 
@@ -47,7 +47,7 @@ public class AnchorLinkTests : BunitContext
     public void Click_AnchorLink_Timeout_IsIgnored()
     {
         using var context = new BunitContext();
-        context.JSInterop.SetupModule(ModulePath).SetupVoid("scrollToHeading", _ => true).SetException(new TaskCanceledException());
+        context.JSInterop.SetupModule(ModulePath).SetupVoid("scrollToAnchor", _ => true).SetException(new TaskCanceledException());
         var viewer = context.Render<MarkdownViewer>(parameters => parameters.Add(component => component.Markdown, "[setup](#setup)\n\n## Setup"));
 
         viewer.Find("a").Click();

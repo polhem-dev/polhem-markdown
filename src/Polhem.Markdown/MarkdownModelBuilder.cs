@@ -2,6 +2,7 @@ using System.Globalization;
 using Markdig;
 using Markdig.Extensions.Alerts;
 using Markdig.Extensions.EmphasisExtras;
+using Markdig.Extensions.Footnotes;
 using Markdig.Extensions.Tables;
 using Markdig.Extensions.TaskLists;
 using Markdig.Extensions.Yaml;
@@ -20,13 +21,15 @@ namespace Polhem.Markdown;
 /// The policy: raw HTML is never interpreted and shows as the text it was written as; an image shows as its alternative
 /// text; a Mermaid diagram is laid out here and drawn by the viewers from shapes, never by running a script; a link
 /// whose target is not an absolute URI with an allowed scheme shows as its text, except a link to the id of a heading in
-/// the same text (<c>#id</c>), which moves to that heading; a node this builder does not know shows as its source text. Link reference definitions are not shown, as in any Markdown renderer, and neither is YAML
-/// front matter.
+/// the same text (<c>#id</c>), which moves to that heading; a node this builder does not know shows as its source text.
+/// Footnotes that are referenced show at the end, numbered by their first reference, as on GitHub; a reference to a note
+/// that is not defined shows as written. Link reference definitions are not shown, as in any Markdown renderer, and
+/// neither is YAML front matter.
 /// </remarks>
 internal sealed class MarkdownModelBuilder
 {
     // NOTE: only the extensions whose nodes the viewers render are enabled. `UseAdvancedExtensions` would parse
-    // footnotes, math and others that no viewer draws. `DisableHtml` makes Markdig itself read raw HTML as
+    // math, definition lists and others that no viewer draws. `DisableHtml` makes Markdig itself read raw HTML as
     // text, and the HTML cases below remain only as a second line of defence.
     private static readonly MarkdownPipeline s_pipeline = new MarkdownPipelineBuilder()
         .DisableHtml()
@@ -38,6 +41,7 @@ internal sealed class MarkdownModelBuilder
         .UseAlertBlocks()
         .UseEmojiAndSmiley(enableSmileys: false)
         .UseYamlFrontMatter()
+        .UseFootnotes()
         .UsePreciseSourceLocation()
         .Build();
 
@@ -45,6 +49,8 @@ internal sealed class MarkdownModelBuilder
     private readonly MarkdownOptions _options;
     private readonly Dictionary<HeadingBlock, string> _headingIds = [];
     private readonly HashSet<string> _ids = [];
+    private readonly Dictionary<Footnote, int> _noteNumbers = [];
+    private readonly Dictionary<int, int> _backLinkPositions = [];
 
     private MarkdownModelBuilder(string markdown, MarkdownOptions options)
     {
@@ -71,6 +77,7 @@ internal sealed class MarkdownModelBuilder
             return new DocumentNode([builder.WholeTextAsParagraph()]);
         }
         builder.AssignHeadingIds(document);
+        builder.NumberFootnotes(document);
         return new DocumentNode(builder.Blocks(document));
     }
 
@@ -107,6 +114,7 @@ internal sealed class MarkdownModelBuilder
         ListBlock list => List(list),
         Table table => Table(table),
         ThematicBreakBlock rule => new ThematicBreakNode(Range(rule)),
+        FootnoteGroup group => Footnotes(group),
         LinkReferenceDefinitionGroup or BlankLineBlock => null,
         _ => new ParagraphNode(Range(block), [SourceText(block)]),
     };
@@ -182,6 +190,88 @@ internal sealed class MarkdownModelBuilder
         }
         return new CodeBlockNode(Range(fenced), language, code);
     }
+
+    /// <summary>
+    /// The referenced notes, in number order. Markdig numbers them by first reference, drops the ones nothing refers to,
+    /// and ends each note with a back link per reference.
+    /// </summary>
+    private FootnotesNode? Footnotes(FootnoteGroup group)
+    {
+        var notes = group.OfType<Footnote>()
+            .Where(_noteNumbers.ContainsKey)
+            .OrderBy(note => _noteNumbers[note])
+            .Select(note => new FootnoteNode(Range(note), _noteNumbers[note], NoteId(note), Blocks(note)))
+            .ToList();
+        if (notes.Count == 0)
+        {
+            return null;
+        }
+        var start = notes.Min(note => note.Range.Start);
+        return new FootnotesNode(new SourceRange(start, notes.Max(note => note.Range.End) - start), notes);
+    }
+
+    /// <summary>
+    /// Numbers the notes a reader can reach, in the order they are first reached: references in the text, in order, then
+    /// references inside the notes so numbered. Each back link gets its position among its note's shown references.
+    /// Every note and every reference is visited once.
+    /// </summary>
+    /// <remarks>
+    /// Markdig's own numbers count references this builder does not show: one in an image's alternative text, which
+    /// shows as plain text, and one inside a note that is not shown. Either would leave a note, or a back link, that
+    /// nothing in the text leads to.
+    /// </remarks>
+    private void NumberFootnotes(MarkdownDocument document)
+    {
+        var hidden = document.Descendants<LinkInline>()
+            .Where(link => link.IsImage)
+            .SelectMany(image => image.Descendants<FootnoteLink>())
+            .Select(link => link.Index)
+            .ToHashSet();
+        var shown = new HashSet<int>();
+
+        // The text comes first; each note joins the queue when it is first reached, so its own references are read after
+        // everything reached before it.
+        var pending = new Queue<IEnumerable<FootnoteLink>>();
+        pending.Enqueue(document.Where(block => block is not FootnoteGroup).SelectMany(FootnoteLinks));
+        while (pending.TryDequeue(out var links))
+        {
+            foreach (var link in links)
+            {
+                if (link.IsBackLink || link.Footnote is not { } note || hidden.Contains(link.Index))
+                {
+                    continue;
+                }
+                shown.Add(link.Index);
+                if (_noteNumbers.TryAdd(note, _noteNumbers.Count + 1))
+                {
+                    pending.Enqueue(FootnoteLinks(note));
+                }
+            }
+        }
+
+        foreach (var note in _noteNumbers.Keys)
+        {
+            var position = 0;
+            foreach (var link in note.Links.Where(link => shown.Contains(link.Index)))
+            {
+                _backLinkPositions[link.Index] = ++position;
+            }
+        }
+    }
+
+    /// <summary>The footnote links in a block and the blocks inside it, in document order.</summary>
+    /// <remarks>Markdig's block descendants stop at blocks, so the inlines of each leaf block are walked here.</remarks>
+    private static IEnumerable<FootnoteLink> FootnoteLinks(Block block) => block switch
+    {
+        LeafBlock { Inline: { } inline } => inline.Descendants<FootnoteLink>(),
+        ContainerBlock container => container.SelectMany(FootnoteLinks),
+        _ => [],
+    };
+
+    // NOTE: a colon never appears in a heading id (see `HeadingSlugger`), so these ids cannot match a heading.
+    private string NoteId(Footnote note) => "fn:" + _noteNumbers[note].ToString(CultureInfo.InvariantCulture);
+
+    private static string ReferenceId(FootnoteLink link) => "fnref:" + link.Index.ToString(CultureInfo.InvariantCulture);
 
     private ListNode List(ListBlock list)
     {
@@ -291,6 +381,15 @@ internal sealed class MarkdownModelBuilder
             case EmphasisInline emphasis:
                 inlines.Add(new EmphasisNode(Range(emphasis), Kind(emphasis), Inlines(emphasis)));
                 break;
+            case FootnoteLink { IsBackLink: false, Footnote: { } note } reference when _noteNumbers.ContainsKey(note):
+                inlines.Add(new FootnoteReferenceNode(Range(reference), _noteNumbers[note], ReferenceId(reference), NoteId(note)));
+                break;
+            case FootnoteLink { IsBackLink: true } back:
+                if (_backLinkPositions.TryGetValue(back.Index, out var position))
+                {
+                    inlines.Add(BackLink(back, position));
+                }
+                break;
             case TaskList task:
                 if (!IsItemCheckBox(task))
                 {
@@ -322,6 +421,16 @@ internal sealed class MarkdownModelBuilder
                 inlines.Add(SourceText(inline));
                 break;
         }
+    }
+
+    /// <summary>
+    /// A back link from a note to one of its references. Markdig adds it with no source of its own, so it is placed at the
+    /// end of the paragraph that holds it.
+    /// </summary>
+    private FootnoteBackLinkNode BackLink(FootnoteLink back, int position)
+    {
+        var end = back.Parent?.ParentBlock is { } paragraph ? Range(paragraph).End : 0;
+        return new FootnoteBackLinkNode(new SourceRange(end, 0), ReferenceId(back), position);
     }
 
     /// <summary>

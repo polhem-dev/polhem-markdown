@@ -15,10 +15,10 @@ public class AnchorLinkTests(HeadlessSession session)
         var blocks = Blocks(viewer).Cast<MarkdownTextBlock>().ToList();
 
         var link = Assert.Single(blocks[0].Links);
-        Assert.Equal("setup", link.HeadingId);
+        Assert.Equal("setup", link.AnchorId);
         Assert.Null(link.Target);
         Assert.Equal("Go to ".Length, link.Start);
-        Assert.Equal("setup", blocks[1].HeadingId);
+        Assert.Equal(["setup"], Anchors(blocks[1]));
     });
 
     [Fact(DisplayName = "Following a link to a heading scrolls the heading to the top of the view")]
@@ -30,9 +30,9 @@ public class AnchorLinkTests(HeadlessSession session)
         var window = new Window { Width = 600, Height = 400, Content = scroller };
         window.Show();
         Dispatcher.UIThread.RunJobs();
-        var heading = Descendants<MarkdownTextBlock>(viewer).Single(text => text.HeadingId == "target");
+        var heading = Descendants<MarkdownTextBlock>(viewer).Single(text => Anchors(text).Contains("target"));
 
-        Assert.True(viewer.ScrollToHeading("target"));
+        Assert.True(viewer.ScrollToAnchor("target"));
         Dispatcher.UIThread.RunJobs();
 
         var top = heading.TranslatePoint(new Point(0, 0), scroller)!.Value.Y;
@@ -45,7 +45,7 @@ public class AnchorLinkTests(HeadlessSession session)
     {
         var (_, viewer) = Show("## Setup");
 
-        Assert.False(viewer.ScrollToHeading("nowhere"));
+        Assert.False(viewer.ScrollToAnchor("nowhere"));
     });
 
     [Fact(DisplayName = "Text that links to a heading becomes a link once the heading arrives, though its own source did not change")]
@@ -56,18 +56,18 @@ public class AnchorLinkTests(HeadlessSession session)
 
         viewer.Markdown = "See [usage](#usage).\n\n## Usage";
 
-        Assert.Equal("usage", Assert.Single(((MarkdownTextBlock)Blocks(viewer).First()).Links).HeadingId);
+        Assert.Equal("usage", Assert.Single(((MarkdownTextBlock)Blocks(viewer).First()).Links).AnchorId);
     });
 
     [Fact(DisplayName = "A heading whose id changes because a heading of the same name arrives above it is rebuilt")]
     public Task Update_HeadingIdChanges_RebuildsTheHeading() => session.RunAsync(() =>
     {
         var (_, viewer) = Show("intro\n\n## Notes");
-        Assert.Equal("notes", ((MarkdownTextBlock)Blocks(viewer).Last()).HeadingId);
+        Assert.Equal(["notes"], Anchors(Blocks(viewer).Last()));
 
         viewer.Markdown = "## Notes\n\n## Notes";
 
-        Assert.Equal(["notes", "notes-1"], Blocks(viewer).Cast<MarkdownTextBlock>().Select(text => text.HeadingId));
+        Assert.Equal(["notes", "notes-1"], Blocks(viewer).SelectMany(Anchors));
     });
 
     [Fact(DisplayName = "Blocks with no heading and no link to one are kept as before while a reply arrives")]
@@ -81,4 +81,6 @@ public class AnchorLinkTests(HeadlessSession session)
         Assert.Equal(1, viewer.LastBuiltBlockCount);
         Assert.Same(before[0], Blocks(viewer).First());
     });
+
+    private static IReadOnlyList<string> Anchors(Control control) => control.GetValue(MarkdownViewer.AnchorIdsProperty);
 }

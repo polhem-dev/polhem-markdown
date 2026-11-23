@@ -8,7 +8,7 @@ const string Markdown = """
     ---
     # Heading :tada:
 
-    A paragraph with *italic*, **bold**, `code`, a [link](https://example.com/), <https://example.org/>, [next](#next),
+    A paragraph with *italic*, **bold**, `code`, a [link](https://example.com/), <https://example.org/>, [next](#next), a note[^n],
     a hard break\
     and <b>raw HTML</b> &amp; ![an image](https://example.com/i.png).
 
@@ -53,6 +53,8 @@ const string Markdown = """
     | 1 | 2 |
 
     ---
+
+    [^n]: The note.
     """;
 
 var document = MarkdownModelBuilder.Build(Markdown, new MarkdownOptions());
@@ -68,6 +70,7 @@ Type[] expected =
     typeof(HeadingNode), typeof(ParagraphNode), typeof(ListNode), typeof(ListItemNode), typeof(QuoteNode), typeof(AlertNode),
     typeof(CodeBlockNode), typeof(DiagramNode), typeof(TableNode), typeof(TableRowNode), typeof(TableCellNode), typeof(ThematicBreakNode),
     typeof(TextNode), typeof(EmphasisNode), typeof(CodeSpanNode), typeof(LinkNode), typeof(AnchorLinkNode), typeof(LineBreakNode),
+    typeof(FootnotesNode), typeof(FootnoteNode), typeof(FootnoteReferenceNode), typeof(FootnoteBackLinkNode),
 ];
 var missing = expected.Where(type => !found.Contains(type)).Select(type => type.Name).ToList();
 if (missing.Count > 0)
@@ -104,6 +107,8 @@ void Collect(MarkdownNode node)
         EmphasisNode emphasis => emphasis.Inlines,
         LinkNode link => link.Inlines,
         AnchorLinkNode anchor => anchor.Inlines,
+        FootnotesNode footnotes => footnotes.Notes,
+        FootnoteNode note => note.Blocks,
         _ => [],
     };
     foreach (var child in children)

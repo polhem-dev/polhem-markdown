@@ -26,7 +26,7 @@ internal static class SampleText
         - [ ] Check the rounding of the amount
 
         > The quantity and the unit price are multiplied into the amount,
-        > which is rounded to two decimals.
+        > which is rounded to two decimals.[^rounding]
 
         > [!NOTE]
         > The order number is assigned when the form is saved.
@@ -103,5 +103,7 @@ internal static class SampleText
         ---
 
         That's all for now. :wave:
+
+        [^rounding]: Halves round away from zero, so 2.345 becomes 2.35. See the [fields](#fields) for the columns.
         """;
 }

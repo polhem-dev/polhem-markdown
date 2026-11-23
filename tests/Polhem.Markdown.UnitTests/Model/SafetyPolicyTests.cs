@@ -87,14 +87,13 @@ public class SafetyPolicyTests
         Assert.DoesNotContain(AllNodes(document), node => node is LinkNode);
     }
 
-    [Fact(DisplayName = "A footnote reference whose definition is not a URL shows as its label, without a link")]
-    public void Build_Footnote_ShowsLabelWithoutLink()
+    [Fact(DisplayName = "The text of a footnote goes through the same policy: a script link in it shows as text")]
+    public void Build_FootnoteContent_FollowsPolicy()
     {
-        // Without the footnote extension, `[^1]: note` is a link reference definition and `[^1]` a link to the
-        // relative target `note`, which the policy refuses. The definition is not shown.
-        var document = Parse("Text[^1]\n\n[^1]: note");
+        var document = Parse("Text[^1]\n\n[^1]: [click](javascript:alert(1)) <b>bold</b>");
 
-        Assert.Equal("Text^1", Text(Single<ParagraphNode>(document).Inlines));
+        var note = Assert.Single(Assert.IsType<FootnotesNode>(document.Blocks[^1]).Notes);
+        Assert.Equal("click <b>bold</b> \u21A9", Text(Assert.IsType<ParagraphNode>(Assert.Single(note.Blocks)).Inlines));
         Assert.DoesNotContain(AllNodes(document), node => node is LinkNode);
     }
 
