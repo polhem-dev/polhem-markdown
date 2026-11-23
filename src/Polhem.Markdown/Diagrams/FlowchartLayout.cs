@@ -219,7 +219,7 @@ internal sealed partial class FlowchartLayout
         }
 
         var visited = new bool[_chart.Nodes.Count];
-        var onPath = new bool[_chart.Nodes.Count];
+        var onPath = new HashSet<int>();
         for (var node = 0; node < _chart.Nodes.Count; node++)
         {
             if (!visited[node])
@@ -232,11 +232,11 @@ internal sealed partial class FlowchartLayout
         void Visit(int node)
         {
             visited[node] = true;
-            onPath[node] = true;
+            onPath.Add(node);
             foreach (var index in outgoing[node])
             {
                 var target = _chart.Edges[index].To;
-                if (onPath[target])
+                if (onPath.Contains(target))
                 {
                     reversed[index] = true;
                 }
@@ -245,7 +245,7 @@ internal sealed partial class FlowchartLayout
                     Visit(target);
                 }
             }
-            onPath[node] = false;
+            onPath.Remove(node);
         }
     }
 
