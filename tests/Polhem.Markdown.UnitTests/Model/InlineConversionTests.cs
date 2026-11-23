@@ -49,6 +49,31 @@ public class InlineConversionTests
         Assert.Equal(EmphasisKind.Bold, Assert.Single(strike.Inlines.OfType<EmphasisNode>()).Kind);
     }
 
+    [Theory(DisplayName = "An emoji shortcode becomes the emoji, and anything else between colons stays as written")]
+    [InlineData("Done :smile:", "Done \U0001F604")]
+    [InlineData("Ship it :rocket:!", "Ship it \U0001F680!")]
+    [InlineData("Not a code :no_such_emoji:", "Not a code :no_such_emoji:")]
+    [InlineData("Time 10:30:00", "Time 10:30:00")]
+    public void Build_EmojiShortcode_BecomesEmoji(string markdown, string text)
+    {
+        Assert.Equal(text, Text(Single<ParagraphNode>(Parse(markdown)).Inlines));
+    }
+
+    [Theory(DisplayName = "A smiley is not turned into an emoji, as on GitHub")]
+    [InlineData(":)")]
+    [InlineData(":-(")]
+    [InlineData(";)")]
+    public void Build_Smiley_StaysText(string markdown)
+    {
+        Assert.Equal(markdown, Text(Single<ParagraphNode>(Parse(markdown)).Inlines));
+    }
+
+    [Fact(DisplayName = "An emoji shortcode in inline code stays as written")]
+    public void Build_EmojiInCode_StaysText()
+    {
+        Assert.Equal(":smile:", Assert.IsType<CodeSpanNode>(Assert.Single(Single<ParagraphNode>(Parse("`:smile:`")).Inlines)).Code);
+    }
+
     [Fact(DisplayName = "Inline code keeps its text without the backticks")]
     public void Build_CodeSpan_KeepsCode()
     {

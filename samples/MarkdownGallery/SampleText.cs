@@ -60,6 +60,6 @@ internal static class SampleText
 
         ---
 
-        That's all for now.
+        That's all for now. :wave:
         """;
 }

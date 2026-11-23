@@ -4,6 +4,7 @@ using Markdig.Extensions.Alerts;
 using Markdig.Extensions.EmphasisExtras;
 using Markdig.Extensions.Tables;
 using Markdig.Extensions.TaskLists;
+using Markdig.Extensions.Yaml;
 using Markdig.Syntax;
 using Markdig.Syntax.Inlines;
 using Polhem.Markdown.Model;
@@ -17,7 +18,8 @@ namespace Polhem.Markdown;
 /// <remarks>
 /// The policy: raw HTML is never interpreted and shows as the text it was written as; an image shows as its alternative
 /// text; a link whose target is not an absolute URI with an allowed scheme shows as its text; a node this builder does
-/// not know shows as its source text. Link reference definitions are not shown, as in any Markdown renderer.
+/// not know shows as its source text. Link reference definitions are not shown, as in any Markdown renderer, and
+/// neither is YAML front matter.
 /// </remarks>
 internal sealed class MarkdownModelBuilder
 {
@@ -32,6 +34,8 @@ internal sealed class MarkdownModelBuilder
         .UseEmphasisExtras(EmphasisExtraOptions.Strikethrough)
         .UseTaskLists()
         .UseAlertBlocks()
+        .UseEmojiAndSmiley(enableSmileys: false)
+        .UseYamlFrontMatter()
         .UsePreciseSourceLocation()
         .Build();
 
@@ -88,6 +92,9 @@ internal sealed class MarkdownModelBuilder
     {
         HeadingBlock heading => new HeadingNode(Range(heading), heading.Level, Inlines(heading.Inline)),
         ParagraphBlock paragraph => new ParagraphNode(Range(paragraph), Inlines(paragraph.Inline)),
+        // NOTE: front matter is metadata for tools, not part of the document, so it is hidden. GitHub shows it as a
+        // table; hiding it is a deliberate difference. Markdig reads it as a kind of code block, so it comes first.
+        YamlFrontMatterBlock => null,
         FencedCodeBlock fenced => new CodeBlockNode(Range(fenced), fenced.Info ?? "", fenced.Lines.ToString()),
         CodeBlock code => new CodeBlockNode(Range(code), "", code.Lines.ToString()),
         AlertBlock alert => Alert(alert),

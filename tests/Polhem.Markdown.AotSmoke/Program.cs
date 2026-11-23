@@ -3,7 +3,10 @@ using Polhem.Markdown.Model;
 
 // Parses a text with every kind of node the model has and checks that each one came out.
 const string Markdown = """
-    # Heading
+    ---
+    title: front matter, which is hidden
+    ---
+    # Heading :tada:
 
     A paragraph with *italic*, **bold**, `code`, a [link](https://example.com/), <https://example.org/>,
     a hard break\
