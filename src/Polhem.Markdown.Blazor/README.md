@@ -19,7 +19,11 @@ Link the stylesheet in the host page, then use the component:
   their alternative text, and only links whose scheme is in `Options.AllowedLinkSchemes` (by default `http`, `https`
   and `mailto`) become links.
 - **Links**: with `OnLinkActivated` set, a click does not navigate and the host decides what the link does; without it,
-  the browser opens the link in a new tab.
+  the browser opens the link in a new tab. A link to a heading of the same text (`[setup](#setup)`, with the id GitHub
+  gives the heading) is not reported: the click scrolls the heading to the top and moves focus to it. The id is not
+  written as an HTML `id`, so it cannot clash with the page. The first such click loads the package's small
+  `_content/Polhem.Markdown.Blazor/polhem-markdown.js` module; the page does not link it, but a Content Security Policy
+  must allow scripts from the site itself.
 - **Code blocks** show their language and a copy button; set `CopyCodeLabel` to translate its tooltip and accessible
   name. The copy uses the browser's clipboard, which needs a secure context (HTTPS or localhost).
 - **Mermaid diagrams**: a ` ```mermaid ` block with a flowchart or a sequence diagram renders as inline SVG laid out by

@@ -35,6 +35,11 @@
 .pmd h3 { font-size: 1.15em; }
 .pmd :where(h4, h5, h6) { font-size: 1em; }
 
+/* A link to a heading moves focus there. The browser draws no ring after a mouse click, and keeps it for the keyboard. */
+.pmd :where(h1, h2, h3, h4, h5, h6)[tabindex="-1"]:focus:not(:focus-visible) {
+  outline: none;
+}
+
 .pmd :where(ul, ol) {
   padding-left: 1.6em;
 }

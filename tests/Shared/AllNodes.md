@@ -1,6 +1,6 @@
 # Heading
 
-A paragraph with *italic*, **bold**, `code` and a [link](https://example.com/),
+A paragraph with *italic*, **bold**, `code`, a [link](https://example.com/) and a [link to the heading](#heading),
 then a hard line break\
 and the next line, with ~~struck~~ text.
 

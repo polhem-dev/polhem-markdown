@@ -57,7 +57,7 @@ internal sealed class MarkdownRenderTree
                 Element("p", paragraph.Inlines);
                 break;
             case HeadingNode heading:
-                Element("h" + Math.Clamp(heading.Level, 1, 6).ToString(CultureInfo.InvariantCulture), heading.Inlines);
+                Heading(heading);
                 break;
             case ListNode list:
                 List(list);
@@ -95,6 +95,29 @@ internal sealed class MarkdownRenderTree
             _rendered.Add(block.GetType());
         }
         _builder.CloseRegion();
+    }
+
+    /// <summary>
+    /// Writes a heading. One with an id can receive focus from script only, which is how a link to it moves there: focus
+    /// scrolls the heading into view and puts a screen reader at it. The id is not written as an HTML id, which could
+    /// clash with the host page or with a second viewer on it.
+    /// </summary>
+    private void Heading(HeadingNode heading)
+    {
+        _builder.OpenElement(0, "h" + Math.Clamp(heading.Level, 1, 6).ToString(CultureInfo.InvariantCulture));
+        if (heading.Id.Length > 0)
+        {
+            var id = heading.Id;
+
+            // NOTE: Blazor calls a reference capture only when it creates the element, not when it updates one. Keying
+            // the element by its id recreates it when the id changes, as it does while a heading's text arrives, so the
+            // viewer never holds an element under an id it no longer has.
+            _builder.SetKey(id);
+            _builder.AddAttribute(1, "tabindex", "-1");
+            _builder.AddElementReferenceCapture(2, element => _viewer.SetHeadingElement(id, element));
+        }
+        Inlines(3, heading.Inlines);
+        _builder.CloseElement();
     }
 
     private void List(ListNode list)
@@ -379,6 +402,9 @@ internal sealed class MarkdownRenderTree
             case LinkNode link:
                 Link(link);
                 break;
+            case AnchorLinkNode anchor:
+                AnchorLink(anchor);
+                break;
             case LineBreakNode:
                 _builder.OpenElement(3, "br");
                 _builder.CloseElement();
@@ -392,6 +418,21 @@ internal sealed class MarkdownRenderTree
             _rendered.Add(inline.GetType());
         }
         _builder.CloseRegion();
+    }
+
+    /// <summary>
+    /// Writes a link to a heading of the text. The click never navigates: with a <c>base</c> element in the page, the
+    /// <c>#id</c> in the href would resolve against the site root instead of the current page.
+    /// </summary>
+    private void AnchorLink(AnchorLinkNode anchor)
+    {
+        var id = anchor.Id;
+        _builder.OpenElement(0, "a");
+        _builder.AddAttribute(1, "href", "#" + id);
+        _builder.AddAttribute(2, "onclick", EventCallback.Factory.Create<MouseEventArgs>(_viewer, () => _viewer.FocusHeadingAsync(id)));
+        _builder.AddEventPreventDefaultAttribute(3, "onclick", true);
+        Inlines(4, anchor.Inlines);
+        _builder.CloseElement();
     }
 
     private void Link(LinkNode link)

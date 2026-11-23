@@ -1,1 +1,3 @@
 #nullable enable
+Polhem.Markdown.Blazor.MarkdownViewer.DisposeAsync() -> System.Threading.Tasks.ValueTask
+virtual Polhem.Markdown.Blazor.MarkdownViewer.DisposeAsyncCore() -> System.Threading.Tasks.ValueTask

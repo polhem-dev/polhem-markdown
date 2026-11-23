@@ -10,7 +10,7 @@ internal static class SampleText
         See the [Markdig project](https://github.com/xoofx/markdig) for the syntax, or open the
         [order form](polhem:form/order?id=7) directly.
 
-        請確認**「必填」**欄位是否正確。
+        請確認**「必填」**欄位是否正確。The [fields](#fields) are listed below.
 
         ## Fields
 

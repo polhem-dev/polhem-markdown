@@ -8,7 +8,7 @@ const string Markdown = """
     ---
     # Heading :tada:
 
-    A paragraph with *italic*, **bold**, `code`, a [link](https://example.com/), <https://example.org/>,
+    A paragraph with *italic*, **bold**, `code`, a [link](https://example.com/), <https://example.org/>, [next](#next),
     a hard break\
     and <b>raw HTML</b> &amp; ![an image](https://example.com/i.png).
 
@@ -16,6 +16,8 @@ const string Markdown = """
     2. two
        - nested
        - [x] a done task, ~~struck~~
+
+    ## Next
 
     > quoted
 
@@ -65,7 +67,7 @@ Type[] expected =
 [
     typeof(HeadingNode), typeof(ParagraphNode), typeof(ListNode), typeof(ListItemNode), typeof(QuoteNode), typeof(AlertNode),
     typeof(CodeBlockNode), typeof(DiagramNode), typeof(TableNode), typeof(TableRowNode), typeof(TableCellNode), typeof(ThematicBreakNode),
-    typeof(TextNode), typeof(EmphasisNode), typeof(CodeSpanNode), typeof(LinkNode), typeof(LineBreakNode),
+    typeof(TextNode), typeof(EmphasisNode), typeof(CodeSpanNode), typeof(LinkNode), typeof(AnchorLinkNode), typeof(LineBreakNode),
 ];
 var missing = expected.Where(type => !found.Contains(type)).Select(type => type.Name).ToList();
 if (missing.Count > 0)
@@ -101,6 +103,7 @@ void Collect(MarkdownNode node)
         TableCellNode cell => cell.Inlines,
         EmphasisNode emphasis => emphasis.Inlines,
         LinkNode link => link.Inlines,
+        AnchorLinkNode anchor => anchor.Inlines,
         _ => [],
     };
     foreach (var child in children)

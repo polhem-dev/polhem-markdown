@@ -13,16 +13,22 @@ namespace Polhem.Markdown.Blazor;
 /// <remarks>
 /// The markup is built with a render tree, never from an HTML string, so no text reaches the page as markup. Styles are
 /// in <c>_content/Polhem.Markdown.Blazor/polhem-markdown.css</c>, which the host page links; they inherit the font and
-/// colors of the surrounding page, and the <c>--pmd-*</c> CSS variables listed in the package README set the rest.
+/// colors of the surrounding page, and the <c>--pmd-*</c> CSS variables listed in the package README set the rest. A
+/// link to a heading of the text loads the package's <c>polhem-markdown.js</c> module on its first click; the page does
+/// not link it.
 /// </remarks>
-public class MarkdownViewer : ComponentBase
+public class MarkdownViewer : ComponentBase, IAsyncDisposable
 {
+    private const string ModulePath = "./_content/Polhem.Markdown.Blazor/polhem-markdown.js";
+
     private static readonly DocumentNode s_empty = new([]);
 
     private DocumentNode _document = s_empty;
     private string? _parsedMarkdown;
     private MarkdownOptions? _parsedOptions;
     private CodeBlockNode? _copiedBlock;
+    private readonly Dictionary<string, ElementReference> _headings = new(StringComparer.Ordinal);
+    private IJSObjectReference? _module;
 
     /// <summary>Gets or sets the Markdown text to show.</summary>
     [Parameter]
@@ -86,6 +92,34 @@ public class MarkdownViewer : ComponentBase
 
     internal bool IsCopied(CodeBlockNode block) => ReferenceEquals(block, _copiedBlock);
 
+    /// <summary>Records the element of the heading with <paramref name="id"/>, as Blazor captures it.</summary>
+    internal void SetHeadingElement(string id, ElementReference element) => _headings[id] = element;
+
+    /// <summary>
+    /// Scrolls the heading with <paramref name="id"/> to the top of the view, as GitHub does and as the Avalonia viewer
+    /// does, and moves focus to it so a screen reader follows.
+    /// </summary>
+    internal async Task FocusHeadingAsync(string id)
+    {
+        if (!_headings.TryGetValue(id, out var element))
+        {
+            return;
+        }
+        try
+        {
+            // NOTE: `ElementReference.FocusAsync` alone does not scroll when the heading already has focus, as it does
+            // after a second click on the same link, and Blazor offers no call that scrolls an element, so the module
+            // does both.
+            _module ??= await JS.InvokeAsync<IJSObjectReference>("import", ModulePath);
+            await _module.InvokeVoidAsync("scrollToHeading", element);
+        }
+        catch (JSException)
+        {
+            // The heading left the page between the click and the call, as a text that is still arriving is
+            // re-rendered, or the module could not load. The click then does nothing.
+        }
+    }
+
     internal Task ActivateLinkAsync(Uri uri) => OnLinkActivated.InvokeAsync(new MarkdownLinkActivatedEventArgs(uri));
 
     /// <summary>Puts the code on the clipboard and shows a check mark on the button for a moment.</summary>
@@ -110,5 +144,30 @@ public class MarkdownViewer : ComponentBase
             _copiedBlock = null;
             StateHasChanged();
         }
+    }
+
+    /// <inheritdoc/>
+    public async ValueTask DisposeAsync()
+    {
+        await DisposeAsyncCore();
+        GC.SuppressFinalize(this);
+    }
+
+    /// <summary>Releases the script module, if a link to a heading loaded it.</summary>
+    protected virtual async ValueTask DisposeAsyncCore()
+    {
+        if (_module is null)
+        {
+            return;
+        }
+        try
+        {
+            await _module.DisposeAsync();
+        }
+        catch (JSDisconnectedException)
+        {
+            // The circuit is already gone, and the module with it.
+        }
+        _module = null;
     }
 }

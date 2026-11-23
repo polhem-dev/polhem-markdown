@@ -1,10 +1,12 @@
 using System.Globalization;
 using Markdig;
 using Markdig.Extensions.Alerts;
+using Markdig.Extensions.AutoIdentifiers;
 using Markdig.Extensions.EmphasisExtras;
 using Markdig.Extensions.Tables;
 using Markdig.Extensions.TaskLists;
 using Markdig.Extensions.Yaml;
+using Markdig.Renderers.Html;
 using Markdig.Syntax;
 using Markdig.Syntax.Inlines;
 using Polhem.Markdown.Diagrams;
@@ -19,8 +21,8 @@ namespace Polhem.Markdown;
 /// <remarks>
 /// The policy: raw HTML is never interpreted and shows as the text it was written as; an image shows as its alternative
 /// text; a Mermaid diagram is laid out here and drawn by the viewers from shapes, never by running a script; a link
-/// whose target is not an absolute URI with an allowed scheme shows as its text; a node this builder does not know
-/// shows as its source text. Link reference definitions are not shown, as in any Markdown renderer, and neither is YAML
+/// whose target is not an absolute URI with an allowed scheme shows as its text, except a link to the id of a heading in
+/// the same text (<c>#id</c>), which moves to that heading; a node this builder does not know shows as its source text. Link reference definitions are not shown, as in any Markdown renderer, and neither is YAML
 /// front matter.
 /// </remarks>
 internal sealed class MarkdownModelBuilder
@@ -38,11 +40,15 @@ internal sealed class MarkdownModelBuilder
         .UseAlertBlocks()
         .UseEmojiAndSmiley(enableSmileys: false)
         .UseYamlFrontMatter()
+        // NOTE: GitHub mode gives the ids GitHub gives (lower case, punctuation dropped, spaces to dashes, `-1` for a
+        // repeat, non-ASCII letters kept) and, unlike the default mode, adds no implicit link definition per heading.
+        .UseAutoIdentifiers(AutoIdentifierOptions.GitHub)
         .UsePreciseSourceLocation()
         .Build();
 
     private readonly string _markdown;
     private readonly MarkdownOptions _options;
+    private HashSet<string> _headingIds = [];
 
     private MarkdownModelBuilder(string markdown, MarkdownOptions options)
     {
@@ -68,6 +74,10 @@ internal sealed class MarkdownModelBuilder
             // so it is shown as written instead of failing the view.
             return new DocumentNode([builder.WholeTextAsParagraph()]);
         }
+        builder._headingIds = document.Descendants<HeadingBlock>()
+            .Select(HeadingId)
+            .Where(id => id.Length > 0)
+            .ToHashSet(StringComparer.Ordinal);
         return new DocumentNode(builder.Blocks(document));
     }
 
@@ -92,7 +102,7 @@ internal sealed class MarkdownModelBuilder
 
     private BlockNode? Block(Block block) => block switch
     {
-        HeadingBlock heading => new HeadingNode(Range(heading), heading.Level, Inlines(heading.Inline)),
+        HeadingBlock heading => new HeadingNode(Range(heading), heading.Level, Inlines(heading.Inline), HeadingId(heading)),
         ParagraphBlock paragraph => new ParagraphNode(Range(paragraph), Inlines(paragraph.Inline)),
         // NOTE: front matter is metadata for tools, not part of the document, so it is hidden. GitHub shows it as a
         // table; hiding it is a deliberate difference. Markdig reads it as a kind of code block, so it comes first.
@@ -107,6 +117,8 @@ internal sealed class MarkdownModelBuilder
         LinkReferenceDefinitionGroup or BlankLineBlock => null,
         _ => new ParagraphNode(Range(block), [SourceText(block)]),
     };
+
+    private static string HeadingId(HeadingBlock heading) => heading.TryGetAttributes()?.Id ?? "";
 
     private BlockNode Alert(AlertBlock alert)
     {
@@ -321,6 +333,11 @@ internal sealed class MarkdownModelBuilder
 
     private void AddLink(Inline link, string? target, List<InlineNode> content, List<InlineNode> inlines)
     {
+        if (target is ['#', ..])
+        {
+            AddAnchorLink(link, target, content, inlines);
+            return;
+        }
         if (!TryCreateTarget(target, out var uri))
         {
             inlines.AddRange(content);
@@ -331,6 +348,25 @@ internal sealed class MarkdownModelBuilder
             content.Add(new TextNode(Range(link), target!));
         }
         inlines.Add(new LinkNode(Range(link), uri, content));
+    }
+
+    /// <summary>
+    /// Adds a link to a heading of this text, or only its content when no heading has the id. The id may be written
+    /// percent-encoded, as GitHub writes a link to a heading with non-ASCII letters.
+    /// </summary>
+    private void AddAnchorLink(Inline link, string target, List<InlineNode> content, List<InlineNode> inlines)
+    {
+        var id = Uri.UnescapeDataString(target[1..]);
+        if (!_headingIds.Contains(id))
+        {
+            inlines.AddRange(content);
+            return;
+        }
+        if (content.Count == 0)
+        {
+            content.Add(new TextNode(Range(link), target));
+        }
+        inlines.Add(new AnchorLinkNode(Range(link), id, content));
     }
 
     private bool TryCreateTarget(string? target, out Uri uri)
