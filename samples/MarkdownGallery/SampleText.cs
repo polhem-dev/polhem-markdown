@@ -53,6 +53,12 @@ internal static class SampleText
         var amount = decimal.Round(quantity * unitPrice, 2, MidpointRounding.AwayFromZero); // a long line that scrolls sideways instead of wrapping
         ```
 
+        The form definition it produces:
+
+        ```json
+        { "table": "ft_order", "readOnly": ["order_no"], "rounding": 2, "audit": true }
+        ```
+
         The order goes through these steps:
 
         ```mermaid

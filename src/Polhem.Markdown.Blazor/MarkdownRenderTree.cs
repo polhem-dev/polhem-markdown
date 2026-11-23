@@ -2,7 +2,6 @@ using System.Globalization;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Rendering;
 using Microsoft.AspNetCore.Components.Web;
-using Polhem.Markdown.Diagrams;
 using Polhem.Markdown.Model;
 
 namespace Polhem.Markdown.Blazor;
@@ -15,16 +14,11 @@ namespace Polhem.Markdown.Blazor;
 /// NOTE: each node is written in its own region, so the sequence numbers below are literals per call site and stay
 /// increasing within a region however deeply the nodes nest; that is what lets Blazor's diff match them up.
 /// </remarks>
-internal sealed class MarkdownRenderTree
+internal sealed partial class MarkdownRenderTree
 {
-    private const string CopyIcon =
-        "M8 2h9a2 2 0 0 1 2 2v11h-2V4H8V2zM5 6h9a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2zm0 2v12h9V8H5z";
-
     private const string ClassAttribute = "class";
 
     private const string OnClickAttribute = "onclick";
-
-    private const string DoneIcon = "M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4z";
 
     private readonly MarkdownViewer _viewer;
     private readonly RenderTreeBuilder _builder;
@@ -157,144 +151,6 @@ internal sealed class MarkdownRenderTree
         }
         _builder.CloseElement();
     }
-
-    private void CodeBlock(CodeBlockNode code)
-    {
-        var copied = _viewer.IsCopied(code);
-
-        _builder.OpenElement(0, "div");
-        _builder.AddAttribute(1, ClassAttribute, "pmd-code");
-
-        _builder.OpenElement(2, "div");
-        _builder.AddAttribute(3, ClassAttribute, "pmd-code-header");
-        _builder.OpenElement(4, "span");
-        _builder.AddAttribute(5, ClassAttribute, "pmd-code-lang");
-        _builder.AddContent(6, code.Language);
-        _builder.CloseElement();
-
-        _builder.OpenElement(7, "button");
-        _builder.AddAttribute(8, "type", "button");
-        _builder.AddAttribute(9, ClassAttribute, "pmd-copy");
-        _builder.AddAttribute(10, "title", _viewer.CopyCodeLabel);
-        _builder.AddAttribute(11, "aria-label", _viewer.CopyCodeLabel);
-        _builder.AddAttribute(12, OnClickAttribute, EventCallback.Factory.Create<MouseEventArgs>(_viewer, () => _viewer.CopyAsync(code)));
-        _builder.OpenElement(13, "svg");
-        _builder.AddAttribute(14, "viewBox", "0 0 24 24");
-        _builder.AddAttribute(15, "aria-hidden", "true");
-        _builder.OpenElement(16, "path");
-        _builder.AddAttribute(17, "d", copied ? DoneIcon : CopyIcon);
-        _builder.CloseElement();
-        _builder.CloseElement();
-        _builder.CloseElement();
-        _builder.CloseElement();
-
-        _builder.OpenElement(18, "pre");
-        _builder.OpenElement(19, "code");
-        _builder.AddContent(20, code.Code);
-        _builder.CloseElement();
-        _builder.CloseElement();
-
-        _builder.CloseElement();
-    }
-
-    private void Alert(AlertNode alert)
-    {
-        var kind = alert.Kind.ToString().ToLowerInvariant();
-        _builder.OpenElement(0, "div");
-        _builder.AddAttribute(1, ClassAttribute, "pmd-alert pmd-alert-" + kind);
-        _builder.OpenElement(2, "p");
-        _builder.AddAttribute(3, ClassAttribute, "pmd-alert-title");
-        _builder.OpenElement(4, "svg");
-        _builder.AddAttribute(5, "viewBox", "0 0 16 16");
-        _builder.AddAttribute(6, "aria-hidden", "true");
-        _builder.OpenElement(7, "path");
-        _builder.AddAttribute(8, "fill-rule", "evenodd");
-        _builder.AddAttribute(9, "d", AlertGlyphs.IconPath(alert.Kind));
-        _builder.CloseElement();
-        _builder.CloseElement();
-        _builder.AddContent(10, AlertGlyphs.Title(alert.Kind));
-        _builder.CloseElement();
-        Blocks(11, alert.Blocks);
-        _builder.CloseElement();
-    }
-
-    /// <summary>
-    /// Writes a diagram as inline SVG at the drawing's own size; the stylesheet scales it down when it is wider than the
-    /// viewer. Colors come from classes, so they follow the <c>--pmd-*</c> variables and the text color.
-    /// </summary>
-    private void Diagram(DiagramDrawing drawing)
-    {
-        _builder.OpenElement(0, "div");
-        _builder.AddAttribute(1, ClassAttribute, "pmd-diagram");
-        _builder.OpenElement(2, "svg");
-        _builder.AddAttribute(3, "viewBox", "0 0 " + Number(drawing.Width) + " " + Number(drawing.Height));
-        _builder.AddAttribute(4, "width", Number(drawing.Width));
-        _builder.AddAttribute(5, "height", Number(drawing.Height));
-        _builder.AddAttribute(6, "font-size", Number(DiagramDrawing.FontSize));
-        _builder.AddAttribute(7, "stroke-width", Number(DiagramDrawing.OutlineThickness));
-        foreach (var shape in drawing.Shapes)
-        {
-            _builder.OpenRegion(8);
-            Shape(shape);
-            _builder.CloseRegion();
-        }
-        _builder.CloseElement();
-        _builder.CloseElement();
-    }
-
-    private void Shape(DiagramShape shape)
-    {
-        switch (shape)
-        {
-            case DiagramRectangle rectangle:
-                _builder.OpenElement(0, "rect");
-                _builder.AddAttribute(1, ClassAttribute, "pmd-d-box");
-                _builder.AddAttribute(2, "x", Number(rectangle.X));
-                _builder.AddAttribute(3, "y", Number(rectangle.Y));
-                _builder.AddAttribute(4, "width", Number(rectangle.Width));
-                _builder.AddAttribute(5, "height", Number(rectangle.Height));
-                if (rectangle.CornerRadius > 0)
-                {
-                    _builder.AddAttribute(6, "rx", Number(rectangle.CornerRadius));
-                }
-                _builder.CloseElement();
-                break;
-            case DiagramPolygon polygon:
-                _builder.OpenElement(7, "polygon");
-                _builder.AddAttribute(8, ClassAttribute, polygon.IsArrowHead ? "pmd-d-arrow" : "pmd-d-box");
-                _builder.AddAttribute(9, "points", Points(polygon.Points));
-                _builder.CloseElement();
-                break;
-            case DiagramLine line:
-                _builder.OpenElement(10, "polyline");
-                _builder.AddAttribute(11, ClassAttribute, line.Stroke == DiagramStroke.Rule ? "pmd-d-line pmd-d-rule" : "pmd-d-line");
-                _builder.AddAttribute(12, "points", Points(line.Points));
-                _builder.AddAttribute(13, "stroke-width", Number(line.Thickness));
-                if (line.Dash > 0)
-                {
-                    _builder.AddAttribute(14, "stroke-dasharray", Number(line.Dash));
-                }
-                _builder.CloseElement();
-                break;
-            case DiagramText text:
-                _builder.OpenElement(15, "text");
-                _builder.AddAttribute(16, "x", Number(text.X));
-                _builder.AddAttribute(17, "y", Number(text.Y));
-                _builder.AddContent(18, text.Text);
-                _builder.CloseElement();
-                break;
-            default:
-                // NOTE: a shape type is recorded only when a case above drew it, so the shape coverage test fails for a
-                // type added to the drawing that this viewer does not draw.
-                return;
-        }
-        _renderedShapes.Add(shape.GetType());
-    }
-
-    private static string Points(IReadOnlyList<DiagramPoint> points) =>
-        string.Join(' ', points.Select(point => Number(point.X) + "," + Number(point.Y)));
-
-    private static string Number(double value) => value.ToString("0.##", CultureInfo.InvariantCulture);
 
     private void Table(TableNode table)
     {
@@ -443,69 +299,6 @@ internal sealed class MarkdownRenderTree
         _builder.AddAttribute(2, OnClickAttribute, EventCallback.Factory.Create<MouseEventArgs>(_viewer, () => _viewer.MoveToAnchorAsync(id)));
         _builder.AddEventPreventDefaultAttribute(3, OnClickAttribute, true);
         Inlines(4, anchor.Inlines);
-        _builder.CloseElement();
-    }
-
-    /// <summary>
-    /// Writes the footnotes as a numbered list in a section of their own, which the stylesheet sets off with a rule. Each
-    /// note is keyed and captured by its id, as headings are, and takes focus from script only.
-    /// </summary>
-    private void Footnotes(FootnotesNode footnotes)
-    {
-        _builder.OpenElement(0, "section");
-        _builder.AddAttribute(1, ClassAttribute, "pmd-footnotes");
-        _builder.OpenElement(2, "ol");
-        foreach (var note in footnotes.Notes)
-        {
-            var id = note.Id;
-            _builder.OpenRegion(3);
-            _builder.OpenElement(0, "li");
-            _builder.SetKey(id);
-            _builder.AddAttribute(1, "tabindex", "-1");
-            _builder.AddElementReferenceCapture(2, element => _viewer.SetAnchorElement(id, element));
-            Blocks(3, note.Blocks);
-            _builder.CloseElement();
-            _builder.CloseRegion();
-            _rendered.Add(typeof(FootnoteNode));
-        }
-        _builder.CloseElement();
-        _builder.CloseElement();
-    }
-
-    /// <summary>
-    /// Writes a reference to a footnote as a superscript link to the note. The link itself is what a back link returns
-    /// to, so it is keyed and captured by the reference's id.
-    /// </summary>
-    private void FootnoteReference(FootnoteReferenceNode reference)
-    {
-        var id = reference.Id;
-        var noteId = reference.NoteId;
-        _builder.OpenElement(0, "sup");
-        _builder.AddAttribute(1, ClassAttribute, "pmd-fnref");
-        _builder.OpenElement(2, "a");
-        _builder.SetKey(id);
-        _builder.AddAttribute(3, "href", _viewer.AnchorHref(noteId));
-        _builder.AddAttribute(4, OnClickAttribute, EventCallback.Factory.Create<MouseEventArgs>(_viewer, () => _viewer.MoveToAnchorAsync(noteId)));
-        _builder.AddEventPreventDefaultAttribute(5, OnClickAttribute, true);
-        _builder.AddElementReferenceCapture(6, element => _viewer.SetAnchorElement(id, element));
-        _builder.AddContent(7, reference.Number.ToString(CultureInfo.InvariantCulture));
-        _builder.CloseElement();
-        _builder.CloseElement();
-    }
-
-    /// <summary>Writes a back link from a footnote to one reference to it, after a space, as GitHub does.</summary>
-    private void FootnoteBackLink(FootnoteBackLinkNode back)
-    {
-        var referenceId = back.ReferenceId;
-        var position = back.Position > 1 ? back.Position.ToString(CultureInfo.InvariantCulture) : "";
-        _builder.AddContent(0, " ");
-        _builder.OpenElement(1, "a");
-        _builder.AddAttribute(2, ClassAttribute, "pmd-fnback");
-        _builder.AddAttribute(3, "href", _viewer.AnchorHref(referenceId));
-        _builder.AddAttribute(4, "aria-label", position.Length == 0 ? "Back to reference" : "Back to reference " + position);
-        _builder.AddAttribute(5, OnClickAttribute, EventCallback.Factory.Create<MouseEventArgs>(_viewer, () => _viewer.MoveToAnchorAsync(referenceId)));
-        _builder.AddEventPreventDefaultAttribute(6, OnClickAttribute, true);
-        _builder.AddContent(7, "\u21A9" + position);
         _builder.CloseElement();
     }
 

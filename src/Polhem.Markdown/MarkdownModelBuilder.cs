@@ -9,6 +9,7 @@ using Markdig.Extensions.Yaml;
 using Markdig.Syntax;
 using Markdig.Syntax.Inlines;
 using Polhem.Markdown.Diagrams;
+using Polhem.Markdown.Highlighting;
 using Polhem.Markdown.Model;
 
 namespace Polhem.Markdown;
@@ -108,7 +109,7 @@ internal sealed class MarkdownModelBuilder
         // table; hiding it is a deliberate difference. Markdig reads it as a kind of code block, so it comes first.
         YamlFrontMatterBlock => null,
         FencedCodeBlock fenced => FencedCode(fenced),
-        CodeBlock code => new CodeBlockNode(Range(code), "", code.Lines.ToString()),
+        CodeBlock code => new CodeBlockNode(Range(code), "", code.Lines.ToString(), []),
         AlertBlock alert => Alert(alert),
         QuoteBlock quote => new QuoteNode(Range(quote), Blocks(quote)),
         ListBlock list => List(list),
@@ -188,7 +189,7 @@ internal sealed class MarkdownModelBuilder
         {
             return new DiagramNode(Range(fenced), drawing);
         }
-        return new CodeBlockNode(Range(fenced), language, code);
+        return new CodeBlockNode(Range(fenced), language, code, CodeHighlighter.Tokenize(language, code));
     }
 
     /// <summary>

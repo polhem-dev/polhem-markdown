@@ -8,6 +8,7 @@ using Avalonia.Input.Platform;
 using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Threading;
+using Polhem.Markdown.Highlighting;
 using Polhem.Markdown.Model;
 using Path = Avalonia.Controls.Shapes.Path;
 
@@ -68,10 +69,17 @@ internal sealed class CodeBlockView : Border
         // with padding the text got one line less than it needed and its last line was cut off.
         var body = new SelectableTextBlock
         {
-            Text = code.Code,
             TextWrapping = TextWrapping.NoWrap,
             Margin = new Thickness(10, 0, 10, 8),
         };
+        if (code.Tokens.Count == 0)
+        {
+            body.Text = code.Code;
+        }
+        else
+        {
+            body.Inlines = Highlighted(viewer, code);
+        }
         body.Bind(TextBlock.FontFamilyProperty, viewer.GetObservable(MarkdownViewer.CodeFontFamilyProperty));
         var scroller = new ScrollViewer
         {
@@ -85,6 +93,37 @@ internal sealed class CodeBlockView : Border
         layout.Children.Add(header);
         layout.Children.Add(scroller);
         Child = layout;
+    }
+
+    /// <summary>The code as runs: plain text between the tokens, and each token in its kind's brush.</summary>
+    private static InlineCollection Highlighted(MarkdownViewer viewer, CodeBlockNode code)
+    {
+        var inlines = new InlineCollection();
+        var position = 0;
+        foreach (var token in code.Tokens)
+        {
+            if (token.Start > position)
+            {
+                inlines.Add(new Run(code.Code[position..token.Start]));
+            }
+            var run = new Run(code.Code.Substring(token.Start, token.Length));
+            run.Bind(TextElement.ForegroundProperty, viewer.GetObservable(token.Kind switch
+            {
+                CodeTokenKind.Keyword => MarkdownViewer.CodeKeywordBrushProperty,
+                CodeTokenKind.String => MarkdownViewer.CodeStringBrushProperty,
+                CodeTokenKind.Comment => MarkdownViewer.CodeCommentBrushProperty,
+                CodeTokenKind.Constant => MarkdownViewer.CodeConstantBrushProperty,
+                CodeTokenKind.Tag => MarkdownViewer.CodeTagBrushProperty,
+                _ => MarkdownViewer.CodePropertyBrushProperty,
+            }));
+            inlines.Add(run);
+            position = token.End;
+        }
+        if (position < code.Code.Length)
+        {
+            inlines.Add(new Run(code.Code[position..]));
+        }
+        return inlines;
     }
 
     /// <summary>The code the copy button copies.</summary>

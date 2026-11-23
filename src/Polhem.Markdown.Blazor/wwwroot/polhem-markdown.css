@@ -9,6 +9,9 @@
     --pmd-code-font  font of inline code and code blocks
     --pmd-alert-note, --pmd-alert-tip, --pmd-alert-important, --pmd-alert-warning, --pmd-alert-caution
                      bar, icon and title of each kind of alert (> [!NOTE] and so on)
+    --pmd-code-keyword, --pmd-code-string, --pmd-code-comment, --pmd-code-constant, --pmd-code-tag,
+    --pmd-code-property
+                     colors of the kinds of token in a highlighted code block
 */
 
 .pmd {
@@ -251,3 +254,11 @@
 .pmd .pmd-fnback {
   text-decoration: none;
 }
+
+/* Highlighted code: each kind of token in its own color, read on light and dark pages. */
+.pmd .pmd-tk-keyword { color: var(--pmd-code-keyword, #8b5cf6); }
+.pmd .pmd-tk-string { color: var(--pmd-code-string, #22a35a); }
+.pmd .pmd-tk-comment { color: var(--pmd-code-comment, #8a8f98); }
+.pmd .pmd-tk-constant { color: var(--pmd-code-constant, #d97706); }
+.pmd .pmd-tk-tag { color: var(--pmd-code-tag, #e5484d); }
+.pmd .pmd-tk-property { color: var(--pmd-code-property, #3b82f6); }

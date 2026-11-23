@@ -138,7 +138,8 @@ public class MarkdownViewerTests(HeadlessSession session)
         var code = Assert.IsType<CodeBlockView>(Assert.Single(Blocks(viewer)));
         Assert.Equal("SELECT 1;", code.Code);
         Assert.Contains(Descendants<TextBlock>(code), text => text.Text == "sql");
-        Assert.Contains(Descendants<SelectableTextBlock>(code), text => text.Text == "SELECT 1;");
+        // Highlighted code is made of runs, so its text is read from them.
+        Assert.Contains(Descendants<SelectableTextBlock>(code), text => (text.Inlines?.Text ?? text.Text) == "SELECT 1;");
     });
 
     [Theory(DisplayName = "A code block lays out every line of its code, so its last line is not cut off")]

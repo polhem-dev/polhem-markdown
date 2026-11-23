@@ -27,7 +27,9 @@ Link the stylesheet in the host page, then use the component:
   `_content/Polhem.Markdown.Blazor/polhem-markdown.js` module; the page does not link it, but a Content Security Policy
   must allow scripts from the site itself.
 - **Code blocks** show their language and a copy button; set `CopyCodeLabel` to translate its tooltip and accessible
-  name. The copy uses the browser's clipboard, which needs a secure context (HTTPS or localhost).
+  name. The copy uses the browser's clipboard, which needs a secure context (HTTPS or localhost). Code in C#, JSON, XML (with HTML, XAML and project files), SQL, shell and PowerShell, JavaScript and TypeScript, Python, YAML, CSS and Razor
+  is highlighted by the component itself, with no script, the same way as in the Avalonia viewer; code in any other
+  language, or none, stays plain text.
 - **Mermaid diagrams**: a ` ```mermaid ` block with a flowchart or a sequence diagram renders as inline SVG laid out by
   the component, with no script, centered, and scales down when it is wider than the page. Boxes use `--pmd-code-bg`, lifelines
   `--pmd-rule`, and lines and text the text color. A diagram of another type, or one using syntax the viewer does not
@@ -46,6 +48,12 @@ Link the stylesheet in the host page, then use the component:
 | `--pmd-alert-important` | The same for `> [!IMPORTANT]` | `#8b5cf6` |
 | `--pmd-alert-warning` | The same for `> [!WARNING]` | `#d97706` |
 | `--pmd-alert-caution` | The same for `> [!CAUTION]` | `#e5484d` |
+| `--pmd-code-keyword` | Keywords in highlighted code | `#8b5cf6` |
+| `--pmd-code-string` | Strings in highlighted code | `#22a35a` |
+| `--pmd-code-comment` | Comments in highlighted code | `#8a8f98` |
+| `--pmd-code-constant` | Numbers and constants such as `true` and `null` | `#d97706` |
+| `--pmd-code-tag` | Markup tag names | `#e5484d` |
+| `--pmd-code-property` | Attribute names, JSON and YAML keys, CSS properties, shell variables | `#3b82f6` |
 
 The defaults read on light and dark pages and match the Avalonia viewer.
 

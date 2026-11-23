@@ -14,3 +14,21 @@ static readonly Polhem.Markdown.Avalonia.MarkdownViewer.AlertWarningBrushPropert
 Polhem.Markdown.Avalonia.MarkdownViewer.AlertCautionBrush.get -> Avalonia.Media.IBrush!
 Polhem.Markdown.Avalonia.MarkdownViewer.AlertCautionBrush.set -> void
 static readonly Polhem.Markdown.Avalonia.MarkdownViewer.AlertCautionBrushProperty -> Avalonia.StyledProperty<Avalonia.Media.IBrush!>!
+Polhem.Markdown.Avalonia.MarkdownViewer.CodeKeywordBrush.get -> Avalonia.Media.IBrush!
+Polhem.Markdown.Avalonia.MarkdownViewer.CodeKeywordBrush.set -> void
+static readonly Polhem.Markdown.Avalonia.MarkdownViewer.CodeKeywordBrushProperty -> Avalonia.StyledProperty<Avalonia.Media.IBrush!>!
+Polhem.Markdown.Avalonia.MarkdownViewer.CodeStringBrush.get -> Avalonia.Media.IBrush!
+Polhem.Markdown.Avalonia.MarkdownViewer.CodeStringBrush.set -> void
+static readonly Polhem.Markdown.Avalonia.MarkdownViewer.CodeStringBrushProperty -> Avalonia.StyledProperty<Avalonia.Media.IBrush!>!
+Polhem.Markdown.Avalonia.MarkdownViewer.CodeCommentBrush.get -> Avalonia.Media.IBrush!
+Polhem.Markdown.Avalonia.MarkdownViewer.CodeCommentBrush.set -> void
+static readonly Polhem.Markdown.Avalonia.MarkdownViewer.CodeCommentBrushProperty -> Avalonia.StyledProperty<Avalonia.Media.IBrush!>!
+Polhem.Markdown.Avalonia.MarkdownViewer.CodeConstantBrush.get -> Avalonia.Media.IBrush!
+Polhem.Markdown.Avalonia.MarkdownViewer.CodeConstantBrush.set -> void
+static readonly Polhem.Markdown.Avalonia.MarkdownViewer.CodeConstantBrushProperty -> Avalonia.StyledProperty<Avalonia.Media.IBrush!>!
+Polhem.Markdown.Avalonia.MarkdownViewer.CodeTagBrush.get -> Avalonia.Media.IBrush!
+Polhem.Markdown.Avalonia.MarkdownViewer.CodeTagBrush.set -> void
+static readonly Polhem.Markdown.Avalonia.MarkdownViewer.CodeTagBrushProperty -> Avalonia.StyledProperty<Avalonia.Media.IBrush!>!
+Polhem.Markdown.Avalonia.MarkdownViewer.CodePropertyBrush.get -> Avalonia.Media.IBrush!
+Polhem.Markdown.Avalonia.MarkdownViewer.CodePropertyBrush.set -> void
+static readonly Polhem.Markdown.Avalonia.MarkdownViewer.CodePropertyBrushProperty -> Avalonia.StyledProperty<Avalonia.Media.IBrush!>!
