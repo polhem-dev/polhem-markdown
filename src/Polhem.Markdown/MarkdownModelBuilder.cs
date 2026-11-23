@@ -494,9 +494,12 @@ internal sealed class MarkdownModelBuilder
     {
         var alternative = PlainText(image);
         var source = image.GetDynamicUrl?.Invoke() ?? image.Url;
-        return TryCreateTarget(source, _options.AllowedImageSchemes, out var uri)
-            ? new ImageNode(Range(image), uri, alternative, string.IsNullOrEmpty(image.Title) ? null : image.Title)
-            : new TextNode(Range(image), alternative);
+        if (!TryCreateTarget(source, _options.AllowedImageSchemes, out var uri))
+        {
+            return new TextNode(Range(image), alternative);
+        }
+        var title = string.IsNullOrEmpty(image.Title) ? null : image.Title;
+        return new ImageNode(Range(image), uri, alternative, title);
     }
 
     /// <summary>
@@ -509,7 +512,7 @@ internal sealed class MarkdownModelBuilder
         // `file` URI. Only a target that writes its scheme counts as absolute here, so such a path is a relative
         // reference: with a web base it stays on the base's host, and without a base it is text, even when the host
         // allows `file`. The scheme check applies to both outcomes; do not relax it to "any absolute URI".
-        if (Uri.TryCreate(target, UriKind.Absolute, out var created) && WritesScheme(target!, created) && IsAllowed(created, schemes))
+        if (Uri.TryCreate(target, UriKind.Absolute, out var created) && WritesScheme(target, created) && IsAllowed(created, schemes))
         {
             uri = created;
             return true;

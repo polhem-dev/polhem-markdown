@@ -26,7 +26,9 @@ internal static class ImageSources
                     await using var body = await response.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false);
                     return await ReadLimitedAsync(body, cancellationToken).ConfigureAwait(false);
                 }
-            case "file" when source.IsFile && File.Exists(source.LocalPath):
+            // NOTE: a file URI with a host is a network share. On Windows, opening one connects to that host and offers the
+            // user's credentials, so only local paths are read.
+            case "file" when source.IsFile && string.IsNullOrEmpty(source.Host) && !source.IsUnc && File.Exists(source.LocalPath):
                 await using (var file = File.OpenRead(source.LocalPath))
                 {
                     return await ReadLimitedAsync(file, cancellationToken).ConfigureAwait(false);
@@ -51,7 +53,7 @@ internal static class ImageSources
             {
                 return null;
             }
-            buffer.Write(chunk, 0, read);
+            await buffer.WriteAsync(chunk.AsMemory(0, read), cancellationToken).ConfigureAwait(false);
         }
         buffer.Position = 0;
         return buffer;

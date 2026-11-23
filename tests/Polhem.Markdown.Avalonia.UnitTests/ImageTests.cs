@@ -39,6 +39,16 @@ public class ImageTests(HeadlessSession session)
         return Descendants<ImageView>(viewer).Single();
     }
 
+    /// <summary>Waits for every image the viewer shows to load or fail.</summary>
+    private static async Task AllLoaded(MarkdownViewer viewer)
+    {
+        foreach (var view in Descendants<ImageView>(viewer).ToList())
+        {
+            await ((Task)viewer.LoadImage(view.Source)).ConfigureAwait(ConfigureAwaitOptions.SuppressThrowing | ConfigureAwaitOptions.ContinueOnCapturedContext);
+        }
+        Dispatcher.UIThread.RunJobs();
+    }
+
     [Fact(DisplayName = "An image shows its alternative text until it has loaded, then the image at its own size")]
     public Task Render_Image_ShowsAltThenImage() => session.RunAsync(async () =>
     {
@@ -182,4 +192,147 @@ public class ImageTests(HeadlessSession session)
         Assert.Equal(MarkdownRenderer.EmbeddedControlLength, link.Length);
         Assert.Contains(text.Inlines!, inline => inline is Span span && span.Inlines.OfType<InlineUIContainer>().Any());
     });
+
+    /// <summary>A PNG whose header declares a picture of the given size and holds no pixel data.</summary>
+    private static byte[] PngHeader(int width, int height)
+    {
+        var header = new byte[13];
+        System.Buffers.Binary.BinaryPrimitives.WriteInt32BigEndian(header, width);
+        System.Buffers.Binary.BinaryPrimitives.WriteInt32BigEndian(header.AsSpan(4), height);
+        header[8] = 8;
+        header[9] = 6;
+        using var png = new MemoryStream();
+        png.Write([0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]);
+        WriteChunk(png, "IHDR"u8, header);
+        WriteChunk(png, "IEND"u8, []);
+        return png.ToArray();
+    }
+
+    private static void WriteChunk(Stream png, ReadOnlySpan<byte> type, ReadOnlySpan<byte> data)
+    {
+        Span<byte> length = stackalloc byte[4];
+        System.Buffers.Binary.BinaryPrimitives.WriteInt32BigEndian(length, data.Length);
+        png.Write(length);
+        var typed = new byte[type.Length + data.Length];
+        type.CopyTo(typed);
+        data.CopyTo(typed.AsSpan(type.Length));
+        png.Write(typed);
+        Span<byte> crc = stackalloc byte[4];
+        System.Buffers.Binary.BinaryPrimitives.WriteUInt32BigEndian(crc, Crc32(typed));
+        png.Write(crc);
+    }
+
+    private static uint Crc32(ReadOnlySpan<byte> bytes)
+    {
+        var crc = 0xFFFFFFFFu;
+        foreach (var value in bytes)
+        {
+            crc ^= value;
+            for (var bit = 0; bit < 8; bit++)
+            {
+                crc = (crc & 1) != 0 ? (crc >> 1) ^ 0xEDB88320u : crc >> 1;
+            }
+        }
+        return ~crc;
+    }
+
+    [Fact(DisplayName = "A PNG that declares more pixels than the limit is not decoded")]
+    public Task Render_PngBomb_KeepsAltText() => session.RunAsync(async () =>
+    {
+        var (_, viewer) = Show($"![bomb]({Pen})", images: Serve(PngHeader(30_000, 30_000)));
+
+        var view = await LoadedView(viewer);
+
+        Assert.Null(view.LoadedImage);
+        Assert.Equal(0, viewer.ImageBytesInUse);
+    });
+
+    [Fact(DisplayName = "An SVG nested too deeply keeps its alternative text instead of overflowing the stack")]
+    public Task Render_DeepSvg_KeepsAltText() => session.RunAsync(async () =>
+    {
+        var svg = "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"10\" height=\"10\">"
+            + string.Concat(Enumerable.Repeat("<g>", 5000)) + "<rect width=\"1\" height=\"1\"/>"
+            + string.Concat(Enumerable.Repeat("</g>", 5000)) + "</svg>";
+        var (_, viewer) = Show("![deep](https://img.example/deep.svg)", images: Serve(Encoding.UTF8.GetBytes(svg)));
+
+        var view = await LoadedView(viewer);
+
+        Assert.Null(view.LoadedImage);
+    });
+
+    [Fact(DisplayName = "An SVG whose use elements would multiply keeps its alternative text")]
+    public Task Render_SvgUseExpansion_KeepsAltText() => session.RunAsync(async () =>
+    {
+        var levels = new StringBuilder("<g id=\"l0\"><rect width=\"1\" height=\"1\"/></g>");
+        for (var level = 1; level <= 20; level++)
+        {
+            levels.Append(System.Globalization.CultureInfo.InvariantCulture, $"<g id=\"l{level}\"><use href=\"#l{level - 1}\"/><use href=\"#l{level - 1}\"/></g>");
+        }
+        var svg = $"<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"10\" height=\"10\"><defs>{levels}</defs><use href=\"#l20\"/></svg>";
+        var (_, viewer) = Show("![bomb](https://img.example/use.svg)", images: Serve(Encoding.UTF8.GetBytes(svg)));
+
+        var view = await LoadedView(viewer);
+
+        Assert.Null(view.LoadedImage);
+    });
+
+    [Fact(DisplayName = "An SVG may use the same simple element many times")]
+    public Task Render_SvgWithSimpleUses_IsDrawn() => session.RunAsync(async () =>
+    {
+        var uses = string.Concat(Enumerable.Range(0, 20).Select(index => $"<use href=\"#dot\" x=\"{index}\"/>"));
+        var svg = $"<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"20\" height=\"2\"><defs><rect id=\"dot\" width=\"1\" height=\"1\"/></defs>{uses}</svg>";
+        var (_, viewer) = Show("![dots](https://img.example/dots.svg)", images: Serve(Encoding.UTF8.GetBytes(svg)));
+
+        var view = await LoadedView(viewer);
+
+        Assert.NotNull(view.LoadedImage);
+    });
+
+    [Fact(DisplayName = "Decoded images stay within the viewer's budget however many a reply holds")]
+    public Task Render_ManyLargeImages_StayWithinBudget() => session.RunAsync(async () =>
+    {
+        var svg = Encoding.UTF8.GetBytes("<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"2048\" height=\"2048\"><rect width=\"9\" height=\"9\"/></svg>");
+        var markdown = string.Concat(Enumerable.Range(0, 40).Select(index => $"![{index}](https://img.example/{index}.svg) "));
+        var (_, viewer) = Show(markdown, images: Serve(svg));
+
+        await AllLoaded(viewer);
+
+        Assert.InRange(viewer.ImageBytesInUse, 1, MarkdownViewer.ImageBudgetBytes);
+        Assert.Contains(Descendants<ImageView>(viewer), view => view.LoadedImage is null);
+    });
+
+    [Fact(DisplayName = "Images the text no longer shows give their bytes back")]
+    public Task Update_ImagesRemoved_ReleaseBudget() => session.RunAsync(async () =>
+    {
+        var (_, viewer) = Show($"![pen]({Pen})", images: Serve(Png(64, 64)));
+        await LoadedView(viewer);
+        Assert.Equal(64 * 64 * 4, viewer.ImageBytesInUse);
+
+        viewer.Markdown = "No images now.";
+
+        Assert.Equal(0, viewer.ImageBytesInUse);
+    });
+
+    [Fact(DisplayName = "A reply with many images loads each once while it keeps arriving")]
+    public Task Update_ManyImages_LoadEachOnce() => session.RunAsync(async () =>
+    {
+        var calls = new List<Uri>();
+        var images = string.Concat(Enumerable.Range(0, 130).Select(index => $"![{index}](https://img.example/{index}.png) "));
+        var (_, viewer) = Show(images + "and", images: Serve(Png(2, 2), calls));
+        await AllLoaded(viewer);
+
+        viewer.Markdown = images + "and more";
+        viewer.Markdown = images + "and more text";
+
+        Assert.Equal(130, calls.Distinct().Count());
+        Assert.Equal(130, calls.Count);
+    });
+
+    [Theory(DisplayName = "The viewer's own loader reads only local files, never a network share")]
+    [InlineData("file://attacker.example/share/x.png")]
+    [InlineData("file:////attacker.example/share/x.png")]
+    public async Task LoadAsync_FileWithHost_IsRefused(string source)
+    {
+        Assert.Null(await ImageSources.LoadAsync(new Uri(source), CancellationToken.None));
+    }
 }
