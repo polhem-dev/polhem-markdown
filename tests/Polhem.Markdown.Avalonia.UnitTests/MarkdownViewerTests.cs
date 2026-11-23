@@ -1,6 +1,7 @@
 using Avalonia.Controls;
 using Avalonia.Controls.Documents;
 using Avalonia.Input.Platform;
+using Avalonia.Layout;
 using Avalonia.Media;
 using Polhem.Markdown.Tests.Shared;
 using static Polhem.Markdown.Avalonia.UnitTests.ViewerHost;
@@ -26,13 +27,14 @@ public class MarkdownViewerTests(HeadlessSession session)
         Assert.Equal(ModelNodeTypes.Shapes.OrderBy(type => type.Name), viewer.RenderedShapeTypes.OrderBy(type => type.Name));
     });
 
-    [Fact(DisplayName = "A diagram is drawn at its own size and scaled down, never up, to the viewer's width")]
+    [Fact(DisplayName = "A diagram is drawn centered at its own size and scaled down, never up, to the viewer's width")]
     public Task Render_Diagram_ScalesDownOnly() => session.RunAsync(() =>
     {
         var (_, viewer) = Show("```mermaid\nsequenceDiagram\n  Alice->>Bob: hello\n```");
 
         var box = Assert.IsType<Viewbox>(Assert.Single(Blocks(viewer)));
         Assert.Equal(StretchDirection.DownOnly, box.StretchDirection);
+        Assert.Equal(HorizontalAlignment.Center, box.HorizontalAlignment);
         var diagram = Assert.IsType<DiagramView>(box.Child);
         Assert.Contains("hello", diagram.Texts);
         Assert.True(diagram.Bounds.Width > 0);

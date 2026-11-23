@@ -23,7 +23,7 @@ Link the stylesheet in the host page, then use the component:
 - **Code blocks** show their language and a copy button; set `CopyCodeLabel` to translate its tooltip and accessible
   name. The copy uses the browser's clipboard, which needs a secure context (HTTPS or localhost).
 - **Mermaid diagrams**: a ` ```mermaid ` block with a flowchart or a sequence diagram renders as inline SVG laid out by
-  the component, with no script, and scales down when it is wider than the page. Boxes use `--pmd-code-bg`, lifelines
+  the component, with no script, centered, and scales down when it is wider than the page. Boxes use `--pmd-code-bg`, lifelines
   `--pmd-rule`, and lines and text the text color. A diagram of another type, or one using syntax the viewer does not
   support, shows as code; set `Options.RenderMermaidDiagrams` to `false` to show every diagram as code.
 - **Styles** inherit the font and the text color of the surrounding page. Everything is scoped under `.pmd`; `Class`
