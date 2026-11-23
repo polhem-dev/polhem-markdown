@@ -87,6 +87,13 @@ if (diagrams.Count != 2 || diagrams.Any(diagram => diagram.Drawing.Shapes.Count 
     return 1;
 }
 
+// The C# block is highlighted, which exercises the scanners under trimming.
+if (document.Blocks.OfType<CodeBlockNode>().First(block => block.Language == "csharp").Tokens.Count == 0)
+{
+    await Console.Error.WriteLineAsync("Expected the C# code block to be highlighted.");
+    return 1;
+}
+
 await Console.Out.WriteLineAsync($"Polhem.Markdown AOT smoke test passed ({found.Count} node types).");
 return 0;
 

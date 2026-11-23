@@ -16,14 +16,16 @@ Blazor front end show the same text the same way.
   the heading) is not reported: the viewer scrolls the nearest scroll viewer so the heading is at the top.
 - **Footnotes** (`text[^note]` and `[^note]: ...`) are numbered by first reference and shown at the end in a slightly
   smaller font, as on GitHub. A reference moves to its note and the note's `↩` back to the reference, in the same way.
-- **Code blocks** show their language and a copy button; set `CopyCodeLabel` to translate its tooltip.
+- **Code blocks** show their language and a copy button; set `CopyCodeLabel` to translate its tooltip. Code in
+  C#, JSON, XML (with HTML, XAML and project files), SQL, shell and PowerShell, JavaScript and TypeScript, Python, YAML, CSS and Razor is highlighted, the same way as in the Blazor viewer; code in any other language, or none, stays plain text.
 - **Mermaid diagrams**: a ` ```mermaid ` block with a flowchart or a sequence diagram is drawn by the viewer itself, with
   no script, centered, and scaled down when it is wider than the viewer. Boxes use `CodeBackground`, lifelines `RuleBrush`, and
   lines and text the foreground. A diagram of another type, or one using syntax the viewer does not support, shows as
   code; set `Options.RenderMermaidDiagrams` to `false` to show every diagram as code.
-- **Colors** work on light and dark themes. Set `LinkForeground`, `CodeBackground`, `RuleBrush` and the alert brushes
-  (`AlertNoteBrush`, `AlertTipBrush`, `AlertImportantBrush`, `AlertWarningBrush`, `AlertCautionBrush`) to match a theme;
-  they apply without rebuilding the view.
+- **Colors** work on light and dark themes. Set `LinkForeground`, `CodeBackground`, `RuleBrush`, the alert brushes
+  (`AlertNoteBrush`, `AlertTipBrush`, `AlertImportantBrush`, `AlertWarningBrush`, `AlertCautionBrush`) and the code
+  brushes (`CodeKeywordBrush`, `CodeStringBrush`, `CodeCommentBrush`, `CodeConstantBrush`, `CodeTagBrush`,
+  `CodePropertyBrush`) to match a theme; they apply without rebuilding the view.
 - **Updates**: when `Markdown` changes, only the top-level blocks whose source changed are rebuilt, so a reply that
   grows as it arrives does not flicker.
 

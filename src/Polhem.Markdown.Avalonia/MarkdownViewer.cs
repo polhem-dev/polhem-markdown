@@ -16,8 +16,8 @@ namespace Polhem.Markdown.Avalonia;
 /// <remarks>
 /// When <see cref="Markdown"/> changes, only the top-level blocks whose source changed are rebuilt, so a text that grows
 /// while it arrives does not flicker. The colors work on light and dark themes; set <see cref="LinkForeground"/>,
-/// <see cref="CodeBackground"/>, <see cref="RuleBrush"/> and the alert brushes (such as <see cref="AlertNoteBrush"/>) to
-/// match a theme.
+/// <see cref="CodeBackground"/>, <see cref="RuleBrush"/>, the alert brushes (such as <see cref="AlertNoteBrush"/>) and the
+/// code brushes (such as <see cref="CodeKeywordBrush"/>) to match a theme.
 /// </remarks>
 public class MarkdownViewer : Control
 {
@@ -60,6 +60,30 @@ public class MarkdownViewer : Control
     /// <summary>Defines the <see cref="AlertCautionBrush"/> property.</summary>
     public static readonly StyledProperty<IBrush> AlertCautionBrushProperty =
         AvaloniaProperty.Register<MarkdownViewer, IBrush>(nameof(AlertCautionBrush), new SolidColorBrush(Color.FromRgb(0xE5, 0x48, 0x4D)));
+
+    /// <summary>Defines the <see cref="CodeKeywordBrush"/> property.</summary>
+    public static readonly StyledProperty<IBrush> CodeKeywordBrushProperty =
+        AvaloniaProperty.Register<MarkdownViewer, IBrush>(nameof(CodeKeywordBrush), new SolidColorBrush(Color.FromRgb(0x8B, 0x5C, 0xF6)));
+
+    /// <summary>Defines the <see cref="CodeStringBrush"/> property.</summary>
+    public static readonly StyledProperty<IBrush> CodeStringBrushProperty =
+        AvaloniaProperty.Register<MarkdownViewer, IBrush>(nameof(CodeStringBrush), new SolidColorBrush(Color.FromRgb(0x22, 0xA3, 0x5A)));
+
+    /// <summary>Defines the <see cref="CodeCommentBrush"/> property.</summary>
+    public static readonly StyledProperty<IBrush> CodeCommentBrushProperty =
+        AvaloniaProperty.Register<MarkdownViewer, IBrush>(nameof(CodeCommentBrush), new SolidColorBrush(Color.FromRgb(0x8A, 0x8F, 0x98)));
+
+    /// <summary>Defines the <see cref="CodeConstantBrush"/> property.</summary>
+    public static readonly StyledProperty<IBrush> CodeConstantBrushProperty =
+        AvaloniaProperty.Register<MarkdownViewer, IBrush>(nameof(CodeConstantBrush), new SolidColorBrush(Color.FromRgb(0xD9, 0x77, 0x06)));
+
+    /// <summary>Defines the <see cref="CodeTagBrush"/> property.</summary>
+    public static readonly StyledProperty<IBrush> CodeTagBrushProperty =
+        AvaloniaProperty.Register<MarkdownViewer, IBrush>(nameof(CodeTagBrush), new SolidColorBrush(Color.FromRgb(0xE5, 0x48, 0x4D)));
+
+    /// <summary>Defines the <see cref="CodePropertyBrush"/> property.</summary>
+    public static readonly StyledProperty<IBrush> CodePropertyBrushProperty =
+        AvaloniaProperty.Register<MarkdownViewer, IBrush>(nameof(CodePropertyBrush), new SolidColorBrush(Color.FromRgb(0x3B, 0x82, 0xF6)));
 
     /// <summary>Defines the <see cref="CodeFontFamily"/> property.</summary>
     public static readonly StyledProperty<FontFamily> CodeFontFamilyProperty =
@@ -162,6 +186,48 @@ public class MarkdownViewer : Control
     {
         get => GetValue(AlertCautionBrushProperty);
         set => SetValue(AlertCautionBrushProperty, value);
+    }
+
+    /// <summary>Gets or sets the brush of keywords in a highlighted code block.</summary>
+    public IBrush CodeKeywordBrush
+    {
+        get => GetValue(CodeKeywordBrushProperty);
+        set => SetValue(CodeKeywordBrushProperty, value);
+    }
+
+    /// <summary>Gets or sets the brush of strings in a highlighted code block.</summary>
+    public IBrush CodeStringBrush
+    {
+        get => GetValue(CodeStringBrushProperty);
+        set => SetValue(CodeStringBrushProperty, value);
+    }
+
+    /// <summary>Gets or sets the brush of comments in a highlighted code block.</summary>
+    public IBrush CodeCommentBrush
+    {
+        get => GetValue(CodeCommentBrushProperty);
+        set => SetValue(CodeCommentBrushProperty, value);
+    }
+
+    /// <summary>Gets or sets the brush of numbers and constants such as <c>true</c> and <c>null</c> in a highlighted code block.</summary>
+    public IBrush CodeConstantBrush
+    {
+        get => GetValue(CodeConstantBrushProperty);
+        set => SetValue(CodeConstantBrushProperty, value);
+    }
+
+    /// <summary>Gets or sets the brush of markup tag names in a highlighted code block.</summary>
+    public IBrush CodeTagBrush
+    {
+        get => GetValue(CodeTagBrushProperty);
+        set => SetValue(CodeTagBrushProperty, value);
+    }
+
+    /// <summary>Gets or sets the brush of attribute names, JSON and YAML keys, CSS properties and shell variables in a highlighted code block.</summary>
+    public IBrush CodePropertyBrush
+    {
+        get => GetValue(CodePropertyBrushProperty);
+        set => SetValue(CodePropertyBrushProperty, value);
     }
 
     /// <summary>Gets or sets the font of inline code and code blocks.</summary>
