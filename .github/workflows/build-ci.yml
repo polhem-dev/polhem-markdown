@@ -79,6 +79,11 @@ jobs:
   # SonarCloud analysis. It runs apart from the build job above, because the scanner wraps the build and turns warnings
   # back into warnings, so the build job stays the gate for TreatWarningsAsErrors. Settings tied to the files of this
   # repository are in SonarQube.Analysis.xml.
+  #
+  # The job fails when the SonarCloud quality gate fails, and repo-baseline.json in polhem-dev/.github makes it a
+  # required check of `main`. The check that SonarCloud posts itself is not required instead, because it never appears
+  # on a pull request that skips the analysis (one that changes only documentation, or one from a fork, which gets no
+  # token); this job always starts and reports success there.
   sonarcloud:
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -141,6 +146,7 @@ jobs:
           /o:"polhem-dev"
           /d:sonar.token="$SONAR_TOKEN"
           /d:sonar.host.url="https://sonarcloud.io"
+          /d:sonar.qualitygate.wait=true
           /s:"$GITHUB_WORKSPACE/SonarQube.Analysis.xml"
 
       - name: Build
