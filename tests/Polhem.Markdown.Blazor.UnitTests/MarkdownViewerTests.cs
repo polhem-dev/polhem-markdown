@@ -36,6 +36,23 @@ public class MarkdownViewerTests : BunitContext
             "<div class=\"pmd\"><p>Hello <em>big</em> <strong>world</strong> <code>code</code><br>next</p></div>");
     }
 
+    [Fact(DisplayName = "Struck-through text renders as a del element")]
+    public void Render_Strikethrough_IsDel()
+    {
+        Show("now ~~was~~").MarkupMatches("<div class=\"pmd\"><p>now <del>was</del></p></div>");
+    }
+
+    [Fact(DisplayName = "A task list item renders a disabled check box, and an ordinary item keeps its bullet")]
+    public void Render_TaskList_HasDisabledCheckBoxes()
+    {
+        Show("- [x] done\n- [ ] open\n- plain").MarkupMatches(
+            "<div class=\"pmd\"><ul>" +
+            "<li class=\"pmd-task\"><input type=\"checkbox\" disabled checked><p>done</p></li>" +
+            "<li class=\"pmd-task\"><input type=\"checkbox\" disabled><p>open</p></li>" +
+            "<li><p>plain</p></li>" +
+            "</ul></div>");
+    }
+
     [Fact(DisplayName = "A heading keeps its level")]
     public void Render_Heading_KeepsLevel()
     {

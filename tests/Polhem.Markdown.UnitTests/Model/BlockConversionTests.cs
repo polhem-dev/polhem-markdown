@@ -69,6 +69,36 @@ public class BlockConversionTests
         Assert.True(Single<ListNode>(Parse("- one\n\n- two")).IsLoose);
     }
 
+    [Fact(DisplayName = "A task list item records whether it is done, and its text no longer holds the check box")]
+    public void Build_TaskList_RecordsState()
+    {
+        var list = Single<ListNode>(Parse("- [ ] open\n- [x] done\n- [X] also done\n- plain"));
+
+        Assert.Equal([false, true, true, null], list.Items.Select(item => item.IsChecked));
+        Assert.Equal(["open", "done", "also done", "plain"],
+            list.Items.Select(item => Text(Assert.IsType<ParagraphNode>(Assert.Single(item.Blocks)).Inlines)));
+    }
+
+    [Fact(DisplayName = "A task list item's text still covers its own source after the check box is removed")]
+    public void Build_TaskListText_CoversItsSource()
+    {
+        const string Markdown = "- [x] done";
+
+        var item = Assert.Single(Single<ListNode>(Parse(Markdown)).Items);
+        var text = Assert.IsType<TextNode>(Assert.Single(Assert.IsType<ParagraphNode>(Assert.Single(item.Blocks)).Inlines));
+
+        Assert.Equal("done", Markdown.Substring(text.Range.Start, text.Range.Length));
+    }
+
+    [Theory(DisplayName = "Brackets that are not at the start of a list item are ordinary text")]
+    [InlineData("[ ] not in a list")]
+    [InlineData("- see [x] here")]
+    public void Build_BracketsOutsideTaskPosition_AreText(string markdown)
+    {
+        Assert.Contains("[", string.Concat(AllNodes(Parse(markdown)).OfType<TextNode>().Select(text => text.Text)));
+        Assert.DoesNotContain(AllNodes(Parse(markdown)).OfType<ListItemNode>(), item => item.IsChecked is not null);
+    }
+
     [Fact(DisplayName = "A nested list sits inside its parent item")]
     public void Build_NestedList_IsInsideItem()
     {

@@ -20,6 +20,11 @@ internal static class SampleText
            - fills in the address
         3. Order date
 
+        Still to do:
+
+        - [x] Add the ~~customer code~~ customer lookup
+        - [ ] Check the rounding of the amount
+
         > The quantity and the unit price are multiplied into the amount,
         > which is rounded to two decimals.
 

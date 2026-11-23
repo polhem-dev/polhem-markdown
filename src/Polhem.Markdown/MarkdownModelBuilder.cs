@@ -1,6 +1,8 @@
 using System.Globalization;
 using Markdig;
+using Markdig.Extensions.EmphasisExtras;
 using Markdig.Extensions.Tables;
+using Markdig.Extensions.TaskLists;
 using Markdig.Syntax;
 using Markdig.Syntax.Inlines;
 using Polhem.Markdown.Model;
@@ -19,13 +21,15 @@ namespace Polhem.Markdown;
 internal sealed class MarkdownModelBuilder
 {
     // NOTE: only the extensions whose nodes the viewers render are enabled. `UseAdvancedExtensions` would parse
-    // footnotes, task lists, math and others that no viewer draws. `DisableHtml` makes Markdig itself read raw HTML as
+    // footnotes, math and others that no viewer draws. `DisableHtml` makes Markdig itself read raw HTML as
     // text, and the HTML cases below remain only as a second line of defence.
     private static readonly MarkdownPipeline s_pipeline = new MarkdownPipelineBuilder()
         .DisableHtml()
         .UsePipeTables()
         .UseAutoLinks()
         .UseCjkFriendlyEmphasis()
+        .UseEmphasisExtras(EmphasisExtraOptions.Strikethrough)
+        .UseTaskLists()
         .UsePreciseSourceLocation()
         .Build();
 
@@ -97,8 +101,42 @@ internal sealed class MarkdownModelBuilder
         var start = list.IsOrdered && int.TryParse(list.OrderedStart, NumberStyles.None, CultureInfo.InvariantCulture, out var number)
             ? number
             : 1;
-        var items = list.OfType<ListItemBlock>().Select(item => new ListItemNode(Range(item), Blocks(item))).ToList();
+        var items = list.OfType<ListItemBlock>().Select(ListItem).ToList();
         return new ListNode(Range(list), list.IsOrdered, start, list.IsLoose, items);
+    }
+
+    private ListItemNode ListItem(ListItemBlock item)
+    {
+        var blocks = Blocks(item);
+
+        // The check box belongs to the item, so its inline is dropped from the text (see `AddInline`), and with it the
+        // space that separates it from the text.
+        if (item.FirstOrDefault() is ParagraphBlock { Inline.FirstChild: TaskList task } && blocks is [ParagraphNode first, ..])
+        {
+            blocks[0] = first with { Inlines = WithoutLeadingSpace(first.Inlines) };
+            return new ListItemNode(Range(item), blocks, task.Checked);
+        }
+        return new ListItemNode(Range(item), blocks, null);
+    }
+
+    private static List<InlineNode> WithoutLeadingSpace(IReadOnlyList<InlineNode> inlines)
+    {
+        var result = inlines.ToList();
+        if (result is [TextNode text, ..] && text.Text.Length > 0 && char.IsWhiteSpace(text.Text[0]))
+        {
+            var trimmed = text.Text.TrimStart();
+            var removed = text.Text.Length - trimmed.Length;
+            var range = new SourceRange(text.Range.Start + Math.Min(removed, text.Range.Length), Math.Max(text.Range.Length - removed, 0));
+            if (trimmed.Length == 0)
+            {
+                result.RemoveAt(0);
+            }
+            else
+            {
+                result[0] = new TextNode(range, trimmed);
+            }
+        }
+        return result;
     }
 
     private TableNode Table(Table table)
@@ -164,7 +202,13 @@ internal sealed class MarkdownModelBuilder
                 inlines.Add(new CodeSpanNode(Range(code), code.Content));
                 break;
             case EmphasisInline emphasis:
-                inlines.Add(new EmphasisNode(Range(emphasis), emphasis.DelimiterCount >= 2, Inlines(emphasis)));
+                inlines.Add(new EmphasisNode(Range(emphasis), Kind(emphasis), Inlines(emphasis)));
+                break;
+            case TaskList task:
+                if (!IsItemCheckBox(task))
+                {
+                    inlines.Add(SourceText(task));
+                }
                 break;
             case LineBreakInline lineBreak:
                 inlines.Add(lineBreak.IsHard ? new LineBreakNode(Range(lineBreak)) : new TextNode(Range(lineBreak), " "));
@@ -192,6 +236,22 @@ internal sealed class MarkdownModelBuilder
                 break;
         }
     }
+
+    /// <summary>
+    /// Whether a task list inline opens its list item, where it is the item's check box. Markdig also parses `[x]`
+    /// later in an item's text, which shows as written, as it does on GitHub.
+    /// </summary>
+    private static bool IsItemCheckBox(TaskList task) =>
+        task.PreviousSibling is null
+        && task.Parent?.ParentBlock is ParagraphBlock { Parent: ListItemBlock item } paragraph
+        && ReferenceEquals(item.FirstOrDefault(), paragraph);
+
+    private static EmphasisKind Kind(EmphasisInline emphasis) => emphasis switch
+    {
+        { DelimiterChar: '~' } => EmphasisKind.Strikethrough,
+        { DelimiterCount: >= 2 } => EmphasisKind.Bold,
+        _ => EmphasisKind.Italic,
+    };
 
     private void AddLink(Inline link, string? target, List<InlineNode> content, List<InlineNode> inlines)
     {

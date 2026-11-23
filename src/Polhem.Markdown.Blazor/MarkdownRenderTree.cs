@@ -100,7 +100,17 @@ internal sealed class MarkdownRenderTree
         {
             _builder.OpenRegion(3);
             _builder.OpenElement(0, "li");
-            Blocks(1, item.Blocks);
+            if (item.IsChecked is { } isChecked)
+            {
+                // The check box shows the state written in the text; it is disabled because a click changes nothing.
+                _builder.AddAttribute(1, "class", "pmd-task");
+                _builder.OpenElement(2, "input");
+                _builder.AddAttribute(3, "type", "checkbox");
+                _builder.AddAttribute(4, "disabled", true);
+                _builder.AddAttribute(5, "checked", isChecked);
+                _builder.CloseElement();
+            }
+            Blocks(6, item.Blocks);
             _builder.CloseElement();
             _builder.CloseRegion();
             _rendered.Add(typeof(ListItemNode));
@@ -248,7 +258,12 @@ internal sealed class MarkdownRenderTree
                 _builder.CloseElement();
                 break;
             case EmphasisNode emphasis:
-                Element(emphasis.IsStrong ? "strong" : "em", emphasis.Inlines);
+                Element(emphasis.Kind switch
+                {
+                    EmphasisKind.Bold => "strong",
+                    EmphasisKind.Strikethrough => "del",
+                    _ => "em",
+                }, emphasis.Inlines);
                 break;
             case LinkNode link:
                 Link(link);

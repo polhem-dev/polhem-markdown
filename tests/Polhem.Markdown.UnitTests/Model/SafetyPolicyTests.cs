@@ -87,14 +87,6 @@ public class SafetyPolicyTests
         Assert.DoesNotContain(AllNodes(document), node => node is LinkNode);
     }
 
-    [Fact(DisplayName = "A task list, which the viewers do not render, shows its box as text")]
-    public void Build_TaskList_ShowsBoxAsText()
-    {
-        var item = Assert.Single(Single<ListNode>(Parse("- [ ] todo")).Items);
-
-        Assert.Equal("[ ] todo", Text(Assert.IsType<ParagraphNode>(Assert.Single(item.Blocks)).Inlines));
-    }
-
     [Fact(DisplayName = "A footnote reference whose definition is not a URL shows as its label, without a link")]
     public void Build_Footnote_ShowsLabelWithoutLink()
     {
