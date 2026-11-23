@@ -139,6 +139,19 @@ public class MarkdownViewerTests(HeadlessSession session)
         Assert.Contains(Descendants<SelectableTextBlock>(code), text => text.Text == "SELECT 1;");
     });
 
+    [Theory(DisplayName = "A code block lays out every line of its code, so its last line is not cut off")]
+    [InlineData("one\ntwo\nthree")]
+    [InlineData("one\ntwo\nthree, a line long enough that the code block has to scroll sideways to show all of it")]
+    public Task Render_CodeBlock_LaysOutEveryLine(string code) => session.RunAsync(() =>
+    {
+        var (_, viewer) = Show($"```text\n{code}\n```\n\nafter");
+
+        var block = Assert.IsType<CodeBlockView>(Blocks(viewer).First());
+        var body = Assert.Single(Descendants<SelectableTextBlock>(block));
+        Assert.Equal(code.Split('\n').Length, body.TextLayout.TextLines.Count);
+        Assert.True(body.Bounds.Height >= body.TextLayout.Height);
+    });
+
     [Fact(DisplayName = "The copy button of a code block puts the code on the clipboard")]
     public Task CopyCode_PutsCodeOnClipboard() => session.RunAsync(async () =>
     {
