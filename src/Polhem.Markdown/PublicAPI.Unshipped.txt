@@ -1,3 +1,5 @@
 #nullable enable
 Polhem.Markdown.MarkdownOptions.RenderMermaidDiagrams.get -> bool
 Polhem.Markdown.MarkdownOptions.RenderMermaidDiagrams.set -> void
+Polhem.Markdown.MarkdownOptions.BaseUri.get -> System.Uri?
+Polhem.Markdown.MarkdownOptions.BaseUri.set -> void

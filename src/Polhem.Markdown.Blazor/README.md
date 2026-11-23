@@ -17,7 +17,9 @@ Link the stylesheet in the host page, then use the component:
 
 - **Safety**: the markup is built with a render tree, never from an HTML string. Raw HTML shows as text, images as
   their alternative text, and only links whose scheme is in `Options.AllowedLinkSchemes` (by default `http`, `https`
-  and `mailto`) become links.
+  and `mailto`) become links. Relative links (`CHANGELOG.md`,
+  `../README.md`) stay text unless `Options.BaseUri` is set, such as to the address of the document being shown; they
+  then resolve against it by the standard URI rules, and the resolved link must still use an allowed scheme.
 - **Links**: with `OnLinkActivated` set, a click does not navigate and the host decides what the link does; without it,
   the browser opens the link in a new tab. A link to a heading of the same text (`[setup](#setup)`, with the id GitHub
   gives the heading) is not reported: the click scrolls the heading to the top and moves focus to it. The id is not

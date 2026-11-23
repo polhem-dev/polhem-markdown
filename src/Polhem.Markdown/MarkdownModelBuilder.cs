@@ -488,18 +488,37 @@ internal sealed class MarkdownModelBuilder
         inlines.Add(new AnchorLinkNode(Range(link), id, content));
     }
 
+    /// <summary>
+    /// The URI a link goes to: its target when the target names its scheme, otherwise the target as a relative reference
+    /// resolved against <see cref="MarkdownOptions.BaseUri"/> when one is set. Either way the scheme must be allowed.
+    /// </summary>
     private bool TryCreateTarget(string? target, out Uri uri)
     {
-        // WARNING: on Unix `Uri.TryCreate` accepts a rooted path such as `/etc/passwd` as an absolute `file` URI, so
-        // the scheme check below is what refuses it; do not relax it to "any absolute URI".
-        if (Uri.TryCreate(target, UriKind.Absolute, out var created) && _options.AllowedLinkSchemes.Contains(created.Scheme))
+        // WARNING: .NET reads a rooted path such as `/etc/passwd` (on Unix) or `C:\x` (on Windows) as an absolute
+        // `file` URI. Only a target that writes its scheme counts as absolute here, so such a path is a relative
+        // reference: with a web base it stays on the base's host, and without a base it is text, even when the host
+        // allows `file`. The scheme check applies to both outcomes; do not relax it to "any absolute URI".
+        if (Uri.TryCreate(target, UriKind.Absolute, out var created) && WritesScheme(target!, created) && IsAllowed(created))
         {
             uri = created;
+            return true;
+        }
+        if (target is not null && _options.BaseUri is { } baseUri
+            && Uri.TryCreate(target, UriKind.Relative, out var relative)
+            && Uri.TryCreate(baseUri, relative, out var resolved) && IsAllowed(resolved))
+        {
+            uri = resolved;
             return true;
         }
         uri = null!;
         return false;
     }
+
+    private static bool WritesScheme(string target, Uri uri) =>
+        target.Length > uri.Scheme.Length && target[uri.Scheme.Length] == ':'
+        && target.StartsWith(uri.Scheme, StringComparison.OrdinalIgnoreCase);
+
+    private bool IsAllowed(Uri uri) => uri.IsAbsoluteUri && _options.AllowedLinkSchemes.Contains(uri.Scheme);
 
     private static string PlainText(ContainerInline container)
     {

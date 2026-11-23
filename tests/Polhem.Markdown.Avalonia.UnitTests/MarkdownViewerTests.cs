@@ -113,6 +113,24 @@ public class MarkdownViewerTests(HeadlessSession session)
         Assert.Equal("polhem", Assert.Single(Assert.IsType<MarkdownTextBlock>(Assert.Single(Blocks(viewer))).Links).Target!.Scheme);
     });
 
+    [Fact(DisplayName = "A relative link resolves against the base and is reported as the resolved address")]
+    public Task Render_RelativeLink_ResolvesAgainstBase() => session.RunAsync(() =>
+    {
+        var options = new MarkdownOptions { BaseUri = new Uri("https://example.com/repo/README.md") };
+        var (window, viewer) = Show("See [the changelog](CHANGELOG.md).", options);
+        var text = Assert.IsType<MarkdownTextBlock>(Assert.Single(Blocks(viewer)));
+        Uri? received = null;
+        window.AddHandler(MarkdownViewer.LinkActivatedEvent, (_, e) =>
+        {
+            received = e.Uri;
+            e.Handled = true;
+        });
+
+        viewer.ActivateLink(text, Assert.Single(text.Links).Target!);
+
+        Assert.Equal(new Uri("https://example.com/repo/CHANGELOG.md"), received);
+    });
+
     [Fact(DisplayName = "Activating a link raises LinkActivated, which bubbles to the window")]
     public Task ActivateLink_RaisesBubblingEvent() => session.RunAsync(() =>
     {
