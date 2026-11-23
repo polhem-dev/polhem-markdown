@@ -141,3 +141,15 @@
   font-weight: 600;
   background: var(--pmd-code-bg, rgba(128, 128, 128, 0.12));
 }
+
+.pmd li.pmd-task {
+  list-style: none;
+  position: relative;
+}
+
+.pmd .pmd-task > input {
+  position: absolute;
+  left: -1.4em;
+  top: 0.3em;
+  margin: 0;
+}

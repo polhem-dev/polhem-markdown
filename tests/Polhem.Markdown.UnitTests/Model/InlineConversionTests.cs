@@ -5,16 +5,17 @@ namespace Polhem.Markdown.UnitTests.Model;
 
 public class InlineConversionTests
 {
-    [Theory(DisplayName = "Single delimiters make italic text and double delimiters bold text")]
-    [InlineData("*word*", false)]
-    [InlineData("_word_", false)]
-    [InlineData("**word**", true)]
-    [InlineData("__word__", true)]
-    public void Build_Emphasis_SetsStrong(string markdown, bool strong)
+    [Theory(DisplayName = "Single delimiters make italic text, double delimiters bold text, and double tildes strike it through")]
+    [InlineData("*word*", nameof(EmphasisKind.Italic))]
+    [InlineData("_word_", nameof(EmphasisKind.Italic))]
+    [InlineData("**word**", nameof(EmphasisKind.Bold))]
+    [InlineData("__word__", nameof(EmphasisKind.Bold))]
+    [InlineData("~~word~~", nameof(EmphasisKind.Strikethrough))]
+    public void Build_Emphasis_SetsKind(string markdown, string kind)
     {
         var emphasis = Assert.IsType<EmphasisNode>(Assert.Single(Single<ParagraphNode>(Parse(markdown)).Inlines));
 
-        Assert.Equal(strong, emphasis.IsStrong);
+        Assert.Equal(Enum.Parse<EmphasisKind>(kind), emphasis.Kind);
         Assert.Equal("word", Text(emphasis.Inlines));
     }
 
@@ -24,7 +25,7 @@ public class InlineConversionTests
         var outer = Assert.IsType<EmphasisNode>(Assert.Single(Single<ParagraphNode>(Parse("***word***")).Inlines));
         var inner = Assert.IsType<EmphasisNode>(Assert.Single(outer.Inlines));
 
-        Assert.NotEqual(outer.IsStrong, inner.IsStrong);
+        Assert.NotEqual(outer.Kind, inner.Kind);
         Assert.Equal("word", Text(inner.Inlines));
     }
 
@@ -34,8 +35,18 @@ public class InlineConversionTests
         var paragraph = Single<ParagraphNode>(Parse("請注意**「必填」**欄位。"));
 
         var emphasis = Assert.Single(paragraph.Inlines.OfType<EmphasisNode>());
-        Assert.True(emphasis.IsStrong);
+        Assert.Equal(EmphasisKind.Bold, emphasis.Kind);
         Assert.Equal("「必填」", Text(emphasis.Inlines));
+    }
+
+    [Fact(DisplayName = "Struck-through text can hold other emphasis")]
+    public void Build_Strikethrough_HoldsEmphasis()
+    {
+        var strike = Assert.IsType<EmphasisNode>(Assert.Single(Single<ParagraphNode>(Parse("~~old **price**~~")).Inlines));
+
+        Assert.Equal(EmphasisKind.Strikethrough, strike.Kind);
+        Assert.Equal("old price", Text(strike.Inlines));
+        Assert.Equal(EmphasisKind.Bold, Assert.Single(strike.Inlines.OfType<EmphasisNode>()).Kind);
     }
 
     [Fact(DisplayName = "Inline code keeps its text without the backticks")]

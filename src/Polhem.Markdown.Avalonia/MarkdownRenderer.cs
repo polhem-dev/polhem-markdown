@@ -69,19 +69,22 @@ internal sealed class MarkdownRenderer
         {
             grid.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
 
-            var marker = new TextBlock
-            {
-                Text = list.IsOrdered
-                    ? (list.Start + index).ToString(System.Globalization.CultureInfo.InvariantCulture) + "."
-                    : s_bullets[depth % s_bullets.Length],
-                Margin = new Thickness(0, 0, 6, 0),
-                HorizontalAlignment = HorizontalAlignment.Right,
-                MinWidth = list.IsOrdered ? 18 : 12,
-                TextAlignment = TextAlignment.Right,
-            };
+            var item = list.Items[index];
+            Control marker = item.IsChecked is { } isChecked
+                ? TaskCheckBox(isChecked)
+                : new TextBlock
+                {
+                    Text = list.IsOrdered
+                        ? (list.Start + index).ToString(System.Globalization.CultureInfo.InvariantCulture) + "."
+                        : s_bullets[depth % s_bullets.Length],
+                    Margin = new Thickness(0, 0, 6, 0),
+                    HorizontalAlignment = HorizontalAlignment.Right,
+                    MinWidth = list.IsOrdered ? 18 : 12,
+                    TextAlignment = TextAlignment.Right,
+                };
             Grid.SetRow(marker, index);
 
-            var content = Blocks(list.Items[index].Blocks, depth + 1, spacing: list.IsLoose ? 8 : 4);
+            var content = Blocks(item.Blocks, depth + 1, spacing: list.IsLoose ? 8 : 4);
             Grid.SetRow(content, index);
             Grid.SetColumn(content, 1);
 
@@ -90,6 +93,18 @@ internal sealed class MarkdownRenderer
         }
         return grid;
     }
+
+    /// <summary>The check box of a task list item, which shows the state written in the text and cannot be changed.</summary>
+    private static CheckBox TaskCheckBox(bool isChecked) => new()
+    {
+        IsChecked = isChecked,
+        IsEnabled = false,
+        MinWidth = 0,
+        MinHeight = 0,
+        Padding = new Thickness(0),
+        Margin = new Thickness(0, 0, 6, 0),
+        VerticalAlignment = VerticalAlignment.Top,
+    };
 
     private Border Quote(QuoteNode quote, int depth)
     {
@@ -215,7 +230,12 @@ internal sealed class MarkdownRenderer
                 return run;
 
             case EmphasisNode emphasis:
-                var span = emphasis.IsStrong ? (Span)new Bold() : new Italic();
+                var span = emphasis.Kind switch
+                {
+                    EmphasisKind.Bold => new Bold(),
+                    EmphasisKind.Strikethrough => new Span { TextDecorations = TextDecorations.Strikethrough },
+                    _ => (Span)new Italic(),
+                };
                 foreach (var child in emphasis.Inlines)
                 {
                     span.Inlines.Add(Inline(child, owner, ref offset));

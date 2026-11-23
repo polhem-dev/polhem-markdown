@@ -154,6 +154,30 @@ public class MarkdownViewerTests(HeadlessSession session)
         Assert.Equal(["3.", "4.", "◦"], markers);
     });
 
+    [Fact(DisplayName = "A task list item shows a check box that cannot be changed in place of its bullet")]
+    public Task Render_TaskList_ShowsReadOnlyCheckBoxes() => session.RunAsync(() =>
+    {
+        var (_, viewer) = Show("- [x] done\n- [ ] open\n- plain");
+
+        var list = Assert.Single(Blocks(viewer));
+        var boxes = Descendants<CheckBox>(list).ToList();
+        Assert.Equal([true, false], boxes.Select(box => box.IsChecked));
+        Assert.All(boxes, box => Assert.False(box.IsEnabled));
+        Assert.Equal(["•"], Descendants<TextBlock>(list).Where(text => text is not SelectableTextBlock).Select(text => text.Text));
+        Assert.Equal(["done", "open", "plain"], Descendants<SelectableTextBlock>(list).Select(text => text.Inlines!.Text));
+    });
+
+    [Fact(DisplayName = "Struck-through text is drawn with a line through it")]
+    public Task Render_Strikethrough_HasLineThrough() => session.RunAsync(() =>
+    {
+        var (_, viewer) = Show("now ~~was~~");
+
+        var text = Assert.IsType<MarkdownTextBlock>(Assert.Single(Blocks(viewer)));
+        var span = Assert.IsType<Span>(text.Inlines![1]);
+        Assert.Equal(TextDecorations.Strikethrough, span.TextDecorations);
+        Assert.Equal("now was", text.Inlines.Text);
+    });
+
     [Fact(DisplayName = "Adding a block at the end builds only that block and keeps the others as they were")]
     public Task Update_Append_BuildsOnlyNewBlock() => session.RunAsync(() =>
     {

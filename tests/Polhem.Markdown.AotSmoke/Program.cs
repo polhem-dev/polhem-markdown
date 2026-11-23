@@ -12,6 +12,7 @@ const string Markdown = """
     1. one
     2. two
        - nested
+       - [x] a done task, ~~struck~~
 
     > quoted
 
