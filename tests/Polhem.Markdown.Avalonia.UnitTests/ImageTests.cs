@@ -335,4 +335,48 @@ public class ImageTests(HeadlessSession session)
     {
         Assert.Null(await ImageSources.LoadAsync(new Uri(source), CancellationToken.None));
     }
+
+    [Fact(DisplayName = "An image written by reference is rebuilt when its definition points somewhere else")]
+    public Task Update_ReferenceImageRepointed_LoadsTheNewImage() => session.RunAsync(async () =>
+    {
+        var calls = new List<Uri>();
+        var (_, viewer) = Show("![a][r]\n\n[r]: https://x.test/1.png", images: Serve(Png(8, 8), calls));
+        await AllLoaded(viewer);
+
+        viewer.Markdown = "![a][r]\n\n[r]: https://x.test/2.png";
+        await AllLoaded(viewer);
+
+        Assert.Equal(new Uri("https://x.test/2.png"), Descendants<ImageView>(viewer).Single().Source);
+        Assert.Equal([new Uri("https://x.test/1.png"), new Uri("https://x.test/2.png")], calls);
+        Assert.Equal(8 * 8 * 4, viewer.ImageBytesInUse);
+    });
+
+    [Fact(DisplayName = "A viewer loads only a few images at the same time")]
+    public Task Render_ManyImages_LoadFewAtATime() => session.RunAsync(async () =>
+    {
+        var running = 0;
+        var most = 0;
+        var png = Png(2, 2);
+        var markdown = string.Concat(Enumerable.Range(0, 20).Select(index => $"![{index}](https://img.example/{index}.png) "));
+        var (_, viewer) = Show(markdown, images: async (_, _) =>
+        {
+            var now = Interlocked.Increment(ref running);
+            InterlockedMax(ref most, now);
+            await Task.Delay(20, CancellationToken.None);
+            Interlocked.Decrement(ref running);
+            return new MemoryStream(png);
+        });
+
+        await AllLoaded(viewer);
+
+        Assert.InRange(most, 1, MarkdownViewer.MaxConcurrentImageLoads);
+    });
+
+    private static void InterlockedMax(ref int target, int value)
+    {
+        int current;
+        while ((current = Volatile.Read(ref target)) < value && Interlocked.CompareExchange(ref target, value, current) != current)
+        {
+        }
+    }
 }

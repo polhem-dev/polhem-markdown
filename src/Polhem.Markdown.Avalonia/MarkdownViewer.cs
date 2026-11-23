@@ -381,7 +381,7 @@ public partial class MarkdownViewer : Control
 
     /// <summary>
     /// The source of a top-level block, followed by what inside it depends on the rest of the text: heading ids, resolved
-    /// links to headings, and footnote numbers and ids. A heading or a footnote definition that arrives later turns
+    /// links to headings, footnote numbers and ids, and image sources. A heading or a footnote definition that arrives later turns
     /// earlier text into a link, a heading added above another of the same name changes that one's id, and a reference
     /// added earlier renumbers the notes, all without the block's own source changing.
     /// </summary>
@@ -395,6 +395,8 @@ public partial class MarkdownViewer : Control
                 FootnoteReferenceNode reference => "^" + reference.Id + ">" + reference.NoteId + "=" + reference.Number,
                 FootnoteNode note => "[" + note.Id + "=" + note.Number,
                 FootnoteBackLinkNode back => "<" + back.ReferenceId + "=" + back.Position,
+                // An image written by reference (`![a][r]`) takes its source from a definition elsewhere in the text.
+                ImageNode image => "!" + image.Source.AbsoluteUri,
                 _ => null,
             })
             .OfType<string>()

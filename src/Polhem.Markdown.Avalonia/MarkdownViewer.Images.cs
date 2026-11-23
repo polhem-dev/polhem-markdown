@@ -8,9 +8,13 @@ public partial class MarkdownViewer
     /// <summary>The most bytes the decoded images of one viewer may take; images beyond it show their alternative text.</summary>
     internal const long ImageBudgetBytes = 256L * 1024 * 1024;
 
+    /// <summary>How many images one viewer loads and decodes at the same time.</summary>
+    internal const int MaxConcurrentImageLoads = 4;
+
     private readonly Dictionary<Uri, Task<LoadedImage?>> _images = [];
 
     private readonly ImageBudget _imageBudget = new(ImageBudgetBytes);
+    private readonly SemaphoreSlim _imageSlots = new(MaxConcurrentImageLoads);
 
     private Func<Uri, CancellationToken, Task<Stream?>>? _imageLoader;
 
@@ -56,13 +60,23 @@ public partial class MarkdownViewer
         var loader = _imageLoader ?? ImageSources.LoadAsync;
         loading = Task.Run(async () =>
         {
-            await using var stream = await loader(source, CancellationToken.None).ConfigureAwait(false);
-            if (stream is null)
+            // NOTE: loads wait for one another past a few at a time, so a reply with many image addresses costs no more
+            // memory and processor time at once than a few images do.
+            await _imageSlots.WaitAsync().ConfigureAwait(false);
+            try
             {
-                return null;
+                await using var stream = await loader(source, CancellationToken.None).ConfigureAwait(false);
+                if (stream is null)
+                {
+                    return null;
+                }
+                using var data = await ImageSources.ReadLimitedAsync(stream, CancellationToken.None).ConfigureAwait(false);
+                return data is null ? null : ImageDecoder.Decode(data, _imageBudget);
             }
-            using var data = await ImageSources.ReadLimitedAsync(stream, CancellationToken.None).ConfigureAwait(false);
-            return data is null ? null : ImageDecoder.Decode(data, _imageBudget);
+            finally
+            {
+                _imageSlots.Release();
+            }
         });
         _images[source] = loading;
         return loading;
