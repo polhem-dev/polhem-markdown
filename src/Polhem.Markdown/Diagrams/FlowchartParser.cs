@@ -276,7 +276,8 @@ internal static partial class FlowchartParser
     {
         public List<NodeDraft> Nodes { get; } = [];
 
-        public Dictionary<string, int> Indexes { get; } = new(StringComparer.Ordinal);
+        // NOTE: the default comparer of `string` is ordinal, which node ids need.
+        public Dictionary<string, int> Indexes { get; } = [];
 
         public List<FlowEdge> Edges { get; } = [];
     }
