@@ -7,10 +7,10 @@ namespace Polhem.Markdown.Highlighting;
 /// <remarks>NOTE: each line is read once from left to right, so the cost is linear in the length of the code.</remarks>
 internal static class YamlScanner
 {
-    private static readonly HashSet<string> s_constants = new(StringComparer.Ordinal)
-    {
+    private static readonly HashSet<string> s_constants =
+    [
         "true", "false", "null", "~", "yes", "no", "on", "off", "True", "False", "Null", "TRUE", "FALSE", "NULL",
-    };
+    ];
 
     public static void Scan(string code, TokenList tokens)
     {

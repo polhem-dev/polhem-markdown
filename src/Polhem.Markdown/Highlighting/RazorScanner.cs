@@ -12,18 +12,18 @@ namespace Polhem.Markdown.Highlighting;
 /// </remarks>
 internal sealed class RazorScanner : MarkupScanner
 {
-    private static readonly HashSet<string> s_blockDirectives = new(StringComparer.Ordinal) { "code", "functions" };
+    private static readonly HashSet<string> s_blockDirectives = ["code", "functions"];
 
-    private static readonly HashSet<string> s_lineDirectives = new(StringComparer.Ordinal)
-    {
+    private static readonly HashSet<string> s_lineDirectives =
+    [
         "page", "using", "inject", "model", "inherits", "implements", "layout", "namespace", "attribute", "rendermode",
         "typeparam", "preservewhitespace", "section",
-    };
+    ];
 
-    private static readonly HashSet<string> s_controlKeywords = new(StringComparer.Ordinal)
-    {
+    private static readonly HashSet<string> s_controlKeywords =
+    [
         "if", "else", "foreach", "for", "while", "do", "switch", "try", "catch", "finally", "lock", "await",
-    };
+    ];
 
     private RazorScanner(string code, TokenList tokens)
         : base(code, tokens)
