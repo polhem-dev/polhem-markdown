@@ -18,6 +18,11 @@ and the next line, with ~~struck~~ text.
 var x = 1;
 ```
 
+```mermaid
+flowchart LR
+    A[Start] -->|go| B{Done?}
+```
+
 | Name | Qty |
 |:-----|----:|
 | pen  | 2   |

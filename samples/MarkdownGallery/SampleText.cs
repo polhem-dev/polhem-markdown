@@ -53,6 +53,48 @@ internal static class SampleText
         var amount = decimal.Round(quantity * unitPrice, 2, MidpointRounding.AwayFromZero); // a long line that scrolls sideways instead of wrapping
         ```
 
+        The order goes through these steps:
+
+        ```mermaid
+        flowchart TD
+            A([New order]) --> B[Check the customer]
+            B --> C{Credit OK?}
+            C -->|yes| D[Reserve stock]
+            C -->|no| E[Hold]
+            D --> F((Done))
+        ```
+
+        ```mermaid
+        flowchart LR
+            A([訂單建立]) --> B{客戶信用<br/>是否足夠}
+            B -->|是| C[保留庫存]
+            B -.->|否| D{{暫停}}
+            C ==> E((完成))
+            D -->|補件後| B
+        ```
+
+        ```mermaid
+        sequenceDiagram
+            participant U as User
+            participant F as Order form
+            participant S as Server
+            U->>F: Save
+            F->>S: Validate the order
+            Note over F,S: The amount is recalculated on the server
+            S-->>F: Order number 7
+            F->>F: Refresh the fields
+            F-->>U: Saved
+            Note right of U: Done
+        ```
+
+        A diagram type the viewers do not draw shows as code:
+
+        ```mermaid
+        pie title Orders by region
+            "North" : 42
+            "South" : 58
+        ```
+
         Raw HTML such as <b>this</b> and <script>alert(1)</script> shows as text, a [script link](javascript:alert(1))
         cannot be clicked, and an image shows its alternative text: ![a logo](https://example.com/logo.png).
         A line can end with a hard break\

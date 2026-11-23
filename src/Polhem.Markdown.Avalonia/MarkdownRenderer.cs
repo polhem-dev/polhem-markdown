@@ -18,6 +18,7 @@ internal sealed class MarkdownRenderer
 
     private readonly MarkdownViewer _viewer;
     private readonly HashSet<Type> _rendered = [];
+    private readonly HashSet<Type> _renderedShapes = [];
 
     public MarkdownRenderer(MarkdownViewer viewer)
     {
@@ -27,6 +28,9 @@ internal sealed class MarkdownRenderer
     /// <summary>The node types rendered so far.</summary>
     public IReadOnlySet<Type> RenderedNodeTypes => _rendered;
 
+    /// <summary>The diagram shape types drawn so far.</summary>
+    public IReadOnlySet<Type> RenderedShapeTypes => _renderedShapes;
+
     public Control Block(BlockNode block, int depth)
     {
         Control? control = block switch
@@ -35,6 +39,7 @@ internal sealed class MarkdownRenderer
             HeadingNode heading => Heading(heading),
             ListNode list => List(list, depth),
             CodeBlockNode code => new CodeBlockView(_viewer, code),
+            DiagramNode diagram => Diagram(diagram),
             QuoteNode quote => Quote(quote, depth),
             AlertNode alert => Alert(alert, depth),
             TableNode table => Table(table),
@@ -51,6 +56,15 @@ internal sealed class MarkdownRenderer
         _rendered.Add(block.GetType());
         return control;
     }
+
+    /// <summary>A diagram at its own size, scaled down to the viewer's width when it is wider, never up.</summary>
+    private Viewbox Diagram(DiagramNode diagram) => new()
+    {
+        Stretch = Stretch.Uniform,
+        StretchDirection = StretchDirection.DownOnly,
+        HorizontalAlignment = HorizontalAlignment.Left,
+        Child = new DiagramView(_viewer, diagram, _renderedShapes),
+    };
 
     private MarkdownTextBlock Heading(HeadingNode heading)
     {

@@ -14,6 +14,10 @@ Blazor front end show the same text the same way.
 - **Links**: a click raises the bubbling `LinkActivated` event. When no handler marks it handled, the viewer asks the
   operating system to open the link.
 - **Code blocks** show their language and a copy button; set `CopyCodeLabel` to translate its tooltip.
+- **Mermaid diagrams**: a ` ```mermaid ` block with a flowchart or a sequence diagram is drawn by the viewer itself, with
+  no script, and scaled down when it is wider than the viewer. Boxes use `CodeBackground`, lifelines `RuleBrush`, and
+  lines and text the foreground. A diagram of another type, or one using syntax the viewer does not support, shows as
+  code; set `Options.RenderMermaidDiagrams` to `false` to show every diagram as code.
 - **Colors** work on light and dark themes. Set `LinkForeground`, `CodeBackground`, `RuleBrush` and the alert brushes
   (`AlertNoteBrush`, `AlertTipBrush`, `AlertImportantBrush`, `AlertWarningBrush`, `AlertCautionBrush`) to match a theme;
   they apply without rebuilding the view.

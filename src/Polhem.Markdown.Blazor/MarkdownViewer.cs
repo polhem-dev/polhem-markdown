@@ -56,6 +56,9 @@ public class MarkdownViewer : ComponentBase
     /// <summary>The node types the last render drew, for the node coverage test.</summary>
     internal IReadOnlySet<Type> RenderedNodeTypes { get; private set; } = new HashSet<Type>();
 
+    /// <summary>The diagram shape types the last render drew, for the shape coverage test.</summary>
+    internal IReadOnlySet<Type> RenderedShapeTypes { get; private set; } = new HashSet<Type>();
+
     [Inject]
     private IJSRuntime JS { get; set; } = default!;
 
@@ -76,6 +79,7 @@ public class MarkdownViewer : ComponentBase
         var tree = new MarkdownRenderTree(this, builder);
         tree.Document(_document, Class);
         RenderedNodeTypes = tree.RenderedNodeTypes;
+        RenderedShapeTypes = tree.RenderedShapeTypes;
     }
 
     internal bool HandlesLinks => OnLinkActivated.HasDelegate;

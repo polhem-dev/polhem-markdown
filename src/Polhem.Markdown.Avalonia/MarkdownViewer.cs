@@ -184,6 +184,9 @@ public class MarkdownViewer : Control
     /// <summary>The node types the last full or partial rebuild rendered, for the node coverage test.</summary>
     internal IReadOnlySet<Type> RenderedNodeTypes { get; private set; } = new HashSet<Type>();
 
+    /// <summary>The diagram shape types the last full or partial rebuild drew, for the shape coverage test.</summary>
+    internal IReadOnlySet<Type> RenderedShapeTypes { get; private set; } = new HashSet<Type>();
+
     /// <summary>The number of top-level blocks the last update built, as opposed to kept.</summary>
     internal int LastBuiltBlockCount { get; private set; }
 
@@ -273,6 +276,7 @@ public class MarkdownViewer : Control
         }
 
         RenderedNodeTypes = renderer.RenderedNodeTypes;
+        RenderedShapeTypes = renderer.RenderedShapeTypes;
         LastBuiltBlockCount = built;
     }
 }

@@ -26,6 +26,26 @@ const string Markdown = """
     var x = 1;
     ```
 
+    ```mermaid
+    flowchart LR
+        A([Start]) -- go --> B{Done?}
+        B -.->|no| C[[Retry]]
+    ```
+
+    ```mermaid
+    flowchart TD
+        A([Start]) -->|go| B{Done?}
+        B -.->|no| A
+    ```
+
+    ```mermaid
+    sequenceDiagram
+        participant U as User
+        U->>S: request
+        Note over U,S: a note
+        S-->>U: response
+    ```
+
     | a | b |
     |:--|--:|
     | 1 | 2 |
@@ -44,13 +64,21 @@ foreach (var block in document.Blocks)
 Type[] expected =
 [
     typeof(HeadingNode), typeof(ParagraphNode), typeof(ListNode), typeof(ListItemNode), typeof(QuoteNode), typeof(AlertNode),
-    typeof(CodeBlockNode), typeof(TableNode), typeof(TableRowNode), typeof(TableCellNode), typeof(ThematicBreakNode),
+    typeof(CodeBlockNode), typeof(DiagramNode), typeof(TableNode), typeof(TableRowNode), typeof(TableCellNode), typeof(ThematicBreakNode),
     typeof(TextNode), typeof(EmphasisNode), typeof(CodeSpanNode), typeof(LinkNode), typeof(LineBreakNode),
 ];
 var missing = expected.Where(type => !found.Contains(type)).Select(type => type.Name).ToList();
 if (missing.Count > 0)
 {
     Console.Error.WriteLine("Missing nodes: " + string.Join(", ", missing));
+    return 1;
+}
+
+// The first diagram uses a node shape outside the supported subset and stays code; the other two are drawn.
+var diagrams = document.Blocks.OfType<DiagramNode>().ToList();
+if (diagrams.Count != 2 || diagrams.Any(diagram => diagram.Drawing.Shapes.Count == 0))
+{
+    Console.Error.WriteLine($"Expected two drawn diagrams, found {diagrams.Count}.");
     return 1;
 }
 
