@@ -161,6 +161,7 @@ public class FootnoteTests
     }
 
     [Fact(DisplayName = "Many references to one note parse in linear time")]
+    [Trait("Category", Scaling.Category)]
     public void Build_ManyReferencesToOneNote_ParseLinearly()
     {
         // Counting each back link's position by walking the note's references grew with the square of the references.

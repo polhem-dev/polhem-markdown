@@ -155,7 +155,8 @@ jobs:
 
       - name: Test with coverage
         if: steps.token.outputs.enabled == 'true'
-        run: dotnet test Polhem.Markdown.slnx --configuration Release --no-build --collect "Code Coverage;Format=xml" --results-directory TestResults/sonar
+        # The scaling tests compare run times, which the coverage collector distorts; the build job runs them.
+        run: dotnet test Polhem.Markdown.slnx --configuration Release --no-build --collect "Code Coverage;Format=xml" --results-directory TestResults/sonar --filter "Category!=Scaling"
 
       - name: SonarScanner end
         if: steps.token.outputs.enabled == 'true'

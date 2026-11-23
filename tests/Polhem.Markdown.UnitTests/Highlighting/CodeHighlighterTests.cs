@@ -205,6 +205,7 @@ public class CodeHighlighterTests
     };
 
     [Theory(DisplayName = "Adversarial code is read in linear time")]
+    [Trait("Category", Scaling.Category)]
     [MemberData(nameof(Adversarial))]
     public void Tokenize_AdversarialCode_IsLinear(string language, string unit)
     {
