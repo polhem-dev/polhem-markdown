@@ -49,6 +49,8 @@ internal sealed class MarkdownModelBuilder
     private readonly MarkdownOptions _options;
     private readonly Dictionary<HeadingBlock, string> _headingIds = [];
     private readonly HashSet<string> _ids = [];
+    private readonly Dictionary<Footnote, int> _noteNumbers = [];
+    private readonly Dictionary<int, int> _backLinkPositions = [];
 
     private MarkdownModelBuilder(string markdown, MarkdownOptions options)
     {
@@ -75,6 +77,7 @@ internal sealed class MarkdownModelBuilder
             return new DocumentNode([builder.WholeTextAsParagraph()]);
         }
         builder.AssignHeadingIds(document);
+        builder.NumberFootnotes(document);
         return new DocumentNode(builder.Blocks(document));
     }
 
@@ -195,9 +198,9 @@ internal sealed class MarkdownModelBuilder
     private FootnotesNode? Footnotes(FootnoteGroup group)
     {
         var notes = group.OfType<Footnote>()
-            .Where(note => note.Order > 0)
-            .OrderBy(note => note.Order)
-            .Select(note => new FootnoteNode(Range(note), note.Order, NoteId(note), Blocks(note)))
+            .Where(_noteNumbers.ContainsKey)
+            .OrderBy(note => _noteNumbers[note])
+            .Select(note => new FootnoteNode(Range(note), _noteNumbers[note], NoteId(note), Blocks(note)))
             .ToList();
         if (notes.Count == 0)
         {
@@ -207,8 +210,41 @@ internal sealed class MarkdownModelBuilder
         return new FootnotesNode(new SourceRange(start, notes.Max(note => note.Range.End) - start), notes);
     }
 
+    /// <summary>
+    /// Numbers the notes that a shown reference refers to, by first reference, and gives each back link its position
+    /// among its note's shown references, in one pass.
+    /// </summary>
+    /// <remarks>
+    /// Markdig's own numbers count references this builder does not show: one in an image's alternative text, which
+    /// shows as plain text. Such a reference would leave a note, or a back link, that nothing in the text leads to.
+    /// </remarks>
+    private void NumberFootnotes(MarkdownDocument document)
+    {
+        var hidden = document.Descendants<LinkInline>()
+            .Where(link => link.IsImage)
+            .SelectMany(image => image.Descendants<FootnoteLink>())
+            .Select(link => link.Index)
+            .ToHashSet();
+        var notes = document.Descendants<FootnoteGroup>()
+            .SelectMany(group => group.OfType<Footnote>())
+            .Where(note => note.Order > 0)
+            .OrderBy(note => note.Order);
+        foreach (var note in notes)
+        {
+            var position = 0;
+            foreach (var link in note.Links.Where(link => !hidden.Contains(link.Index)))
+            {
+                _backLinkPositions[link.Index] = ++position;
+            }
+            if (position > 0)
+            {
+                _noteNumbers[note] = _noteNumbers.Count + 1;
+            }
+        }
+    }
+
     // NOTE: a colon never appears in a heading id (see `HeadingSlugger`), so these ids cannot match a heading.
-    private static string NoteId(Footnote note) => "fn:" + note.Order.ToString(CultureInfo.InvariantCulture);
+    private string NoteId(Footnote note) => "fn:" + _noteNumbers[note].ToString(CultureInfo.InvariantCulture);
 
     private static string ReferenceId(FootnoteLink link) => "fnref:" + link.Index.ToString(CultureInfo.InvariantCulture);
 
@@ -320,11 +356,14 @@ internal sealed class MarkdownModelBuilder
             case EmphasisInline emphasis:
                 inlines.Add(new EmphasisNode(Range(emphasis), Kind(emphasis), Inlines(emphasis)));
                 break;
-            case FootnoteLink { IsBackLink: false, Footnote: { } note } reference:
-                inlines.Add(new FootnoteReferenceNode(Range(reference), note.Order, ReferenceId(reference), NoteId(note)));
+            case FootnoteLink { IsBackLink: false, Footnote: { } note } reference when _noteNumbers.ContainsKey(note):
+                inlines.Add(new FootnoteReferenceNode(Range(reference), _noteNumbers[note], ReferenceId(reference), NoteId(note)));
                 break;
-            case FootnoteLink { IsBackLink: true, Footnote: { } note } back:
-                inlines.Add(BackLink(back, note));
+            case FootnoteLink { IsBackLink: true } back:
+                if (_backLinkPositions.TryGetValue(back.Index, out var position))
+                {
+                    inlines.Add(BackLink(back, position));
+                }
                 break;
             case TaskList task:
                 if (!IsItemCheckBox(task))
@@ -363,17 +402,8 @@ internal sealed class MarkdownModelBuilder
     /// A back link from a note to one of its references. Markdig adds it with no source of its own, so it is placed at the
     /// end of the paragraph that holds it.
     /// </summary>
-    private FootnoteBackLinkNode BackLink(FootnoteLink back, Footnote note)
+    private FootnoteBackLinkNode BackLink(FootnoteLink back, int position)
     {
-        var position = 1;
-        foreach (var link in note.Links)
-        {
-            if (link.Index == back.Index)
-            {
-                break;
-            }
-            position++;
-        }
         var end = back.Parent?.ParentBlock is { } paragraph ? Range(paragraph).End : 0;
         return new FootnoteBackLinkNode(new SourceRange(end, 0), ReferenceId(back), position);
     }

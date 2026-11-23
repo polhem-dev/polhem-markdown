@@ -15,6 +15,7 @@ internal sealed class MarkdownTextBlock : SelectableTextBlock
 {
     private readonly MarkdownViewer _viewer;
     private readonly List<LinkRange> _links = [];
+    private readonly List<string> _anchorIds = [];
 
     public MarkdownTextBlock(MarkdownViewer viewer)
     {
@@ -29,7 +30,16 @@ internal sealed class MarkdownTextBlock : SelectableTextBlock
     public void AddLink(int start, int length, Uri target) => _links.Add(new LinkRange(start, length, target, null));
 
     /// <summary>Records an id a link in the text can move to this text by.</summary>
-    public void AddAnchor(string id) => SetValue(MarkdownViewer.AnchorIdsProperty, [.. GetValue(MarkdownViewer.AnchorIdsProperty), id]);
+    public void AddAnchor(string id)
+    {
+        // The list is set once and then grown in place, so a paragraph with many footnote references does not copy it
+        // for each one. Nothing observes the property's changes; it is only read when a link is followed.
+        if (_anchorIds.Count == 0)
+        {
+            SetValue(MarkdownViewer.AnchorIdsProperty, _anchorIds);
+        }
+        _anchorIds.Add(id);
+    }
 
     public void AddAnchorLink(int start, int length, string anchorId) => _links.Add(new LinkRange(start, length, null, anchorId));
 

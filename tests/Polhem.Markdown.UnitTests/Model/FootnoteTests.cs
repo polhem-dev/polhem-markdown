@@ -107,6 +107,42 @@ public class FootnoteTests
         Assert.Equal(Markdown.Length, AllNodes(document).OfType<FootnoteBackLinkNode>().Single().Range.Start);
     }
 
+    [Fact(DisplayName = "A note referenced only in an image's alternative text is not shown, and the others are numbered without a gap")]
+    public void Build_ReferenceInImageAlt_IsNotCounted()
+    {
+        var document = Parse("![logo[^a]](https://example.com/i.png) and text[^b].\n\n[^a]: Hidden.\n\n[^b]: Shown.");
+
+        var footnotes = Assert.IsType<FootnotesNode>(document.Blocks[^1]);
+        var note = Assert.Single(footnotes.Notes);
+        Assert.Equal(1, note.Number);
+        Assert.Equal("Shown. \u21A9", NoteText(note));
+        Assert.Equal(1, Assert.Single(AllNodes(document).OfType<FootnoteReferenceNode>()).Number);
+    }
+
+    [Fact(DisplayName = "A note referenced alongside an image's alternative text keeps only the back links that lead somewhere")]
+    public void Build_ReferenceInImageAlt_DropsItsBackLink()
+    {
+        var document = Parse("![logo[^n]](https://example.com/i.png) and text[^n].\n\n[^n]: The note.");
+
+        var back = Assert.Single(AllNodes(document).OfType<FootnoteBackLinkNode>());
+        Assert.Equal(1, back.Position);
+        Assert.Equal(Assert.Single(AllNodes(document).OfType<FootnoteReferenceNode>()).Id, back.ReferenceId);
+    }
+
+    [Fact(DisplayName = "Many references to one note parse in linear time")]
+    public void Build_ManyReferencesToOneNote_ParseQuickly()
+    {
+        // Counting each back link's position by walking the note's references took over half a second for this text.
+        var markdown = string.Concat(Enumerable.Repeat("x[^a] ", 40_000)) + "\n\n[^a]: The note.";
+        var watch = System.Diagnostics.Stopwatch.StartNew();
+
+        var document = Parse(markdown);
+
+        watch.Stop();
+        Assert.Equal(40_000, AllNodes(document).OfType<FootnoteBackLinkNode>().Last().Position);
+        Assert.True(watch.Elapsed < TimeSpan.FromSeconds(1), $"Parsing took {watch.Elapsed}.");
+    }
+
     private static string NoteText(FootnoteNode note) =>
         string.Join("\n", note.Blocks.OfType<ParagraphNode>().Select(paragraph => Text(paragraph.Inlines)));
 }
