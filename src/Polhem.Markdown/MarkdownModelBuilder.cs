@@ -514,9 +514,13 @@ internal sealed class MarkdownModelBuilder
         return false;
     }
 
-    private static bool WritesScheme(string target, Uri uri) =>
-        target.Length > uri.Scheme.Length && target[uri.Scheme.Length] == ':'
-        && target.StartsWith(uri.Scheme, StringComparison.OrdinalIgnoreCase);
+    // `Uri.TryCreate` trims surrounding white space, which an angle-bracket target such as `< https://x>` can keep.
+    private static bool WritesScheme(string target, Uri uri)
+    {
+        var written = target.AsSpan().TrimStart();
+        return written.Length > uri.Scheme.Length && written[uri.Scheme.Length] == ':'
+            && written.StartsWith(uri.Scheme, StringComparison.OrdinalIgnoreCase);
+    }
 
     private bool IsAllowed(Uri uri) => uri.IsAbsoluteUri && _options.AllowedLinkSchemes.Contains(uri.Scheme);
 

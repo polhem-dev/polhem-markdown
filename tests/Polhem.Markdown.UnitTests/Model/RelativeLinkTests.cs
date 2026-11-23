@@ -94,6 +94,12 @@ public class RelativeLinkTests
         Assert.Equal(new Uri("https://elsewhere.example/a"), Target("[x](HTTPS://elsewhere.example/a)", WithBase()));
     }
 
+    [Fact(DisplayName = "An absolute target written with leading space in angle brackets is still a link")]
+    public void Build_AngleTargetWithLeadingSpace_IsAbsolute()
+    {
+        Assert.Equal(new Uri("https://example.com/a"), Target("[x](< https://example.com/a>)", new MarkdownOptions()));
+    }
+
     [Fact(DisplayName = "A protocol-relative link takes the base's scheme")]
     public void Build_ProtocolRelative_TakesBaseScheme()
     {
