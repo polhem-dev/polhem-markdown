@@ -1,12 +1,10 @@
 using System.Globalization;
 using Markdig;
 using Markdig.Extensions.Alerts;
-using Markdig.Extensions.AutoIdentifiers;
 using Markdig.Extensions.EmphasisExtras;
 using Markdig.Extensions.Tables;
 using Markdig.Extensions.TaskLists;
 using Markdig.Extensions.Yaml;
-using Markdig.Renderers.Html;
 using Markdig.Syntax;
 using Markdig.Syntax.Inlines;
 using Polhem.Markdown.Diagrams;
@@ -40,15 +38,13 @@ internal sealed class MarkdownModelBuilder
         .UseAlertBlocks()
         .UseEmojiAndSmiley(enableSmileys: false)
         .UseYamlFrontMatter()
-        // NOTE: GitHub mode gives the ids GitHub gives (lower case, punctuation dropped, spaces to dashes, `-1` for a
-        // repeat, non-ASCII letters kept) and, unlike the default mode, adds no implicit link definition per heading.
-        .UseAutoIdentifiers(AutoIdentifierOptions.GitHub)
         .UsePreciseSourceLocation()
         .Build();
 
     private readonly string _markdown;
     private readonly MarkdownOptions _options;
-    private HashSet<string> _headingIds = [];
+    private readonly Dictionary<HeadingBlock, string> _headingIds = [];
+    private readonly HashSet<string> _ids = [];
 
     private MarkdownModelBuilder(string markdown, MarkdownOptions options)
     {
@@ -74,10 +70,7 @@ internal sealed class MarkdownModelBuilder
             // so it is shown as written instead of failing the view.
             return new DocumentNode([builder.WholeTextAsParagraph()]);
         }
-        builder._headingIds = document.Descendants<HeadingBlock>()
-            .Select(HeadingId)
-            .Where(id => id.Length > 0)
-            .ToHashSet(StringComparer.Ordinal);
+        builder.AssignHeadingIds(document);
         return new DocumentNode(builder.Blocks(document));
     }
 
@@ -102,7 +95,7 @@ internal sealed class MarkdownModelBuilder
 
     private BlockNode? Block(Block block) => block switch
     {
-        HeadingBlock heading => new HeadingNode(Range(heading), heading.Level, Inlines(heading.Inline), HeadingId(heading)),
+        HeadingBlock heading => new HeadingNode(Range(heading), heading.Level, Inlines(heading.Inline), _headingIds.GetValueOrDefault(heading, "")),
         ParagraphBlock paragraph => new ParagraphNode(Range(paragraph), Inlines(paragraph.Inline)),
         // NOTE: front matter is metadata for tools, not part of the document, so it is hidden. GitHub shows it as a
         // table; hiding it is a deliberate difference. Markdig reads it as a kind of code block, so it comes first.
@@ -118,7 +111,23 @@ internal sealed class MarkdownModelBuilder
         _ => new ParagraphNode(Range(block), [SourceText(block)]),
     };
 
-    private static string HeadingId(HeadingBlock heading) => heading.TryGetAttributes()?.Id ?? "";
+    /// <summary>
+    /// Gives every heading its id, in document order, before any link is converted, so a link can refer to a heading
+    /// further down.
+    /// </summary>
+    private void AssignHeadingIds(MarkdownDocument document)
+    {
+        var slugger = new HeadingSlugger();
+        foreach (var heading in document.Descendants<HeadingBlock>())
+        {
+            var id = slugger.Next(heading.Inline is null ? "" : PlainText(heading.Inline));
+            _headingIds[heading] = id;
+            if (id.Length > 0)
+            {
+                _ids.Add(id);
+            }
+        }
+    }
 
     private BlockNode Alert(AlertBlock alert)
     {
@@ -357,7 +366,7 @@ internal sealed class MarkdownModelBuilder
     private void AddAnchorLink(Inline link, string target, List<InlineNode> content, List<InlineNode> inlines)
     {
         var id = Uri.UnescapeDataString(target[1..]);
-        if (!_headingIds.Contains(id))
+        if (!_ids.Contains(id))
         {
             inlines.AddRange(content);
             return;

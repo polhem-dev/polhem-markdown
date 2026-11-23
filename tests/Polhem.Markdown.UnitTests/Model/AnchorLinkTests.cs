@@ -25,6 +25,36 @@ public class AnchorLinkTests
         Assert.Equal(["notes", "notes-1", "notes-2"], ids);
     }
 
+    [Fact(DisplayName = "A repeat skips a numbered id a heading already took, as on GitHub")]
+    public void Build_RepeatAfterNumberedHeading_SkipsTakenId()
+    {
+        var ids = Parse("# a-1\n\n# a\n\n# a\n\n# A!").Blocks.OfType<HeadingNode>().Select(heading => heading.Id);
+
+        Assert.Equal(["a-1", "a", "a-2", "a-3"], ids);
+    }
+
+    [Fact(DisplayName = "Many headings of the same name parse in linear time")]
+    public void Build_ManyRepeatedHeadings_ParseQuickly()
+    {
+        // Markdig's own numbering took over two seconds for this text; the slugger takes milliseconds.
+        var markdown = string.Concat(Enumerable.Repeat("# a\n", 20_000));
+        var watch = System.Diagnostics.Stopwatch.StartNew();
+
+        var document = Parse(markdown);
+
+        watch.Stop();
+        Assert.Equal("a-19999", Assert.IsType<HeadingNode>(document.Blocks[^1]).Id);
+        Assert.True(watch.Elapsed < TimeSpan.FromSeconds(1), $"Parsing took {watch.Elapsed}.");
+    }
+
+    [Theory(DisplayName = "A heading with only punctuation or symbols gets no id, so nothing can link to it")]
+    [InlineData("## !!!")]
+    [InlineData("## :tada:")]
+    public void Build_SymbolHeading_HasNoId(string markdown)
+    {
+        Assert.Equal("", Single<HeadingNode>(Parse(markdown)).Id);
+    }
+
     [Fact(DisplayName = "A link to a heading of the same text becomes an in-document link")]
     public void Build_LinkToHeading_IsAnchorLink()
     {

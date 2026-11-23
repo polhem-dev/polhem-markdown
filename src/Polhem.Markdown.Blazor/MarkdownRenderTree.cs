@@ -423,14 +423,14 @@ internal sealed class MarkdownRenderTree
     }
 
     /// <summary>
-    /// Writes a link to a heading of the text. The click never navigates: with a <c>base</c> element in the page, the
-    /// <c>#id</c> in the href would resolve against the site root instead of the current page.
+    /// Writes a link to a heading of the text. Once the component is interactive the click never navigates; the viewer
+    /// scrolls to the heading itself (see <see cref="MarkdownViewer.AnchorHref"/> for the href).
     /// </summary>
     private void AnchorLink(AnchorLinkNode anchor)
     {
         var id = anchor.Id;
         _builder.OpenElement(0, "a");
-        _builder.AddAttribute(1, "href", "#" + id);
+        _builder.AddAttribute(1, "href", _viewer.AnchorHref(id));
         _builder.AddAttribute(2, OnClickAttribute, EventCallback.Factory.Create<MouseEventArgs>(_viewer, () => _viewer.FocusHeadingAsync(id)));
         _builder.AddEventPreventDefaultAttribute(3, OnClickAttribute, true);
         Inlines(4, anchor.Inlines);

@@ -312,54 +312,15 @@ public class MarkdownViewer : Control
     /// </summary>
     private static string BlockKey(string source, BlockNode block)
     {
-        var anchors = new List<string>();
-        CollectAnchors(block, anchors);
+        var anchors = NodeTree.SelfAndDescendants(block)
+            .Select(node => node switch
+            {
+                HeadingNode heading => "#" + heading.Id,
+                AnchorLinkNode link => ">" + link.Id,
+                _ => null,
+            })
+            .OfType<string>()
+            .ToList();
         return anchors.Count == 0 ? source : source + "\0" + string.Join("\0", anchors);
-    }
-
-    private static void CollectAnchors(MarkdownNode node, List<string> anchors)
-    {
-        IEnumerable<MarkdownNode> children;
-        switch (node)
-        {
-            case HeadingNode heading:
-                anchors.Add("#" + heading.Id);
-                children = heading.Inlines;
-                break;
-            case AnchorLinkNode link:
-                anchors.Add(">" + link.Id);
-                children = link.Inlines;
-                break;
-            case ParagraphNode paragraph:
-                children = paragraph.Inlines;
-                break;
-            case ListNode list:
-                children = list.Items;
-                break;
-            case ListItemNode item:
-                children = item.Blocks;
-                break;
-            case QuoteNode quote:
-                children = quote.Blocks;
-                break;
-            case AlertNode alert:
-                children = alert.Blocks;
-                break;
-            case TableNode table:
-                children = table.HeaderRows.Concat(table.Rows).SelectMany(row => row.Cells).SelectMany(cell => cell.Inlines);
-                break;
-            case EmphasisNode emphasis:
-                children = emphasis.Inlines;
-                break;
-            case LinkNode link:
-                children = link.Inlines;
-                break;
-            default:
-                return;
-        }
-        foreach (var child in children)
-        {
-            CollectAnchors(child, anchors);
-        }
     }
 }
