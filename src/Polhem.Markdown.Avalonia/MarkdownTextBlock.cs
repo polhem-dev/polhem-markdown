@@ -5,7 +5,7 @@ namespace Polhem.Markdown.Avalonia;
 
 /// <summary>
 /// A paragraph, heading or table cell: selectable text whose link runs can be clicked. A link either opens a URI or
-/// moves to a heading of the same text.
+/// moves to an anchor of the same text: a heading, a footnote, or a reference to one.
 /// </summary>
 /// <remarks>
 /// NOTE: links are runs inside the text rather than controls placed in it, so a long link wraps like any other text and
@@ -24,14 +24,14 @@ internal sealed class MarkdownTextBlock : SelectableTextBlock
     /// <summary>The links of the text, by character range.</summary>
     public IReadOnlyList<LinkRange> Links => _links;
 
-    /// <summary>The id an in-document link refers to this text by, when it is a heading; otherwise empty.</summary>
-    public string HeadingId { get; set; } = "";
-
     protected override Type StyleKeyOverride => typeof(SelectableTextBlock);
 
     public void AddLink(int start, int length, Uri target) => _links.Add(new LinkRange(start, length, target, null));
 
-    public void AddAnchorLink(int start, int length, string headingId) => _links.Add(new LinkRange(start, length, null, headingId));
+    /// <summary>Records an id a link in the text can move to this text by.</summary>
+    public void AddAnchor(string id) => SetValue(MarkdownViewer.AnchorIdsProperty, [.. GetValue(MarkdownViewer.AnchorIdsProperty), id]);
+
+    public void AddAnchorLink(int start, int length, string anchorId) => _links.Add(new LinkRange(start, length, null, anchorId));
 
     /// <summary>The target of the link at a character index of the text, or <see langword="null"/>.</summary>
     public Uri? LinkAt(int index) => LinkRangeAt(index)?.Target;
@@ -60,9 +60,9 @@ internal sealed class MarkdownTextBlock : SelectableTextBlock
         {
             return;
         }
-        if (link.HeadingId is { } headingId)
+        if (link.AnchorId is { } anchorId)
         {
-            _viewer.ScrollToHeading(headingId);
+            _viewer.ScrollToAnchor(anchorId);
         }
         else if (link.Target is { } target)
         {
@@ -81,6 +81,6 @@ internal sealed class MarkdownTextBlock : SelectableTextBlock
         return hit.IsInside ? LinkRangeAt(hit.TextPosition) : null;
     }
 
-    /// <summary>A link run: <see cref="Target"/> for a link that opens a URI, <see cref="HeadingId"/> for one to a heading.</summary>
-    internal sealed record LinkRange(int Start, int Length, Uri? Target, string? HeadingId);
+    /// <summary>A link run: <see cref="Target"/> for a link that opens a URI, <see cref="AnchorId"/> for one within the text.</summary>
+    internal sealed record LinkRange(int Start, int Length, Uri? Target, string? AnchorId);
 }

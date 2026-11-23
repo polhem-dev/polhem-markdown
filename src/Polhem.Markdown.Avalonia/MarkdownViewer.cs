@@ -73,6 +73,13 @@ public class MarkdownViewer : Control
     public static readonly RoutedEvent<MarkdownLinkActivatedEventArgs> LinkActivatedEvent =
         RoutedEvent.Register<MarkdownViewer, MarkdownLinkActivatedEventArgs>(nameof(LinkActivated), RoutingStrategies.Bubble);
 
+    /// <summary>
+    /// The ids a link in the text moves to a control by: a heading's, a footnote's, or those of the footnote references in
+    /// a paragraph.
+    /// </summary>
+    internal static readonly AttachedProperty<IReadOnlyList<string>> AnchorIdsProperty =
+        AvaloniaProperty.RegisterAttached<MarkdownViewer, Control, IReadOnlyList<string>>("AnchorIds", []);
+
     private readonly StackPanel _panel = new() { Spacing = 8 };
     private readonly List<string> _sources = [];
 
@@ -223,24 +230,24 @@ public class MarkdownViewer : Control
     }
 
     /// <summary>
-    /// Scrolls the nearest scroll viewer so the heading with <paramref name="headingId"/> is at the top, or as near the
-    /// top as the content allows. Returns whether the viewer shows such a heading.
+    /// Scrolls the nearest scroll viewer so the control with <paramref name="anchorId"/> is at the top, or as near the top
+    /// as the content allows. Returns whether the viewer shows such a control.
     /// </summary>
-    internal bool ScrollToHeading(string headingId)
+    internal bool ScrollToAnchor(string anchorId)
     {
-        var heading = _panel.GetLogicalDescendants()
-            .OfType<MarkdownTextBlock>()
-            .FirstOrDefault(text => string.Equals(text.HeadingId, headingId, StringComparison.Ordinal));
-        if (heading is null)
+        var target = _panel.GetLogicalDescendants()
+            .OfType<Control>()
+            .FirstOrDefault(control => control.GetValue(AnchorIdsProperty).Contains(anchorId, StringComparer.Ordinal));
+        if (target is null)
         {
             return false;
         }
 
-        // NOTE: a scroll viewer brings a rectangle into view by the least movement, which leaves a heading below the
-        // view at the bottom. A rectangle as tall as the window starts at the heading and cannot fit, and the scroll
-        // viewer then aligns its top edge.
-        var height = Math.Max(heading.Bounds.Height, TopLevel.GetTopLevel(this)?.ClientSize.Height ?? 0);
-        heading.BringIntoView(new Rect(0, 0, heading.Bounds.Width, height));
+        // NOTE: a scroll viewer brings a rectangle into view by the least movement, which leaves a target below the view
+        // at the bottom. A rectangle as tall as the window starts at the target and cannot fit, and the scroll viewer
+        // then aligns its top edge.
+        var height = Math.Max(target.Bounds.Height, TopLevel.GetTopLevel(this)?.ClientSize.Height ?? 0);
+        target.BringIntoView(new Rect(0, 0, target.Bounds.Width, height));
         return true;
     }
 
@@ -306,9 +313,10 @@ public class MarkdownViewer : Control
     }
 
     /// <summary>
-    /// The source of a top-level block, followed by the heading ids and the resolved links to headings inside it. A
-    /// heading that arrives later turns earlier text into a link, and a heading added above another of the same name
-    /// changes that one's id, without either block's own source changing.
+    /// The source of a top-level block, followed by what inside it depends on the rest of the text: heading ids, resolved
+    /// links to headings, and footnote numbers and ids. A heading or a footnote definition that arrives later turns
+    /// earlier text into a link, a heading added above another of the same name changes that one's id, and a reference
+    /// added earlier renumbers the notes, all without the block's own source changing.
     /// </summary>
     private static string BlockKey(string source, BlockNode block)
     {
@@ -317,6 +325,9 @@ public class MarkdownViewer : Control
             {
                 HeadingNode heading => "#" + heading.Id,
                 AnchorLinkNode link => ">" + link.Id,
+                FootnoteReferenceNode reference => "^" + reference.Id + ">" + reference.NoteId + "=" + reference.Number,
+                FootnoteNode note => "[" + note.Id + "=" + note.Number,
+                FootnoteBackLinkNode back => "<" + back.ReferenceId + "=" + back.Position,
                 _ => null,
             })
             .OfType<string>()

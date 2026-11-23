@@ -20,6 +20,18 @@ internal static class NodeTree
         }
     }
 
+    /// <summary>
+    /// The id a link in the text can move to <paramref name="node"/> by: a heading's, a footnote's, or a footnote
+    /// reference's, which a back link returns to. Any other node has none.
+    /// </summary>
+    public static string? AnchorId(MarkdownNode node) => node switch
+    {
+        HeadingNode { Id.Length: > 0 } heading => heading.Id,
+        FootnoteNode note => note.Id,
+        FootnoteReferenceNode reference => reference.Id,
+        _ => null,
+    };
+
     private static IReadOnlyList<MarkdownNode> Children(MarkdownNode node) => node switch
     {
         ParagraphNode paragraph => paragraph.Inlines,
@@ -34,6 +46,8 @@ internal static class NodeTree
         EmphasisNode emphasis => emphasis.Inlines,
         LinkNode link => link.Inlines,
         AnchorLinkNode anchor => anchor.Inlines,
+        FootnotesNode footnotes => footnotes.Notes,
+        FootnoteNode note => note.Blocks,
         _ => [],
     };
 }

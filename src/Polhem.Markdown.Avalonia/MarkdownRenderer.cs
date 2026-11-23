@@ -44,6 +44,7 @@ internal sealed class MarkdownRenderer
             AlertNode alert => Alert(alert, depth),
             TableNode table => Table(table),
             ThematicBreakNode => Rule(),
+            FootnotesNode footnotes => Footnotes(footnotes, depth),
             _ => null,
         };
 
@@ -73,8 +74,49 @@ internal sealed class MarkdownRenderer
         var text = Text(heading.Inlines);
         text.FontWeight = FontWeight.SemiBold;
         text.FontSize = _viewer.GetValue(TextElement.FontSizeProperty) * s_headingScale[Math.Clamp(heading.Level, 1, 6) - 1];
-        text.HeadingId = heading.Id;
+        if (heading.Id.Length > 0)
+        {
+            text.AddAnchor(heading.Id);
+        }
         return text;
+    }
+
+    /// <summary>
+    /// The footnotes after a rule, as a numbered list in a slightly smaller font. Each note's content is the anchor its
+    /// references move to.
+    /// </summary>
+    private StackPanel Footnotes(FootnotesNode footnotes, int depth)
+    {
+        _rendered.Add(typeof(FootnoteNode));
+        var grid = new Grid { RowSpacing = 4 };
+        grid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Auto));
+        grid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
+        for (var index = 0; index < footnotes.Notes.Count; index++)
+        {
+            var note = footnotes.Notes[index];
+            grid.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
+
+            var marker = new TextBlock
+            {
+                Text = note.Number.ToString(System.Globalization.CultureInfo.InvariantCulture) + ".",
+                Margin = new Thickness(0, 0, 6, 0),
+                MinWidth = 18,
+                TextAlignment = TextAlignment.Right,
+            };
+            Grid.SetRow(marker, index);
+
+            var content = Blocks(note.Blocks, depth + 1, spacing: 4);
+            content.SetValue(MarkdownViewer.AnchorIdsProperty, [note.Id]);
+            Grid.SetRow(content, index);
+            Grid.SetColumn(content, 1);
+
+            grid.Children.Add(marker);
+            grid.Children.Add(content);
+        }
+
+        var panel = new StackPanel { Spacing = 8, Children = { Rule(), grid } };
+        panel.SetValue(TextElement.FontSizeProperty, _viewer.GetValue(TextElement.FontSizeProperty) * FootnoteScale);
+        return panel;
     }
 
     private Grid List(ListNode list, int depth)
@@ -329,6 +371,31 @@ internal sealed class MarkdownRenderer
                 offset += LineBreakLength;
                 return new LineBreak();
 
+            case FootnoteReferenceNode reference:
+                var number = reference.Number.ToString(System.Globalization.CultureInfo.InvariantCulture);
+                owner.AddAnchorLink(offset, number.Length, reference.NoteId);
+                owner.AddAnchor(reference.Id);
+                offset += number.Length;
+                var superscript = new Run(number)
+                {
+                    BaselineAlignment = BaselineAlignment.Superscript,
+                    FontSize = _viewer.GetValue(TextElement.FontSizeProperty) * SuperscriptScale,
+                };
+                superscript.Bind(TextElement.ForegroundProperty, _viewer.GetObservable(MarkdownViewer.LinkForegroundProperty));
+                return superscript;
+
+            case FootnoteBackLinkNode back:
+                // A space keeps the arrow off the last word, as on GitHub; it is not part of the link.
+                offset += 1;
+                var arrow = back.Position > 1
+                    ? BackArrow + back.Position.ToString(System.Globalization.CultureInfo.InvariantCulture)
+                    : BackArrow;
+                owner.AddAnchorLink(offset, arrow.Length, back.ReferenceId);
+                offset += arrow.Length;
+                var arrowRun = new Run(arrow);
+                arrowRun.Bind(TextElement.ForegroundProperty, _viewer.GetObservable(MarkdownViewer.LinkForegroundProperty));
+                return new Span { Inlines = { new Run(" "), arrowRun } };
+
             default:
                 return null;
         }
@@ -351,4 +418,8 @@ internal sealed class MarkdownRenderer
     /// <see cref="InlineCollection.Text"/>.
     /// </summary>
     internal const int LineBreakLength = 1;
+
+    private const string BackArrow = "\u21A9";
+    private const double SuperscriptScale = 0.75;
+    private const double FootnoteScale = 0.875;
 }

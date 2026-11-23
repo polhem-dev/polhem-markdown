@@ -21,7 +21,9 @@ Link the stylesheet in the host page, then use the component:
 - **Links**: with `OnLinkActivated` set, a click does not navigate and the host decides what the link does; without it,
   the browser opens the link in a new tab. A link to a heading of the same text (`[setup](#setup)`, with the id GitHub
   gives the heading) is not reported: the click scrolls the heading to the top and moves focus to it. The id is not
-  written as an HTML `id`, so it cannot clash with the page. The first such click loads the package's small
+  written as an HTML `id`, so it cannot clash with the page. Footnotes (`text[^note]` and `[^note]: ...`) are numbered
+  by first reference and shown at the end, as on GitHub; a reference moves to its note and the note's `↩` back to the
+  reference in the same way. The first click on any of these links loads the package's small
   `_content/Polhem.Markdown.Blazor/polhem-markdown.js` module; the page does not link it, but a Content Security Policy
   must allow scripts from the site itself.
 - **Code blocks** show their language and a copy button; set `CopyCodeLabel` to translate its tooltip and accessible
