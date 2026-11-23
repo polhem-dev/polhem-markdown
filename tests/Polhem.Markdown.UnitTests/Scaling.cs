@@ -19,6 +19,12 @@ namespace Polhem.Markdown.UnitTests;
 /// </remarks>
 internal static class Scaling
 {
+    /// <summary>
+    /// The trait of the tests that use this check. The sonarcloud job leaves them out: its coverage collector changes
+    /// how long code takes, and the build job runs them without it.
+    /// </summary>
+    public const string Category = "Scaling";
+
     private const int Factor = 4;
     private const double Limit = 10;
     private const int Pairs = 5;

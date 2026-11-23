@@ -257,4 +257,19 @@ public class MarkdownViewerTests : BunitContext
 
         Assert.Equal(["one", "two"], viewer.FindAll("p").Select(p => p.TextContent));
     }
+
+    [Fact(DisplayName = "A relative link resolves against the base, and the host receives the resolved address")]
+    public void Render_RelativeLink_ResolvesAgainstBase()
+    {
+        Uri? received = null;
+        var viewer = Render<MarkdownViewer>(parameters => parameters
+            .Add(component => component.Markdown, "See [the changelog](CHANGELOG.md).")
+            .Add(component => component.Options, new MarkdownOptions { BaseUri = new Uri("https://example.com/repo/README.md") })
+            .Add(component => component.OnLinkActivated, e => received = e.Uri));
+
+        var link = viewer.Find("a");
+        Assert.Equal("https://example.com/repo/CHANGELOG.md", link.GetAttribute("href"));
+        link.Click();
+        Assert.Equal(new Uri("https://example.com/repo/CHANGELOG.md"), received);
+    }
 }

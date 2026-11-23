@@ -34,6 +34,7 @@ public class AnchorLinkTests
     }
 
     [Fact(DisplayName = "Many headings of the same name parse in linear time")]
+    [Trait("Category", Scaling.Category)]
     public void Build_ManyRepeatedHeadings_ParseLinearly()
     {
         // Markdig's own numbering tried every number on each repeat, which grew with the square of the headings.

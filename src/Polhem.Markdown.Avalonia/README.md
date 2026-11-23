@@ -10,7 +10,9 @@ Blazor front end show the same text the same way.
 ```
 
 - **Safety**: raw HTML shows as text, images as their alternative text, and only links whose scheme is in
-  `Options.AllowedLinkSchemes` (by default `http`, `https` and `mailto`) can be clicked.
+  `Options.AllowedLinkSchemes` (by default `http`, `https` and `mailto`) can be clicked. Relative links (`CHANGELOG.md`,
+  `../README.md`) stay text unless `Options.BaseUri` is set, such as to the address of the document being shown; they
+  then resolve against it by the standard URI rules, and the resolved link must still use an allowed scheme.
 - **Links**: a click raises the bubbling `LinkActivated` event. When no handler marks it handled, the viewer asks the
   operating system to open the link. A link to a heading of the same text (`[setup](#setup)`, with the id GitHub gives
   the heading) is not reported: the viewer scrolls the nearest scroll viewer so the heading is at the top.
