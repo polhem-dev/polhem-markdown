@@ -212,7 +212,7 @@ public class CodeHighlighterTests
 
         var code = Code(100_000);
         AssertWellFormed(CodeHighlighter.Tokenize(language, code), code.Length);
-        Scaling.AssertLinear(Code, text => CodeHighlighter.Tokenize(language, text), 25_000, $"{language} with {unit.Replace("\n", "\\n", StringComparison.Ordinal)}");
+        Scaling.AssertLinear(Code, text => CodeHighlighter.Tokenize(language, text), 10_000, 800_000, $"{language} with {unit.Replace("\n", "\\n", StringComparison.Ordinal)}");
     }
 
     public static TheoryData<string, string> Adversarial()
@@ -220,7 +220,7 @@ public class CodeHighlighterTests
         var data = new TheoryData<string, string>();
         foreach (var language in s_languages)
         {
-            foreach (var unit in new[] { "\"", "'", "/*", "<", "@{", "@(", "<script>", "<style>", "a: ", "$", "${\n", "-- ", "{", "<!--", "@*", "x\n", "`", "a{b:" })
+            foreach (var unit in new[] { "\"", "'", "/*", "<", "@{", "@(", "<script>", "<style>", "a: ", "$", "${\n", "-- ", "{", "<!--", "@*", "x\n", "`", "a{b:", "${" + new string('a', 60) + "\n", "${ " + new string('x', 19) + "\n" })
             {
                 data.Add(language, unit);
             }

@@ -167,7 +167,7 @@ public class FootnoteTests
         static string References(int count) => string.Concat(Enumerable.Repeat("x[^a] ", count)) + "\n\n[^a]: The note.";
 
         Assert.Equal(20_000, AllNodes(Parse(References(20_000))).OfType<FootnoteBackLinkNode>().Last().Position);
-        Scaling.AssertLinear(References, markdown => Parse(markdown), 5_000, "references to one note");
+        Scaling.AssertLinear(References, markdown => Parse(markdown), 1_000, 40_000, "references to one note");
     }
 
     private static string NoteText(FootnoteNode note) =>

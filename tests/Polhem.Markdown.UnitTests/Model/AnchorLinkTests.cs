@@ -40,7 +40,7 @@ public class AnchorLinkTests
         static string Headings(int count) => string.Concat(Enumerable.Repeat("# a\n", count));
 
         Assert.Equal("a-19999", Assert.IsType<HeadingNode>(Parse(Headings(20_000)).Blocks[^1]).Id);
-        Scaling.AssertLinear(Headings, markdown => Parse(markdown), 5_000, "repeated headings");
+        Scaling.AssertLinear(Headings, markdown => Parse(markdown), 1_000, 40_000, "repeated headings");
     }
 
     [Theory(DisplayName = "A heading with only punctuation or symbols gets an empty id")]
