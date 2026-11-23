@@ -19,6 +19,7 @@ internal static class ModelTestHelpers
         CodeSpanNode code => code.Code,
         EmphasisNode emphasis => Text(emphasis.Inlines),
         LinkNode link => Text(link.Inlines),
+        AnchorLinkNode anchor => Text(anchor.Inlines),
         LineBreakNode => "\n",
         _ => throw new ArgumentOutOfRangeException(nameof(inlines), inline.GetType().Name),
     }));
@@ -38,6 +39,7 @@ internal static class ModelTestHelpers
             TableCellNode cell => cell.Inlines,
             EmphasisNode emphasis => emphasis.Inlines,
             LinkNode link => link.Inlines,
+            AnchorLinkNode anchor => anchor.Inlines,
             CodeBlockNode or DiagramNode or ThematicBreakNode or TextNode or CodeSpanNode or LineBreakNode => [],
             _ => throw new ArgumentOutOfRangeException(nameof(node), node.GetType().Name),
         };

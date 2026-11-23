@@ -110,7 +110,7 @@ public class MarkdownViewerTests(HeadlessSession session)
         options.AllowedLinkSchemes.Add("polhem");
         viewer.Options = options;
 
-        Assert.Equal("polhem", Assert.Single(Assert.IsType<MarkdownTextBlock>(Assert.Single(Blocks(viewer))).Links).Target.Scheme);
+        Assert.Equal("polhem", Assert.Single(Assert.IsType<MarkdownTextBlock>(Assert.Single(Blocks(viewer))).Links).Target!.Scheme);
     });
 
     [Fact(DisplayName = "Activating a link raises LinkActivated, which bubbles to the window")]
@@ -125,7 +125,7 @@ public class MarkdownViewerTests(HeadlessSession session)
             e.Handled = true;
         });
 
-        viewer.ActivateLink(text, text.Links[0].Target);
+        viewer.ActivateLink(text, text.Links[0].Target!);
 
         Assert.Equal(new Uri("https://example.com/"), received);
     });

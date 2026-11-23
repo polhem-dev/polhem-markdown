@@ -19,8 +19,8 @@ namespace Polhem.Markdown;
 /// <remarks>
 /// The policy: raw HTML is never interpreted and shows as the text it was written as; an image shows as its alternative
 /// text; a Mermaid diagram is laid out here and drawn by the viewers from shapes, never by running a script; a link
-/// whose target is not an absolute URI with an allowed scheme shows as its text; a node this builder does not know
-/// shows as its source text. Link reference definitions are not shown, as in any Markdown renderer, and neither is YAML
+/// whose target is not an absolute URI with an allowed scheme shows as its text, except a link to the id of a heading in
+/// the same text (<c>#id</c>), which moves to that heading; a node this builder does not know shows as its source text. Link reference definitions are not shown, as in any Markdown renderer, and neither is YAML
 /// front matter.
 /// </remarks>
 internal sealed class MarkdownModelBuilder
@@ -43,6 +43,8 @@ internal sealed class MarkdownModelBuilder
 
     private readonly string _markdown;
     private readonly MarkdownOptions _options;
+    private readonly Dictionary<HeadingBlock, string> _headingIds = [];
+    private readonly HashSet<string> _ids = [];
 
     private MarkdownModelBuilder(string markdown, MarkdownOptions options)
     {
@@ -68,6 +70,7 @@ internal sealed class MarkdownModelBuilder
             // so it is shown as written instead of failing the view.
             return new DocumentNode([builder.WholeTextAsParagraph()]);
         }
+        builder.AssignHeadingIds(document);
         return new DocumentNode(builder.Blocks(document));
     }
 
@@ -92,7 +95,7 @@ internal sealed class MarkdownModelBuilder
 
     private BlockNode? Block(Block block) => block switch
     {
-        HeadingBlock heading => new HeadingNode(Range(heading), heading.Level, Inlines(heading.Inline)),
+        HeadingBlock heading => new HeadingNode(Range(heading), heading.Level, Inlines(heading.Inline), _headingIds.GetValueOrDefault(heading, "")),
         ParagraphBlock paragraph => new ParagraphNode(Range(paragraph), Inlines(paragraph.Inline)),
         // NOTE: front matter is metadata for tools, not part of the document, so it is hidden. GitHub shows it as a
         // table; hiding it is a deliberate difference. Markdig reads it as a kind of code block, so it comes first.
@@ -107,6 +110,24 @@ internal sealed class MarkdownModelBuilder
         LinkReferenceDefinitionGroup or BlankLineBlock => null,
         _ => new ParagraphNode(Range(block), [SourceText(block)]),
     };
+
+    /// <summary>
+    /// Gives every heading its id, in document order, before any link is converted, so a link can refer to a heading
+    /// further down.
+    /// </summary>
+    private void AssignHeadingIds(MarkdownDocument document)
+    {
+        var slugger = new HeadingSlugger();
+        foreach (var heading in document.Descendants<HeadingBlock>())
+        {
+            var id = slugger.Next(heading.Inline is null ? "" : PlainText(heading.Inline));
+            _headingIds[heading] = id;
+            if (id.Length > 0)
+            {
+                _ids.Add(id);
+            }
+        }
+    }
 
     private BlockNode Alert(AlertBlock alert)
     {
@@ -321,6 +342,11 @@ internal sealed class MarkdownModelBuilder
 
     private void AddLink(Inline link, string? target, List<InlineNode> content, List<InlineNode> inlines)
     {
+        if (target is ['#', ..])
+        {
+            AddAnchorLink(link, target, content, inlines);
+            return;
+        }
         if (!TryCreateTarget(target, out var uri))
         {
             inlines.AddRange(content);
@@ -331,6 +357,25 @@ internal sealed class MarkdownModelBuilder
             content.Add(new TextNode(Range(link), target!));
         }
         inlines.Add(new LinkNode(Range(link), uri, content));
+    }
+
+    /// <summary>
+    /// Adds a link to a heading of this text, or only its content when no heading has the id. The id may be written
+    /// percent-encoded, as GitHub writes a link to a heading with non-ASCII letters.
+    /// </summary>
+    private void AddAnchorLink(Inline link, string target, List<InlineNode> content, List<InlineNode> inlines)
+    {
+        var id = Uri.UnescapeDataString(target[1..]);
+        if (!_ids.Contains(id))
+        {
+            inlines.AddRange(content);
+            return;
+        }
+        if (content.Count == 0)
+        {
+            content.Add(new TextNode(Range(link), target));
+        }
+        inlines.Add(new AnchorLinkNode(Range(link), id, content));
     }
 
     private bool TryCreateTarget(string? target, out Uri uri)

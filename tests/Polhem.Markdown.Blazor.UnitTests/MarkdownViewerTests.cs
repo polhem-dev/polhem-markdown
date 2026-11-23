@@ -123,10 +123,10 @@ public class MarkdownViewerTests : BunitContext
             "</ul></div>");
     }
 
-    [Fact(DisplayName = "A heading keeps its level")]
+    [Fact(DisplayName = "A heading keeps its level, and can take focus from a link to it")]
     public void Render_Heading_KeepsLevel()
     {
-        Show("### Title").MarkupMatches("<div class=\"pmd\"><h3>Title</h3></div>");
+        Show("### Title").MarkupMatches("<div class=\"pmd\"><h3 tabindex=\"-1\">Title</h3></div>");
     }
 
     [Fact(DisplayName = "A numbered list keeps its start, and a loose list is marked so it gets more space")]

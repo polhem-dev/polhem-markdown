@@ -2,7 +2,9 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Documents;
 using Avalonia.Interactivity;
+using Avalonia.LogicalTree;
 using Avalonia.Media;
+using Polhem.Markdown.Model;
 
 namespace Polhem.Markdown.Avalonia;
 
@@ -221,6 +223,28 @@ public class MarkdownViewer : Control
     }
 
     /// <summary>
+    /// Scrolls the nearest scroll viewer so the heading with <paramref name="headingId"/> is at the top, or as near the
+    /// top as the content allows. Returns whether the viewer shows such a heading.
+    /// </summary>
+    internal bool ScrollToHeading(string headingId)
+    {
+        var heading = _panel.GetLogicalDescendants()
+            .OfType<MarkdownTextBlock>()
+            .FirstOrDefault(text => string.Equals(text.HeadingId, headingId, StringComparison.Ordinal));
+        if (heading is null)
+        {
+            return false;
+        }
+
+        // NOTE: a scroll viewer brings a rectangle into view by the least movement, which leaves a heading below the
+        // view at the bottom. A rectangle as tall as the window starts at the heading and cannot fit, and the scroll
+        // viewer then aligns its top edge.
+        var height = Math.Max(heading.Bounds.Height, TopLevel.GetTopLevel(this)?.ClientSize.Height ?? 0);
+        heading.BringIntoView(new Rect(0, 0, heading.Bounds.Width, height));
+        return true;
+    }
+
+    /// <summary>
     /// Raises <see cref="LinkActivatedEvent"/> from <paramref name="source"/>, and opens the link when no handler
     /// handled it.
     /// </summary>
@@ -244,11 +268,12 @@ public class MarkdownViewer : Control
         for (var index = 0; index < document.Blocks.Count; index++)
         {
             var block = document.Blocks[index];
-            var source = markdown.Substring(block.Range.Start, block.Range.Length);
+            var source = BlockKey(markdown.Substring(block.Range.Start, block.Range.Length), block);
 
             // NOTE: a block is kept when its own source is unchanged. A link that refers to a reference definition
             // elsewhere in the text therefore keeps its old target when only that definition changes; replies write
-            // links inline, and assigning Options rebuilds everything when it matters.
+            // links inline, and assigning Options rebuilds everything when it matters. Heading ids and links to
+            // headings do depend on the rest of the text, so they are part of the key (see `BlockKey`).
             if (!fullRebuild && index < _sources.Count && string.Equals(_sources[index], source, StringComparison.Ordinal))
             {
                 continue;
@@ -278,5 +303,24 @@ public class MarkdownViewer : Control
         RenderedNodeTypes = renderer.RenderedNodeTypes;
         RenderedShapeTypes = renderer.RenderedShapeTypes;
         LastBuiltBlockCount = built;
+    }
+
+    /// <summary>
+    /// The source of a top-level block, followed by the heading ids and the resolved links to headings inside it. A
+    /// heading that arrives later turns earlier text into a link, and a heading added above another of the same name
+    /// changes that one's id, without either block's own source changing.
+    /// </summary>
+    private static string BlockKey(string source, BlockNode block)
+    {
+        var anchors = NodeTree.SelfAndDescendants(block)
+            .Select(node => node switch
+            {
+                HeadingNode heading => "#" + heading.Id,
+                AnchorLinkNode link => ">" + link.Id,
+                _ => null,
+            })
+            .OfType<string>()
+            .ToList();
+        return anchors.Count == 0 ? source : source + "\0" + string.Join("\0", anchors);
     }
 }

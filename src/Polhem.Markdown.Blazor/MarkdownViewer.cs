@@ -13,16 +13,23 @@ namespace Polhem.Markdown.Blazor;
 /// <remarks>
 /// The markup is built with a render tree, never from an HTML string, so no text reaches the page as markup. Styles are
 /// in <c>_content/Polhem.Markdown.Blazor/polhem-markdown.css</c>, which the host page links; they inherit the font and
-/// colors of the surrounding page, and the <c>--pmd-*</c> CSS variables listed in the package README set the rest.
+/// colors of the surrounding page, and the <c>--pmd-*</c> CSS variables listed in the package README set the rest. A
+/// link to a heading of the text loads the package's <c>polhem-markdown.js</c> module on its first click; the page does
+/// not link it.
 /// </remarks>
-public class MarkdownViewer : ComponentBase
+public class MarkdownViewer : ComponentBase, IAsyncDisposable
 {
+    private const string ModulePath = "./_content/Polhem.Markdown.Blazor/polhem-markdown.js";
+
     private static readonly DocumentNode s_empty = new([]);
 
     private DocumentNode _document = s_empty;
     private string? _parsedMarkdown;
     private MarkdownOptions? _parsedOptions;
     private CodeBlockNode? _copiedBlock;
+    // Keyed by heading id; string keys compare ordinally by default.
+    private readonly Dictionary<string, ElementReference> _headings = [];
+    private Task<IJSObjectReference>? _module;
 
     /// <summary>Gets or sets the Markdown text to show.</summary>
     [Parameter]
@@ -62,6 +69,9 @@ public class MarkdownViewer : ComponentBase
     [Inject]
     private IJSRuntime JS { get; set; } = default!;
 
+    [Inject]
+    private IServiceProvider Services { get; set; } = default!;
+
     /// <inheritdoc/>
     protected override void OnParametersSet()
     {
@@ -70,6 +80,28 @@ public class MarkdownViewer : ComponentBase
             _document = string.IsNullOrEmpty(Markdown) ? s_empty : MarkdownModelBuilder.Build(Markdown, Options ?? new MarkdownOptions());
             _parsedMarkdown = Markdown;
             _parsedOptions = Options;
+            ForgetRemovedHeadings();
+        }
+    }
+
+    /// <summary>
+    /// Drops the elements of headings the text no longer has. While a heading arrives its id changes with every chunk
+    /// (<c>u</c>, <c>us</c>, <c>usa</c>), and each id would otherwise stay for the life of the viewer.
+    /// </summary>
+    private void ForgetRemovedHeadings()
+    {
+        if (_headings.Count == 0)
+        {
+            return;
+        }
+        var ids = _document.Blocks
+            .SelectMany(NodeTree.SelfAndDescendants)
+            .OfType<HeadingNode>()
+            .Select(heading => heading.Id)
+            .ToHashSet(StringComparer.Ordinal);
+        foreach (var id in _headings.Keys.Where(id => !ids.Contains(id)).ToList())
+        {
+            _headings.Remove(id);
         }
     }
 
@@ -85,6 +117,80 @@ public class MarkdownViewer : ComponentBase
     internal bool HandlesLinks => OnLinkActivated.HasDelegate;
 
     internal bool IsCopied(CodeBlockNode block) => ReferenceEquals(block, _copiedBlock);
+
+    /// <summary>
+    /// The href of a link to the heading with <paramref name="id"/>: the current page with the id as its fragment.
+    /// </summary>
+    /// <remarks>
+    /// NOTE: a bare <c>#id</c> resolves against a <c>base</c> element, which usually names the site root, so before the
+    /// component is interactive (static rendering, or prerendered output before its circuit connects) a click, and a
+    /// click that opens a new tab at any time, would go to another page. Rendering outside a page, as with
+    /// <c>HtmlRenderer</c>, has no current page, and the bare fragment is all there is.
+    /// </remarks>
+    internal string AnchorHref(string id)
+    {
+        try
+        {
+            if (Services.GetService(typeof(NavigationManager)) is NavigationManager navigation)
+            {
+                // Relative to the base, the page resolves to itself without naming the host, which during prerendering
+                // is the one the server saw and may be an internal one behind a proxy.
+                var page = navigation.ToBaseRelativePath(navigation.Uri);
+                var hash = page.IndexOf('#', StringComparison.Ordinal);
+                return (hash < 0 ? page : page[..hash]) + "#" + id;
+            }
+        }
+        catch (InvalidOperationException)
+        {
+            // The navigation manager exists but was never initialized, as outside a page.
+        }
+        return "#" + id;
+    }
+
+    /// <summary>Records the element of the heading with <paramref name="id"/>, as Blazor captures it.</summary>
+    internal void SetHeadingElement(string id, ElementReference element) => _headings[id] = element;
+
+    /// <summary>
+    /// Scrolls the heading with <paramref name="id"/> to the top of the view, as GitHub does and as the Avalonia viewer
+    /// does, and moves focus to it so a screen reader follows.
+    /// </summary>
+    internal async Task FocusHeadingAsync(string id)
+    {
+        if (!_headings.TryGetValue(id, out var element))
+        {
+            return;
+        }
+        try
+        {
+            // NOTE: `ElementReference.FocusAsync` alone does not scroll when the heading already has focus, as it does
+            // after a second click on the same link, and Blazor offers no call that scrolls an element, so the module
+            // does both.
+            // The task, not its result, is kept, so two quick clicks import the module once.
+            _module ??= JS.InvokeAsync<IJSObjectReference>("import", ModulePath).AsTask();
+            var module = await _module;
+            await module.InvokeVoidAsync("scrollToHeading", element);
+        }
+        catch (JSException)
+        {
+            // The heading left the page between the click and the call, as a text that is still arriving is
+            // re-rendered, or the module could not load. The click then does nothing.
+            ForgetFailedImport();
+        }
+        catch (TaskCanceledException)
+        {
+            // The call timed out on a slow connection. Left unhandled, it would end the circuit over a click.
+            ForgetFailedImport();
+        }
+    }
+
+    /// <summary>Drops an import that failed, so the next click tries again instead of failing the same way.</summary>
+    private void ForgetFailedImport()
+    {
+        if (_module is { IsCompleted: true, IsCompletedSuccessfully: false })
+        {
+            _module = null;
+        }
+    }
 
     internal Task ActivateLinkAsync(Uri uri) => OnLinkActivated.InvokeAsync(new MarkdownLinkActivatedEventArgs(uri));
 
@@ -109,6 +215,40 @@ public class MarkdownViewer : ComponentBase
         {
             _copiedBlock = null;
             StateHasChanged();
+        }
+    }
+
+    /// <inheritdoc/>
+    public async ValueTask DisposeAsync()
+    {
+        await DisposeAsyncCore();
+        GC.SuppressFinalize(this);
+    }
+
+    /// <summary>Releases the script module, if a link to a heading loaded it.</summary>
+    protected virtual async ValueTask DisposeAsyncCore()
+    {
+        var module = _module;
+        _module = null;
+        if (module is null)
+        {
+            return;
+        }
+        try
+        {
+            await (await module).DisposeAsync();
+        }
+        catch (JSException)
+        {
+            // The import itself failed, so there is nothing to release.
+        }
+        catch (JSDisconnectedException)
+        {
+            // The circuit is already gone, and the module with it.
+        }
+        catch (TaskCanceledException)
+        {
+            // The import never finished.
         }
     }
 }

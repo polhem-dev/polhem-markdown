@@ -73,6 +73,7 @@ internal sealed class MarkdownRenderer
         var text = Text(heading.Inlines);
         text.FontWeight = FontWeight.SemiBold;
         text.FontSize = _viewer.GetValue(TextElement.FontSizeProperty) * s_headingScale[Math.Clamp(heading.Level, 1, 6) - 1];
+        text.HeadingId = heading.Id;
         return text;
     }
 
@@ -314,14 +315,15 @@ internal sealed class MarkdownRenderer
 
             case LinkNode link:
                 var start = offset;
-                var linkSpan = new Span { TextDecorations = TextDecorations.Underline };
-                linkSpan.Bind(TextElement.ForegroundProperty, _viewer.GetObservable(MarkdownViewer.LinkForegroundProperty));
-                foreach (var child in link.Inlines)
-                {
-                    linkSpan.Inlines.Add(Inline(child, owner, ref offset));
-                }
+                var linkSpan = LinkSpan(link.Inlines, owner, ref offset);
                 owner.AddLink(start, offset - start, link.Target);
                 return linkSpan;
+
+            case AnchorLinkNode anchor:
+                var anchorStart = offset;
+                var anchorSpan = LinkSpan(anchor.Inlines, owner, ref offset);
+                owner.AddAnchorLink(anchorStart, offset - anchorStart, anchor.Id);
+                return anchorSpan;
 
             case LineBreakNode:
                 offset += LineBreakLength;
@@ -330,6 +332,17 @@ internal sealed class MarkdownRenderer
             default:
                 return null;
         }
+    }
+
+    private Span LinkSpan(IReadOnlyList<InlineNode> inlines, MarkdownTextBlock owner, ref int offset)
+    {
+        var span = new Span { TextDecorations = TextDecorations.Underline };
+        span.Bind(TextElement.ForegroundProperty, _viewer.GetObservable(MarkdownViewer.LinkForegroundProperty));
+        foreach (var child in inlines)
+        {
+            span.Inlines.Add(Inline(child, owner, ref offset));
+        }
+        return span;
     }
 
     /// <summary>
