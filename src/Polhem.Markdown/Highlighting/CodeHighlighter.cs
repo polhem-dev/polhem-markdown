@@ -36,9 +36,12 @@ internal static class CodeHighlighter
             case "py" or "python" or "python3":
                 CodeScanner.Scan(code, CodeLanguages.Python, tokens);
                 break;
-            case "xml" or "html" or "htm" or "xhtml" or "xaml" or "axaml" or "svg" or "csproj" or "props" or "targets"
-                or "config" or "resx" or "xsd" or "xslt" or "plist":
-                MarkupScanner.Scan(code, tokens);
+            case "html" or "htm" or "xhtml":
+                MarkupScanner.Scan(code, tokens, html: true);
+                break;
+            case "xml" or "xaml" or "axaml" or "svg" or "csproj" or "props" or "targets" or "config" or "resx" or "xsd"
+                or "xslt" or "plist":
+                MarkupScanner.Scan(code, tokens, html: false);
                 break;
             case "razor" or "cshtml":
                 RazorScanner.Scan(code, tokens);

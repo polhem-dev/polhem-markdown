@@ -34,17 +34,13 @@ public class AnchorLinkTests
     }
 
     [Fact(DisplayName = "Many headings of the same name parse in linear time")]
-    public void Build_ManyRepeatedHeadings_ParseQuickly()
+    public void Build_ManyRepeatedHeadings_ParseLinearly()
     {
-        // Markdig's own numbering took over two seconds for this text; the slugger takes milliseconds.
-        var markdown = string.Concat(Enumerable.Repeat("# a\n", 20_000));
-        var watch = System.Diagnostics.Stopwatch.StartNew();
+        // Markdig's own numbering tried every number on each repeat, which grew with the square of the headings.
+        static string Headings(int count) => string.Concat(Enumerable.Repeat("# a\n", count));
 
-        var document = Parse(markdown);
-
-        watch.Stop();
-        Assert.Equal("a-19999", Assert.IsType<HeadingNode>(document.Blocks[^1]).Id);
-        Assert.True(watch.Elapsed < TimeSpan.FromSeconds(1), $"Parsing took {watch.Elapsed}.");
+        Assert.Equal("a-19999", Assert.IsType<HeadingNode>(Parse(Headings(20_000)).Blocks[^1]).Id);
+        Scaling.AssertLinear(Headings, markdown => Parse(markdown), 5_000, "repeated headings");
     }
 
     [Theory(DisplayName = "A heading with only punctuation or symbols gets an empty id")]

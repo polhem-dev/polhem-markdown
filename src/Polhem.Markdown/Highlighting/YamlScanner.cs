@@ -19,22 +19,25 @@ internal static class YamlScanner
         while (lineStart < code.Length)
         {
             var lineEnd = CodeScanner.LineEnd(code, lineStart, code.Length);
+
+            // A Windows line ending's carriage return is not part of the line's content.
+            var contentEnd = lineEnd > lineStart && code[lineEnd - 1] == '\r' ? lineEnd - 1 : lineEnd;
             var indent = lineStart;
-            while (indent < lineEnd && code[indent] == ' ')
+            while (indent < contentEnd && code[indent] == ' ')
             {
                 indent++;
             }
             var column = indent - lineStart;
 
             // A block scalar takes every following line indented further than the key that opened it, and blank lines.
-            if (blockIndent >= 0 && (indent == lineEnd || column > blockIndent))
+            if (blockIndent >= 0 && (indent == contentEnd || column > blockIndent))
             {
                 lineStart = lineEnd + 1;
                 continue;
             }
             blockIndent = -1;
 
-            if (Line(code, indent, lineEnd, tokens))
+            if (Line(code, indent, contentEnd, tokens))
             {
                 blockIndent = column;
             }
@@ -120,22 +123,29 @@ internal static class YamlScanner
         }
         else
         {
-            var comment = CommentStart(code, index, end);
-            var valueEnd = comment;
-            while (valueEnd > index && char.IsWhiteSpace(code[valueEnd - 1]))
-            {
-                valueEnd--;
-            }
-            var value = code.AsSpan(index, valueEnd - index);
-            if (s_constants.GetAlternateLookup<ReadOnlySpan<char>>().Contains(value) || IsNumber(value))
-            {
-                tokens.Add(index, valueEnd, CodeTokenKind.Constant);
-            }
-            index = comment;
+            index = PlainValue(code, index, end, tokens);
         }
-        var trailing = CommentStart(code, index, end);
-        tokens.Add(trailing, end, CodeTokenKind.Comment);
+        tokens.Add(CommentStart(code, index, end), end, CodeTokenKind.Comment);
         return false;
+    }
+
+    /// <summary>
+    /// An unquoted value up to a comment, a constant when it is one or a number, and returns where the comment starts.
+    /// </summary>
+    private static int PlainValue(string code, int index, int end, TokenList tokens)
+    {
+        var comment = CommentStart(code, index, end);
+        var valueEnd = comment;
+        while (valueEnd > index && char.IsWhiteSpace(code[valueEnd - 1]))
+        {
+            valueEnd--;
+        }
+        var value = code.AsSpan(index, valueEnd - index);
+        if (s_constants.GetAlternateLookup<ReadOnlySpan<char>>().Contains(value) || IsNumber(value))
+        {
+            tokens.Add(index, valueEnd, CodeTokenKind.Constant);
+        }
+        return comment;
     }
 
     /// <summary>Where a comment starts: a <c>#</c> after a space, or <paramref name="end"/> when there is none.</summary>

@@ -2,7 +2,8 @@ namespace Polhem.Markdown.Highlighting;
 
 /// <summary>
 /// Reads XML and HTML: comments, tags with their attributes, entities, and in HTML the code inside <c>script</c> and
-/// <c>style</c> elements. Razor builds on it through <see cref="ExpressionHook"/>.
+/// <c>style</c> elements. In XML those are ordinary elements, such as XAML's <c>Style</c>. Razor builds on it through
+/// <see cref="ExpressionHook"/>.
 /// </summary>
 /// <remarks>
 /// NOTE: one forward pass, like <see cref="CodeScanner"/>. A tag, comment or attribute value that is not closed runs to
@@ -10,17 +11,21 @@ namespace Polhem.Markdown.Highlighting;
 /// </remarks>
 internal class MarkupScanner
 {
-    protected MarkupScanner(string code, TokenList tokens)
+    private readonly bool _html;
+
+    protected MarkupScanner(string code, TokenList tokens, bool html)
     {
         Code = code;
         Tokens = tokens;
+        _html = html;
     }
 
     protected string Code { get; }
 
     protected TokenList Tokens { get; }
 
-    public static void Scan(string code, TokenList tokens) => new MarkupScanner(code, tokens).Run();
+    /// <summary>Scans <paramref name="code"/> as HTML when <paramref name="html"/> is set, otherwise as XML.</summary>
+    public static void Scan(string code, TokenList tokens, bool html) => new MarkupScanner(code, tokens, html).Run();
 
     protected void Run()
     {
@@ -85,16 +90,25 @@ internal class MarkupScanner
         }
         var nameEnd = NameEnd(nameStart);
         Tokens.Add(nameStart, nameEnd, CodeTokenKind.Tag);
-        var name = Code[nameStart..nameEnd];
+        var position = TagBody(nameEnd);
 
-        var position = nameEnd;
+        var opened = Code[index + 1] != '/' && Code[position - 1] == '>' && Code[position - 2] != '/';
+        return opened && _html ? EmbeddedCode(Code[nameStart..nameEnd], position) : position;
+    }
+
+    /// <summary>
+    /// Reads a tag's attributes up to its <c>&gt;</c>, and returns the index after it; or the index of a <c>&lt;</c> that
+    /// starts another tag first, or the end of the code.
+    /// </summary>
+    private int TagBody(int index)
+    {
+        var position = index;
         while (position < Code.Length)
         {
             var character = Code[position];
             if (character == '>')
             {
-                position++;
-                break;
+                return position + 1;
             }
             if (character == '<')
             {
@@ -103,38 +117,44 @@ internal class MarkupScanner
             if (character is '"' or '\'')
             {
                 position = AttributeValue(position);
-                continue;
             }
-            if (IsNameStart(character))
+            else if (IsNameStart(character))
             {
                 var attributeEnd = NameEnd(position);
                 Tokens.Add(position, attributeEnd, CodeTokenKind.Property);
                 position = attributeEnd;
-                continue;
-            }
-            var hooked = ExpressionHook(position);
-            position = hooked != position ? hooked : position + 1;
-        }
-
-        // The body of a script or style element is code in another language, up to its closing tag.
-        var opened = Code[index + 1] != '/' && Code[position - 1] == '>' && Code[position - 2] != '/';
-        var isScript = string.Equals(name, "script", StringComparison.OrdinalIgnoreCase);
-        var isStyle = string.Equals(name, "style", StringComparison.OrdinalIgnoreCase);
-        if (opened && (isScript || isStyle))
-        {
-            var close = Code.IndexOf("</" + name, position, StringComparison.OrdinalIgnoreCase);
-            var bodyEnd = close < 0 ? Code.Length : close;
-            if (isScript)
-            {
-                CodeScanner.Scan(Code, position, bodyEnd, CodeLanguages.JavaScript, Tokens);
             }
             else
             {
-                CssScanner.Scan(Code, position, bodyEnd, Tokens);
+                var hooked = ExpressionHook(position);
+                position = hooked != position ? hooked : position + 1;
             }
-            return bodyEnd;
         }
         return position;
+    }
+
+    /// <summary>
+    /// After an HTML <c>script</c> or <c>style</c> start tag, reads its body as JavaScript or CSS up to the closing tag,
+    /// and returns the index of that tag. After any other tag it reads nothing.
+    /// </summary>
+    private int EmbeddedCode(string name, int index)
+    {
+        var isScript = string.Equals(name, "script", StringComparison.OrdinalIgnoreCase);
+        if (!isScript && !string.Equals(name, "style", StringComparison.OrdinalIgnoreCase))
+        {
+            return index;
+        }
+        var close = Code.IndexOf("</" + name, index, StringComparison.OrdinalIgnoreCase);
+        var bodyEnd = close < 0 ? Code.Length : close;
+        if (isScript)
+        {
+            CodeScanner.Scan(Code, index, bodyEnd, CodeLanguages.JavaScript, Tokens);
+        }
+        else
+        {
+            CssScanner.Scan(Code, index, bodyEnd, Tokens);
+        }
+        return bodyEnd;
     }
 
     private int AttributeValue(int index)

@@ -26,11 +26,11 @@ internal sealed class RazorScanner : MarkupScanner
     ];
 
     private RazorScanner(string code, TokenList tokens)
-        : base(code, tokens)
+        : base(code, tokens, html: true)
     {
     }
 
-    public static new void Scan(string code, TokenList tokens) => new RazorScanner(code, tokens).Run();
+    public static void Scan(string code, TokenList tokens) => new RazorScanner(code, tokens).Run();
 
     /// <summary>
     /// An at sign starts C# unless it follows a letter or digit, as in an e-mail address, or nothing that can follow it
@@ -52,39 +52,31 @@ internal sealed class RazorScanner : MarkupScanner
         {
             return index;
         }
-        var next = Code[index + 1];
-        switch (next)
+        switch (Code[index + 1])
         {
             case '@':
                 return index + 2;
             case '*':
-                var close = Code.IndexOf("*@", index + 2, StringComparison.Ordinal);
-                var commentEnd = close < 0 ? Code.Length : close + 2;
+                var commentEnd = SkipPast(index + 2, "*@");
                 Tokens.Add(index, commentEnd, CodeTokenKind.Comment);
                 return commentEnd;
             case '{' or '(':
                 Tokens.Add(index, index + 1, CodeTokenKind.Keyword);
                 return CSharpGroup(index + 1);
+            default:
+                return Word(index);
         }
-        var nameEnd = index + 1;
-        while (nameEnd < Code.Length && (char.IsLetterOrDigit(Code[nameEnd]) || Code[nameEnd] == '_'))
-        {
-            nameEnd++;
-        }
+    }
+
+    /// <summary>Reads <c>@</c> and the word after it: a keyword, a directive, or the start of an implicit expression.</summary>
+    private int Word(int index)
+    {
+        var nameEnd = NameEnd(index + 1);
         var word = Code[(index + 1)..nameEnd];
         if (s_blockDirectives.Contains(word) || s_controlKeywords.Contains(word))
         {
             Tokens.Add(index, nameEnd, CodeTokenKind.Keyword);
-            var after = nameEnd;
-            while (after < Code.Length && Code[after] is ' ' or '\t' or '\r' or '\n')
-            {
-                after++;
-            }
-            if (after < Code.Length && (Code[after] == '(' || (Code[after] == '{' && s_blockDirectives.Contains(word))))
-            {
-                return CSharpGroup(after);
-            }
-            return nameEnd;
+            return KeywordGroup(nameEnd, allowsBraces: s_blockDirectives.Contains(word));
         }
         if (s_lineDirectives.Contains(word))
         {
@@ -98,14 +90,24 @@ internal sealed class RazorScanner : MarkupScanner
         var expressionEnd = nameEnd;
         while (expressionEnd + 1 < Code.Length && Code[expressionEnd] == '.' && (char.IsLetter(Code[expressionEnd + 1]) || Code[expressionEnd + 1] == '_'))
         {
-            expressionEnd++;
-            while (expressionEnd < Code.Length && (char.IsLetterOrDigit(Code[expressionEnd]) || Code[expressionEnd] == '_'))
-            {
-                expressionEnd++;
-            }
+            expressionEnd = NameEnd(expressionEnd + 1);
         }
         Tokens.Add(index, expressionEnd, CodeTokenKind.Property);
         return expressionEnd;
+    }
+
+    /// <summary>
+    /// After a keyword, reads its parenthesized condition as C#, or for <c>@code</c> and <c>@functions</c> its braces;
+    /// otherwise returns <paramref name="index"/>, and what follows stays markup.
+    /// </summary>
+    private int KeywordGroup(int index, bool allowsBraces)
+    {
+        var after = index;
+        while (after < Code.Length && Code[after] is ' ' or '\t' or '\r' or '\n')
+        {
+            after++;
+        }
+        return after < Code.Length && (Code[after] == '(' || (Code[after] == '{' && allowsBraces)) ? CSharpGroup(after) : index;
     }
 
     /// <summary>
@@ -120,19 +122,12 @@ internal sealed class RazorScanner : MarkupScanner
         var position = open;
         while (position < Code.Length)
         {
+            if (SkipNonCode(position) is { } skipped)
+            {
+                position = skipped;
+                continue;
+            }
             var character = Code[position];
-            if (character is '"' or '\'')
-            {
-                position = SkipQuoted(position);
-                continue;
-            }
-            if (character == '/' && position + 1 < Code.Length && Code[position + 1] is '/' or '*')
-            {
-                position = Code[position + 1] == '/'
-                    ? CodeScanner.LineEnd(Code, position, Code.Length)
-                    : SkipPast(position + 2, "*/");
-                continue;
-            }
             if (character == opener)
             {
                 depth++;
@@ -143,9 +138,38 @@ internal sealed class RazorScanner : MarkupScanner
             }
             position++;
         }
-        var end = Math.Min(position + 1, Code.Length);
         CodeScanner.Scan(Code, open + 1, Math.Min(position, Code.Length), CodeLanguages.CSharp, Tokens);
-        return end;
+        return Math.Min(position + 1, Code.Length);
+    }
+
+    /// <summary>The index after a string, character or comment starting at <paramref name="index"/>, or <see langword="null"/>.</summary>
+    private int? SkipNonCode(int index)
+    {
+        var character = Code[index];
+        if (character is '"' or '\'')
+        {
+            return SkipQuoted(index);
+        }
+        if (character != '/' || index + 1 >= Code.Length)
+        {
+            return null;
+        }
+        return Code[index + 1] switch
+        {
+            '/' => CodeScanner.LineEnd(Code, index, Code.Length),
+            '*' => SkipPast(index + 2, "*/"),
+            _ => null,
+        };
+    }
+
+    private int NameEnd(int index)
+    {
+        var position = index;
+        while (position < Code.Length && (char.IsLetterOrDigit(Code[position]) || Code[position] == '_'))
+        {
+            position++;
+        }
+        return position;
     }
 
     private int SkipQuoted(int index)

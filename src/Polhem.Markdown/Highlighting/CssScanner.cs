@@ -1,199 +1,260 @@
 namespace Polhem.Markdown.Highlighting;
 
 /// <summary>
-/// Reads CSS: comments, strings, at-rules, selectors outside declaration blocks, and inside them property names, numbers
-/// with their units, colors and <c>!important</c>.
+/// Reads CSS: comments, strings, at-rules, selectors outside declaration blocks and of rules nested in them, and inside
+/// blocks property names, numbers with their units, colors and <c>!important</c>.
 /// </summary>
-/// <remarks>NOTE: one forward pass, like <see cref="CodeScanner"/>.</remarks>
-internal static class CssScanner
+/// <remarks>
+/// NOTE: one forward pass, like <see cref="CodeScanner"/>. The only look-ahead, for a nested rule, runs from the start of
+/// a declaration to its first <c>{</c>, <c>;</c> or <c>}</c>, and what it passes over is read next, so no character is
+/// looked at more than twice.
+/// </remarks>
+internal sealed class CssScanner
 {
+    private readonly string _code;
+    private readonly int _end;
+    private readonly TokenList _tokens;
+    private int _depth;
+    private bool _declarationStart = true;
+
+    private CssScanner(string code, int end, TokenList tokens)
+    {
+        _code = code;
+        _end = end;
+        _tokens = tokens;
+    }
+
     public static void Scan(string code, TokenList tokens) => Scan(code, 0, code.Length, tokens);
 
     public static void Scan(string code, int start, int end, TokenList tokens)
     {
-        var depth = 0;
-        var declarationStart = true;
+        var scanner = new CssScanner(code, end, tokens);
         var index = start;
         while (index < end)
         {
-            var character = code[index];
-            if (character == '/' && index + 1 < end && code[index + 1] == '*')
-            {
-                var close = code.IndexOf("*/", index + 2, end - index - 2, StringComparison.Ordinal);
-                var commentEnd = close < 0 ? end : close + 2;
-                tokens.Add(index, commentEnd, CodeTokenKind.Comment);
-                index = commentEnd;
-                continue;
-            }
-            if (character is '"' or '\'')
-            {
-                var stringEnd = StringEnd(code, index, end);
-                tokens.Add(index, stringEnd, CodeTokenKind.String);
-                index = stringEnd;
-                continue;
-            }
-            switch (character)
-            {
-                case '{':
-                    depth++;
-                    declarationStart = true;
-                    index++;
-                    continue;
-                case '}':
-                    depth = Math.Max(depth - 1, 0);
-                    declarationStart = true;
-                    index++;
-                    continue;
-                case ';':
-                    declarationStart = true;
-                    index++;
-                    continue;
-                case '@' when index + 1 < end && char.IsLetter(code[index + 1]):
-                    var ruleEnd = NameEnd(code, index + 1, end);
-                    tokens.Add(index, ruleEnd, CodeTokenKind.Keyword);
-                    index = ruleEnd;
-                    continue;
-                case '!' when index + 10 <= end && string.Compare(code, index, "!important", 0, 10, StringComparison.OrdinalIgnoreCase) == 0:
-                    tokens.Add(index, index + 10, CodeTokenKind.Keyword);
-                    index += 10;
-                    continue;
-            }
-
-            if (depth > 0 && declarationStart && !char.IsWhiteSpace(character) && NestedRuleOpen(code, index, end) is { } open)
-            {
-                // A rule nested in a block, as inside @media or with CSS nesting: its selector runs up to its brace.
-                while (index < open)
-                {
-                    index = Selector(code, index, open, tokens);
-                }
-                declarationStart = false;
-            }
-            else if (depth > 0)
-            {
-                index = Declaration(code, index, end, ref declarationStart, tokens);
-            }
-            else
-            {
-                index = Selector(code, index, end, tokens);
-            }
+            index = scanner.Next(index);
         }
     }
 
-    /// <summary>
-    /// The brace that opens a nested rule starting at <paramref name="index"/>, or <see langword="null"/> when a semicolon
-    /// or a closing brace comes first, as after a declaration.
-    /// </summary>
-    private static int? NestedRuleOpen(string code, int index, int end)
+    private int Next(int index) =>
+        Comment(index) ?? QuotedString(index) ?? Punctuation(index) ?? AtRule(index) ?? Important(index)
+        ?? NestedRule(index) ?? (_depth > 0 ? Declaration(index) : Selector(index, _end));
+
+    private int? Comment(int index)
     {
-        for (var position = index; position < end; position++)
+        if (_code[index] != '/' || index + 1 >= _end || _code[index + 1] != '*')
         {
-            switch (code[position])
-            {
-                case '{':
-                    return position;
-                case ';' or '}':
-                    return null;
-            }
+            return null;
         }
-        return null;
+        var close = _code.IndexOf("*/", index + 2, _end - index - 2, StringComparison.Ordinal);
+        var commentEnd = close < 0 ? _end : close + 2;
+        _tokens.Add(index, commentEnd, CodeTokenKind.Comment);
+        return commentEnd;
     }
 
-    private static int Declaration(string code, int index, int end, ref bool declarationStart, TokenList tokens)
+    private int? QuotedString(int index)
     {
-        var character = code[index];
-        if (declarationStart && (char.IsLetter(character) || character == '-'))
+        if (_code[index] is not ('"' or '\''))
         {
-            var nameEnd = NameEnd(code, index, end);
-            var after = nameEnd;
-            while (after < end && code[after] is ' ' or '\t')
-            {
-                after++;
-            }
-            declarationStart = false;
-            if (after < end && code[after] == ':')
-            {
-                tokens.Add(index, nameEnd, CodeTokenKind.Property);
-            }
-            return nameEnd;
+            return null;
         }
-        if (!char.IsWhiteSpace(character))
-        {
-            declarationStart = false;
-        }
-        if (char.IsAsciiDigit(character) || (character == '.' && index + 1 < end && char.IsAsciiDigit(code[index + 1])))
-        {
-            var numberEnd = index + 1;
-            while (numberEnd < end && (char.IsAsciiLetterOrDigit(code[numberEnd]) || code[numberEnd] is '.' or '%'))
-            {
-                numberEnd++;
-            }
-            tokens.Add(index, numberEnd, CodeTokenKind.Constant);
-            return numberEnd;
-        }
-        if (character == '#' && index + 1 < end && char.IsAsciiHexDigit(code[index + 1]))
-        {
-            var colorEnd = index + 1;
-            while (colorEnd < end && char.IsAsciiHexDigit(code[colorEnd]))
-            {
-                colorEnd++;
-            }
-            tokens.Add(index, colorEnd, CodeTokenKind.Constant);
-            return colorEnd;
-        }
-        return char.IsLetter(character) || character == '-' ? NameEnd(code, index, end) : index + 1;
+        var stringEnd = StringEnd(index);
+        _tokens.Add(index, stringEnd, CodeTokenKind.String);
+        return stringEnd;
     }
 
-    /// <summary>Selector names: elements, classes and ids, shown as tags; pseudo-classes stay plain.</summary>
-    private static int Selector(string code, int index, int end, TokenList tokens)
+    /// <summary>Braces and semicolons, which open and close blocks and start declarations.</summary>
+    private int? Punctuation(int index)
     {
-        var character = code[index];
-        if (character == ':')
+        switch (_code[index])
         {
-            var pseudoEnd = index + 1;
-            while (pseudoEnd < end && code[pseudoEnd] == ':')
-            {
-                pseudoEnd++;
-            }
-            return NameEnd(code, pseudoEnd, end);
+            case '{':
+                _depth++;
+                break;
+            case '}':
+                _depth = Math.Max(_depth - 1, 0);
+                break;
+            case ';':
+                break;
+            default:
+                return null;
         }
-        if (char.IsLetter(character) || character is '.' or '#' or '*' || (character == '-' && index + 1 < end && char.IsLetter(code[index + 1])))
-        {
-            var nameEnd = character is '.' or '#' or '*' ? NameEnd(code, index + 1, end) : NameEnd(code, index, end);
-            nameEnd = Math.Max(nameEnd, index + 1);
-            tokens.Add(index, nameEnd, CodeTokenKind.Tag);
-            return nameEnd;
-        }
+        _declarationStart = true;
         return index + 1;
     }
 
-    private static int StringEnd(string code, int index, int end)
+    private int? AtRule(int index)
     {
-        var quote = code[index];
-        var position = index + 1;
-        while (position < end)
+        if (_code[index] != '@' || index + 1 >= _end || !char.IsLetter(_code[index + 1]))
         {
-            if (code[position] == '\\')
+            return null;
+        }
+        var ruleEnd = NameEnd(index + 1);
+        _tokens.Add(index, ruleEnd, CodeTokenKind.Keyword);
+        return ruleEnd;
+    }
+
+    private int? Important(int index)
+    {
+        const string Text = "!important";
+        if (_code[index] != '!' || index + Text.Length > _end
+            || string.Compare(_code, index, Text, 0, Text.Length, StringComparison.OrdinalIgnoreCase) != 0)
+        {
+            return null;
+        }
+        _tokens.Add(index, index + Text.Length, CodeTokenKind.Keyword);
+        return index + Text.Length;
+    }
+
+    /// <summary>
+    /// A rule nested in a block, as inside <c>@media</c> or with CSS nesting: what starts a declaration but reaches a
+    /// <c>{</c> before a <c>;</c> or <c>}</c> is a selector, read up to that brace.
+    /// </summary>
+    private int? NestedRule(int index)
+    {
+        if (_depth == 0 || !_declarationStart || char.IsWhiteSpace(_code[index]))
+        {
+            return null;
+        }
+        var open = index;
+        while (open < _end && _code[open] is not ('{' or ';' or '}'))
+        {
+            open++;
+        }
+        if (open >= _end || _code[open] != '{')
+        {
+            return null;
+        }
+        var position = index;
+        while (position < open)
+        {
+            position = Selector(position, open);
+        }
+        _declarationStart = false;
+        return position;
+    }
+
+    private int Declaration(int index)
+    {
+        var character = _code[index];
+        if (_declarationStart && (char.IsLetter(character) || character == '-'))
+        {
+            _declarationStart = false;
+            return PropertyName(index);
+        }
+        if (!char.IsWhiteSpace(character))
+        {
+            _declarationStart = false;
+        }
+        return NumberValue(index) ?? ColorValue(index) ?? (char.IsLetter(character) || character == '-' ? NameEnd(index) : index + 1);
+    }
+
+    /// <summary>A name at the start of a declaration, which is a property when a colon follows it.</summary>
+    private int PropertyName(int index)
+    {
+        var nameEnd = NameEnd(index);
+        var after = nameEnd;
+        while (after < _end && _code[after] is ' ' or '\t')
+        {
+            after++;
+        }
+        if (after < _end && _code[after] == ':')
+        {
+            _tokens.Add(index, nameEnd, CodeTokenKind.Property);
+        }
+        return nameEnd;
+    }
+
+    /// <summary>A number with its unit, such as <c>4px</c>, <c>.5em</c> or <c>50%</c>.</summary>
+    private int? NumberValue(int index)
+    {
+        var character = _code[index];
+        if (!char.IsAsciiDigit(character) && !(character == '.' && index + 1 < _end && char.IsAsciiDigit(_code[index + 1])))
+        {
+            return null;
+        }
+        var numberEnd = index + 1;
+        while (numberEnd < _end && (char.IsAsciiLetterOrDigit(_code[numberEnd]) || _code[numberEnd] is '.' or '%'))
+        {
+            numberEnd++;
+        }
+        _tokens.Add(index, numberEnd, CodeTokenKind.Constant);
+        return numberEnd;
+    }
+
+    /// <summary>A hexadecimal color, such as <c>#fff</c>.</summary>
+    private int? ColorValue(int index)
+    {
+        if (_code[index] != '#' || index + 1 >= _end || !char.IsAsciiHexDigit(_code[index + 1]))
+        {
+            return null;
+        }
+        var colorEnd = index + 1;
+        while (colorEnd < _end && char.IsAsciiHexDigit(_code[colorEnd]))
+        {
+            colorEnd++;
+        }
+        _tokens.Add(index, colorEnd, CodeTokenKind.Constant);
+        return colorEnd;
+    }
+
+    /// <summary>
+    /// A selector name before <paramref name="limit"/>: an element, class or id, shown as a tag. Pseudo-classes stay plain.
+    /// </summary>
+    private int Selector(int index, int limit)
+    {
+        var character = _code[index];
+        if (character == ':')
+        {
+            var pseudoEnd = index + 1;
+            while (pseudoEnd < limit && _code[pseudoEnd] == ':')
+            {
+                pseudoEnd++;
+            }
+            return Math.Max(Math.Min(NameEnd(pseudoEnd), limit), index + 1);
+        }
+        var isName = char.IsLetter(character) || (character == '-' && index + 1 < limit && char.IsLetter(_code[index + 1]));
+        if (!isName && character is not ('.' or '#' or '*'))
+        {
+            return index + 1;
+        }
+        var nameEnd = Math.Min(isName ? NameEnd(index) : NameEnd(index + 1), limit);
+        nameEnd = Math.Max(nameEnd, index + 1);
+        _tokens.Add(index, nameEnd, CodeTokenKind.Tag);
+        return nameEnd;
+    }
+
+    private int StringEnd(int index)
+    {
+        var quote = _code[index];
+        var position = index + 1;
+        while (position < _end)
+        {
+            var character = _code[position];
+            if (character == '\\')
             {
                 position += 2;
-                continue;
             }
-            if (code[position] == quote)
+            else if (character == quote)
             {
                 return position + 1;
             }
-            if (code[position] == '\n')
+            else if (character == '\n')
             {
                 return position;
             }
-            position++;
+            else
+            {
+                position++;
+            }
         }
-        return end;
+        return _end;
     }
 
-    private static int NameEnd(string code, int index, int end)
+    private int NameEnd(int index)
     {
         var position = index;
-        while (position < end && (char.IsLetterOrDigit(code[position]) || code[position] is '-' or '_'))
+        while (position < _end && (char.IsLetterOrDigit(_code[position]) || _code[position] is '-' or '_'))
         {
             position++;
         }

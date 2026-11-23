@@ -126,6 +126,35 @@ public class CodeHighlighterTests
                 .Where(token => token != "Tag:screen").ToList());
     }
 
+    [Theory(DisplayName = "In XML, XAML and Avalonia XAML a Style or Script element is markup like any other")]
+    [InlineData("xml")]
+    [InlineData("xaml")]
+    [InlineData("axaml")]
+    public void Tokenize_XmlStyleElement_IsMarkup(string language)
+    {
+        Assert.Equal(
+            ["Tag:Style", "Property:Selector", "String:\"Button\"", "Tag:Setter", "Property:Property", "String:\"Background\"",
+             "Property:Value", "String:\"Red\"", "Tag:Style"],
+            Tokens(language, "<Style Selector=\"Button\"><Setter Property=\"Background\" Value=\"Red\"/></Style>"));
+    }
+
+    [Fact(DisplayName = "YAML with Windows line endings reads keys, list items and block scalars the same way")]
+    public void Tokenize_YamlWithCrLf()
+    {
+        var unix = Tokens("yaml", "parent:\n  - child: 1\nscript: |\n  a: b\n\n  c: d\nafter: true");
+        var windows = Tokens("yaml", "parent:\r\n  - child: 1\r\nscript: |\r\n  a: b\r\n\r\n  c: d\r\nafter: true");
+
+        Assert.Equal(unix, windows);
+        Assert.Contains("Property:parent", windows);
+        Assert.DoesNotContain("Property:c", windows);
+    }
+
+    [Fact(DisplayName = "A shell variable in braces that is not closed ends at the end of its line")]
+    public void Tokenize_UnclosedShellBrace_EndsAtLine()
+    {
+        Assert.Equal(["Property:${A", "Property:$B"], Tokens("bash", "${A\necho $B"));
+    }
+
     [Theory(DisplayName = "The fence's language matches its usual names in any case, and only its first word counts")]
     [InlineData("C#")]
     [InlineData("CSharp")]
@@ -179,14 +208,11 @@ public class CodeHighlighterTests
     [MemberData(nameof(Adversarial))]
     public void Tokenize_AdversarialCode_IsLinear(string language, string unit)
     {
-        var code = string.Concat(Enumerable.Repeat(unit, 200_000 / unit.Length));
-        var watch = System.Diagnostics.Stopwatch.StartNew();
+        string Code(int length) => string.Concat(Enumerable.Repeat(unit, Math.Max(1, length / unit.Length)));
 
-        var tokens = CodeHighlighter.Tokenize(language, code);
-
-        watch.Stop();
-        AssertWellFormed(tokens, code.Length);
-        Assert.True(watch.Elapsed < TimeSpan.FromSeconds(1), $"{language} took {watch.Elapsed}.");
+        var code = Code(100_000);
+        AssertWellFormed(CodeHighlighter.Tokenize(language, code), code.Length);
+        Scaling.AssertLinear(Code, text => CodeHighlighter.Tokenize(language, text), 25_000, $"{language} with {unit.Replace("\n", "\\n", StringComparison.Ordinal)}");
     }
 
     public static TheoryData<string, string> Adversarial()
@@ -194,7 +220,7 @@ public class CodeHighlighterTests
         var data = new TheoryData<string, string>();
         foreach (var language in s_languages)
         {
-            foreach (var unit in new[] { "\"", "'", "/*", "<", "@{", "@(", "<script>", "a: ", "$", "-- ", "{", "<!--", "@*", "x\n", "`" })
+            foreach (var unit in new[] { "\"", "'", "/*", "<", "@{", "@(", "<script>", "<style>", "a: ", "$", "${\n", "-- ", "{", "<!--", "@*", "x\n", "`", "a{b:" })
             {
                 data.Add(language, unit);
             }

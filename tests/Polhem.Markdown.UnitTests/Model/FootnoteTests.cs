@@ -161,17 +161,13 @@ public class FootnoteTests
     }
 
     [Fact(DisplayName = "Many references to one note parse in linear time")]
-    public void Build_ManyReferencesToOneNote_ParseQuickly()
+    public void Build_ManyReferencesToOneNote_ParseLinearly()
     {
-        // Counting each back link's position by walking the note's references took over half a second for this text.
-        var markdown = string.Concat(Enumerable.Repeat("x[^a] ", 40_000)) + "\n\n[^a]: The note.";
-        var watch = System.Diagnostics.Stopwatch.StartNew();
+        // Counting each back link's position by walking the note's references grew with the square of the references.
+        static string References(int count) => string.Concat(Enumerable.Repeat("x[^a] ", count)) + "\n\n[^a]: The note.";
 
-        var document = Parse(markdown);
-
-        watch.Stop();
-        Assert.Equal(40_000, AllNodes(document).OfType<FootnoteBackLinkNode>().Last().Position);
-        Assert.True(watch.Elapsed < TimeSpan.FromSeconds(1), $"Parsing took {watch.Elapsed}.");
+        Assert.Equal(20_000, AllNodes(Parse(References(20_000))).OfType<FootnoteBackLinkNode>().Last().Position);
+        Scaling.AssertLinear(References, markdown => Parse(markdown), 5_000, "references to one note");
     }
 
     private static string NoteText(FootnoteNode note) =>
