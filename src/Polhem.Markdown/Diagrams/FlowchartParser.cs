@@ -52,12 +52,9 @@ internal static partial class FlowchartParser
         }
 
         var statements = separator < 0 ? lines : lines.Prepend(header[(separator + 1)..]);
-        foreach (var line in statements)
+        if (!statements.All(line => TryLine(line, state)))
         {
-            if (!TryLine(line, state))
-            {
-                return false;
-            }
+            return false;
         }
 
         var nodes = state.Nodes.Select(node => new FlowNode(node.Id, TextMetrics.Lines(node.Label), node.Shape)).ToList();
@@ -247,13 +244,20 @@ internal static partial class FlowchartParser
         }
 
         var op = match.Groups["op"].Value;
-        style = op.Contains('.', StringComparison.Ordinal) ? FlowLineStyle.Dotted
-            : op.Contains('=', StringComparison.Ordinal) ? FlowLineStyle.Thick
-            : FlowLineStyle.Solid;
+        style = LineStyle(op);
         arrow = op.EndsWith('>');
         label = Unquote(match.Groups["label"].Value.Trim());
         cursor.Advance(match.Length);
         return true;
+    }
+
+    private static FlowLineStyle LineStyle(string op)
+    {
+        if (op.Contains('.', StringComparison.Ordinal))
+        {
+            return FlowLineStyle.Dotted;
+        }
+        return op.Contains('=', StringComparison.Ordinal) ? FlowLineStyle.Thick : FlowLineStyle.Solid;
     }
 
     private static string Unquote(string text) =>

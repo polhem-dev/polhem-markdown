@@ -8,7 +8,7 @@ internal sealed partial class FlowchartLayout
     private DiagramDrawing Draw()
     {
         var builder = new DrawingBuilder();
-        var labels = new List<(IReadOnlyList<string> Lines, List<DiagramPoint> Candidates)>();
+        var labels = new List<LabelRequest>();
         var bends = ParallelBends();
 
         for (var index = 0; index < _chart.Edges.Count; index++)
@@ -19,33 +19,10 @@ internal sealed partial class FlowchartLayout
             if (edge.From == edge.To)
             {
                 Loop(builder, edge, thickness, dash, labels);
-                continue;
             }
-
-            var path = _paths[index];
-            var points = path.Select(vertex => Center(_vertices[vertex])).ToList();
-            var bend = bends[index];
-            if (bend != default)
+            else
             {
-                points.Insert(1, new DiagramPoint((points[0].X + points[1].X) / 2 + bend.X, (points[0].Y + points[1].Y) / 2 + bend.Y));
-            }
-            points[0] = Clip(edge.From, points[1]);
-            points[^1] = Clip(edge.To, points[^2]);
-            builder.Connector(points, thickness, dash, edge.Arrow);
-
-            if (HasText(edge.Label) && bend != default)
-            {
-                // The outer side of the bend first: the side it leans to.
-                var side = _horizontal ? (bend.Y < 0 ? 1 : -1) : (bend.X > 0 ? 1 : -1);
-                var candidates = new List<DiagramPoint> { Beside(points[0], points[1], 1, edge.Label, side) };
-                candidates.AddRange(BesideSegment(points[0], points[1], edge.Label, side));
-                candidates.AddRange(BesideSegment(points[1], points[2], edge.Label, side));
-                labels.Add((edge.Label, candidates));
-            }
-            else if (HasText(edge.Label))
-            {
-                var segment = _labelSegments[index];
-                labels.Add((edge.Label, BesideSegment(points[segment], points[segment + 1], edge.Label, 1).ToList()));
+                Link(builder, index, bends[index], thickness, dash, labels);
             }
         }
 
@@ -55,6 +32,53 @@ internal sealed partial class FlowchartLayout
         }
         PlaceLabels(builder, labels);
         return builder.Build();
+    }
+
+    /// <summary>A label to place, with the centers it may take in order of preference.</summary>
+    private sealed record LabelRequest(IReadOnlyList<string> Lines, List<DiagramPoint> Candidates);
+
+    /// <summary>Draws a link between two different nodes, bent by <paramref name="bend"/> when it is not zero.</summary>
+    private void Link(DrawingBuilder builder, int index, DiagramPoint bend, double thickness, double dash, List<LabelRequest> labels)
+    {
+        var edge = _chart.Edges[index];
+        var points = _paths[index].Select(vertex => Center(_vertices[vertex])).ToList();
+        var bent = bend != default;
+        if (bent)
+        {
+            points.Insert(1, new DiagramPoint((points[0].X + points[1].X) / 2 + bend.X, (points[0].Y + points[1].Y) / 2 + bend.Y));
+        }
+        points[0] = Clip(edge.From, points[1]);
+        points[^1] = Clip(edge.To, points[^2]);
+        builder.Connector(points, thickness, dash, edge.Arrow);
+
+        if (!HasText(edge.Label))
+        {
+            return;
+        }
+        if (bent)
+        {
+            // The outer side of the bend first: the side it leans to.
+            var side = BendSide(bend);
+            var candidates = new List<DiagramPoint> { Beside(points[0], points[1], 1, edge.Label, side) };
+            candidates.AddRange(BesideSegment(points[0], points[1], edge.Label, side));
+            candidates.AddRange(BesideSegment(points[1], points[2], edge.Label, side));
+            labels.Add(new LabelRequest(edge.Label, candidates));
+        }
+        else
+        {
+            var segment = _labelSegments[index];
+            labels.Add(new LabelRequest(edge.Label, BesideSegment(points[segment], points[segment + 1], edge.Label, 1).ToList()));
+        }
+    }
+
+    /// <summary>The side a bend leans to, as <see cref="Beside"/> numbers sides: 1 above or to the right, -1 otherwise.</summary>
+    private int BendSide(DiagramPoint bend)
+    {
+        if (_horizontal)
+        {
+            return bend.Y < 0 ? 1 : -1;
+        }
+        return bend.X > 0 ? 1 : -1;
     }
 
     /// <summary>
@@ -158,7 +182,7 @@ internal sealed partial class FlowchartLayout
     /// Draws each label at its first candidate that overlaps no node and no label placed before it, or at its first
     /// candidate when every one overlaps.
     /// </summary>
-    private void PlaceLabels(DrawingBuilder builder, List<(IReadOnlyList<string> Lines, List<DiagramPoint> Candidates)> labels)
+    private void PlaceLabels(DrawingBuilder builder, List<LabelRequest> labels)
     {
         var taken = _vertices.Take(_chart.Nodes.Count)
             .Select(vertex => Box(vertex.X, vertex.Y, vertex.Width, vertex.Height))
@@ -182,8 +206,7 @@ internal sealed partial class FlowchartLayout
     }
 
     /// <summary>A link from a node to itself: a loop beside the node, to the right in a vertical chart and below in a horizontal one.</summary>
-    private void Loop(DrawingBuilder builder, FlowEdge edge, double thickness, double dash,
-        List<(IReadOnlyList<string> Lines, List<DiagramPoint> Candidates)> labels)
+    private void Loop(DrawingBuilder builder, FlowEdge edge, double thickness, double dash, List<LabelRequest> labels)
     {
         var vertex = _vertices[edge.From];
         var center = Center(vertex);
@@ -204,7 +227,7 @@ internal sealed partial class FlowchartLayout
             var at = _horizontal
                 ? new DiagramPoint(center.X, center.Y + reach + LabelGap + TextMetrics.Height(edge.Label) / 2)
                 : new DiagramPoint(center.X + reach + LabelGap + TextMetrics.Width(edge.Label) / 2, center.Y);
-            labels.Add((edge.Label, [at]));
+            labels.Add(new LabelRequest(edge.Label, [at]));
         }
     }
 

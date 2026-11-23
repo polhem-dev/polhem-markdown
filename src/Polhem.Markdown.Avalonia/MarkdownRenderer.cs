@@ -87,18 +87,7 @@ internal sealed class MarkdownRenderer
             grid.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
 
             var item = list.Items[index];
-            Control marker = item.IsChecked is { } isChecked
-                ? TaskCheckBox(isChecked)
-                : new TextBlock
-                {
-                    Text = list.IsOrdered
-                        ? (list.Start + index).ToString(System.Globalization.CultureInfo.InvariantCulture) + "."
-                        : s_bullets[depth % s_bullets.Length],
-                    Margin = new Thickness(0, 0, 6, 0),
-                    HorizontalAlignment = HorizontalAlignment.Right,
-                    MinWidth = list.IsOrdered ? 18 : 12,
-                    TextAlignment = TextAlignment.Right,
-                };
+            var marker = Marker(list, item, index, depth);
             Grid.SetRow(marker, index);
 
             var content = Blocks(item.Blocks, depth + 1, spacing: list.IsLoose ? 8 : 4);
@@ -176,6 +165,26 @@ internal sealed class MarkdownRenderer
         return border;
     }
 
+    /// <summary>The marker before a list item: a check box for a task, otherwise its number or a bullet.</summary>
+    private static Control Marker(ListNode list, ListItemNode item, int index, int depth)
+    {
+        if (item.IsChecked is { } isChecked)
+        {
+            return TaskCheckBox(isChecked);
+        }
+        var text = list.IsOrdered
+            ? (list.Start + index).ToString(System.Globalization.CultureInfo.InvariantCulture) + "."
+            : s_bullets[depth % s_bullets.Length];
+        return new TextBlock
+        {
+            Text = text,
+            Margin = new Thickness(0, 0, 6, 0),
+            HorizontalAlignment = HorizontalAlignment.Right,
+            MinWidth = list.IsOrdered ? 18 : 12,
+            TextAlignment = TextAlignment.Right,
+        };
+    }
+
     private ScrollViewer Table(TableNode table)
     {
         _rendered.Add(typeof(TableRowNode));
@@ -195,30 +204,10 @@ internal sealed class MarkdownRenderer
             var (row, header) = rows[rowIndex];
             for (var column = 0; column < columns; column++)
             {
-                var text = Text(column < row.Cells.Count ? row.Cells[column].Inlines : []);
-                text.TextAlignment = table.Alignments[column] switch
-                {
-                    ColumnAlignment.Center => TextAlignment.Center,
-                    ColumnAlignment.Right => TextAlignment.Right,
-                    _ => TextAlignment.Left,
-                };
-                if (header)
-                {
-                    text.FontWeight = FontWeight.SemiBold;
-                }
+                var cell = TableCell(column < row.Cells.Count ? row.Cells[column].Inlines : [], table.Alignments[column], header);
 
-                var cell = new Border
-                {
-                    // Each cell draws its right and bottom edge; the first row and column add the outer top and left.
-                    BorderThickness = new Thickness(column == 0 ? 1 : 0, rowIndex == 0 ? 1 : 0, 1, 1),
-                    Padding = new Thickness(8, 4),
-                    Child = text,
-                };
-                cell.Bind(Border.BorderBrushProperty, _viewer.GetObservable(MarkdownViewer.RuleBrushProperty));
-                if (header)
-                {
-                    cell.Bind(Border.BackgroundProperty, _viewer.GetObservable(MarkdownViewer.CodeBackgroundProperty));
-                }
+                // Each cell draws its right and bottom edge; the first row and column add the outer top and left.
+                cell.BorderThickness = new Thickness(column == 0 ? 1 : 0, rowIndex == 0 ? 1 : 0, 1, 1);
                 Grid.SetRow(cell, rowIndex);
                 Grid.SetColumn(cell, column);
                 grid.Children.Add(cell);
@@ -231,6 +220,29 @@ internal sealed class MarkdownRenderer
             VerticalScrollBarVisibility = global::Avalonia.Controls.Primitives.ScrollBarVisibility.Disabled,
             Content = grid,
         };
+    }
+
+    private Border TableCell(IReadOnlyList<InlineNode> inlines, ColumnAlignment alignment, bool header)
+    {
+        var text = Text(inlines);
+        text.TextAlignment = alignment switch
+        {
+            ColumnAlignment.Center => TextAlignment.Center,
+            ColumnAlignment.Right => TextAlignment.Right,
+            _ => TextAlignment.Left,
+        };
+        if (header)
+        {
+            text.FontWeight = FontWeight.SemiBold;
+        }
+
+        var cell = new Border { Padding = new Thickness(8, 4), Child = text };
+        cell.Bind(Border.BorderBrushProperty, _viewer.GetObservable(MarkdownViewer.RuleBrushProperty));
+        if (header)
+        {
+            cell.Bind(Border.BackgroundProperty, _viewer.GetObservable(MarkdownViewer.CodeBackgroundProperty));
+        }
+        return cell;
     }
 
     private Border Rule()
@@ -257,7 +269,7 @@ internal sealed class MarkdownRenderer
         var offset = 0;
         foreach (var inline in inlines)
         {
-            text.Inlines!.Add(Inline(inline, text, ref offset));
+            text.Inlines.Add(Inline(inline, text, ref offset));
         }
         return text;
     }

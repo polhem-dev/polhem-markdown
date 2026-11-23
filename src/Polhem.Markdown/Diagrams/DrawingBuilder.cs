@@ -97,7 +97,7 @@ internal sealed class DrawingBuilder
         var minY = double.MaxValue;
         var maxX = double.MinValue;
         var maxY = double.MinValue;
-        foreach (var (left, top, right, bottom) in _shapes.Select(Bounds))
+        foreach (var (left, top, right, bottom) in _shapes.Select(shape => shape.Bounds()))
         {
             minX = Math.Min(minX, left);
             minY = Math.Min(minY, top);
@@ -107,49 +107,9 @@ internal sealed class DrawingBuilder
 
         var dx = Margin - minX;
         var dy = Margin - minY;
-        var shapes = _shapes.Select(shape => Offset(shape, dx, dy)).ToList();
+        var shapes = _shapes.Select(shape => shape.MovedBy(dx, dy)).ToList();
         return new DiagramDrawing(Round(maxX - minX + 2 * Margin), Round(maxY - minY + 2 * Margin), shapes);
     }
-
-    private static (double Left, double Top, double Right, double Bottom) Bounds(DiagramShape shape)
-    {
-        switch (shape)
-        {
-            case DiagramRectangle rectangle:
-                return (rectangle.X, rectangle.Y, rectangle.X + rectangle.Width, rectangle.Y + rectangle.Height);
-            case DiagramPolygon polygon:
-                return PointBounds(polygon.Points, 0);
-            case DiagramLine line:
-                return PointBounds(line.Points, line.Thickness / 2);
-            case DiagramText text:
-                var halfWidth = TextMetrics.Width(text.Text) / 2;
-                return (text.X - halfWidth, text.Y - TextMetrics.LineHeight / 2, text.X + halfWidth, text.Y + TextMetrics.LineHeight / 2);
-            default:
-                throw new ArgumentOutOfRangeException(nameof(shape), shape.GetType().Name);
-        }
-    }
-
-    private static (double, double, double, double) PointBounds(IReadOnlyList<DiagramPoint> points, double pad) =>
-        (points.Min(p => p.X) - pad, points.Min(p => p.Y) - pad, points.Max(p => p.X) + pad, points.Max(p => p.Y) + pad);
-
-    private static DiagramShape Offset(DiagramShape shape, double dx, double dy) => shape switch
-    {
-        DiagramRectangle rectangle => rectangle with
-        {
-            X = Round(rectangle.X + dx),
-            Y = Round(rectangle.Y + dy),
-            Width = Round(rectangle.Width),
-            Height = Round(rectangle.Height),
-            CornerRadius = Round(rectangle.CornerRadius),
-        },
-        DiagramPolygon polygon => polygon with { Points = Offset(polygon.Points, dx, dy) },
-        DiagramLine line => line with { Points = Offset(line.Points, dx, dy) },
-        DiagramText text => text with { X = Round(text.X + dx), Y = Round(text.Y + dy) },
-        _ => throw new ArgumentOutOfRangeException(nameof(shape), shape.GetType().Name),
-    };
-
-    private static List<DiagramPoint> Offset(IReadOnlyList<DiagramPoint> points, double dx, double dy) =>
-        points.Select(p => new DiagramPoint(Round(p.X + dx), Round(p.Y + dy))).ToList();
 
     // Two decimals are below what a screen shows and keep the SVG short.
     private static double Round(double value) => Math.Round(value, 2);

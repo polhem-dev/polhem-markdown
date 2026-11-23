@@ -5,6 +5,8 @@ namespace Polhem.Markdown.UnitTests.Diagrams;
 
 public class FlowchartTests
 {
+    private static readonly string[] s_siblings = ["B", "C", "D"];
+
     [Theory(DisplayName = "The direction decides where the second node goes")]
     [InlineData("flowchart TD", 0, 1)]
     [InlineData("flowchart TB", 0, 1)]
@@ -157,7 +159,7 @@ public class FlowchartTests
     {
         var drawing = Draw("flowchart TD\n  A --> B\n  A --> C\n  A --> D\n  B --> E\n  D --> E");
 
-        var boxes = new[] { "B", "C", "D" }.Select(label => BoxAround(drawing, label)).OrderBy(box => box.X).ToList();
+        var boxes = s_siblings.Select(label => BoxAround(drawing, label)).OrderBy(box => box.X).ToList();
         for (var index = 1; index < boxes.Count; index++)
         {
             Assert.True(boxes[index].X >= boxes[index - 1].X + boxes[index - 1].Width, "Neighbouring nodes overlap.");

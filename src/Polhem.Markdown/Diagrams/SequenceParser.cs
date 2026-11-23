@@ -22,98 +22,126 @@ internal static partial class SequenceParser
     public static bool TryParse(IEnumerable<string> lines, out SequenceDiagram diagram)
     {
         diagram = null!;
-        var participants = new List<(string Id, string Name)>();
-        var indexes = new Dictionary<string, int>(StringComparer.Ordinal);
-        var steps = new List<SequenceStep>();
-
+        var builder = new Builder();
         foreach (var raw in lines)
         {
             var line = raw.Trim().TrimEnd(';').Trim();
-            if (line.Length == 0)
-            {
-                continue;
-            }
-            if (steps.Count == MaxSteps)
+            if (line.Length > 0 && !builder.TryLine(line))
             {
                 return false;
             }
+        }
+        return builder.TryBuild(out diagram);
+    }
 
+    private static NotePlacement Placement(string text)
+    {
+        if (text.StartsWith("left", StringComparison.OrdinalIgnoreCase))
+        {
+            return NotePlacement.LeftOf;
+        }
+        return text.StartsWith("right", StringComparison.OrdinalIgnoreCase) ? NotePlacement.RightOf : NotePlacement.Over;
+    }
+
+    /// <summary>Collects the participants and steps of one diagram, one line at a time.</summary>
+    private sealed class Builder
+    {
+        private readonly List<(string Id, string Name)> _participants = [];
+
+        // NOTE: the default comparer of `string` is ordinal, which participant ids need.
+        private readonly Dictionary<string, int> _indexes = [];
+        private readonly List<SequenceStep> _steps = [];
+
+        public bool TryLine(string line)
+        {
+            if (_steps.Count == MaxSteps)
+            {
+                return false;
+            }
             if (ParticipantPattern().Match(line) is { Success: true } declaration)
             {
-                var id = declaration.Groups["id"].Value;
-                var name = declaration.Groups["alias"].Success ? declaration.Groups["alias"].Value.Trim() : id;
-                if (indexes.TryGetValue(id, out var existing))
-                {
-                    participants[existing] = (id, name);
-                }
-                else if (!TryAdd(id, name))
-                {
-                    return false;
-                }
+                return TryDeclare(declaration);
             }
-            else if (MessagePattern().Match(line) is { Success: true } message)
+            if (MessagePattern().Match(line) is { Success: true } message)
             {
-                if (!TryIndex(message.Groups["from"].Value, out var from) || !TryIndex(message.Groups["to"].Value, out var to))
-                {
-                    return false;
-                }
-                var arrow = message.Groups["arrow"].Value;
-                var label = TextMetrics.Lines(message.Groups["text"].Value.Trim());
-                steps.Add(new SequenceMessage(from, to, arrow.StartsWith("--", StringComparison.Ordinal), arrow.EndsWith(">>", StringComparison.Ordinal), label));
+                return TryMessage(message);
             }
-            else if (NotePattern().Match(line) is { Success: true } note)
+            if (NotePattern().Match(line) is { Success: true } note)
             {
-                var placementText = note.Groups["placement"].Value;
-                var placement = placementText.StartsWith("left", StringComparison.OrdinalIgnoreCase) ? NotePlacement.LeftOf
-                    : placementText.StartsWith("right", StringComparison.OrdinalIgnoreCase) ? NotePlacement.RightOf
-                    : NotePlacement.Over;
-                var names = note.Groups["names"].Value.Split(',', StringSplitOptions.TrimEntries);
-                if (names.Length > (placement == NotePlacement.Over ? 2 : 1) || !TryIndex(names[0], out var first))
-                {
-                    return false;
-                }
-                var last = first;
-                if (names.Length == 2 && !TryIndex(names[1], out last))
-                {
-                    return false;
-                }
-                var text = TextMetrics.Lines(note.Groups["text"].Value.Trim());
-                var (low, high) = (Math.Min(first, last), Math.Max(first, last));
-                steps.Add(new SequenceNote(placement, low, high, text));
+                return TryNote(note);
             }
-            else
+            return false;
+        }
+
+        public bool TryBuild(out SequenceDiagram diagram)
+        {
+            diagram = new SequenceDiagram(
+                _participants.Select(participant => new SequenceParticipant(participant.Id, TextMetrics.Lines(participant.Name))).ToList(),
+                _steps);
+            return _participants.Count > 0;
+        }
+
+        private bool TryDeclare(Match declaration)
+        {
+            var id = declaration.Groups["id"].Value;
+            var name = declaration.Groups["alias"].Success ? declaration.Groups["alias"].Value.Trim() : id;
+            if (_indexes.TryGetValue(id, out var existing))
+            {
+                _participants[existing] = (id, name);
+                return true;
+            }
+            return TryAdd(id, name);
+        }
+
+        private bool TryMessage(Match message)
+        {
+            if (!TryIndex(message.Groups["from"].Value, out var from) || !TryIndex(message.Groups["to"].Value, out var to))
             {
                 return false;
             }
+            var arrow = message.Groups["arrow"].Value;
+            var label = TextMetrics.Lines(message.Groups["text"].Value.Trim());
+            _steps.Add(new SequenceMessage(from, to, arrow.StartsWith("--", StringComparison.Ordinal), arrow.EndsWith(">>", StringComparison.Ordinal), label));
+            return true;
         }
 
-        if (participants.Count == 0)
+        private bool TryNote(Match note)
         {
-            return false;
+            var placement = Placement(note.Groups["placement"].Value);
+            var names = note.Groups["names"].Value.Split(',', StringSplitOptions.TrimEntries);
+            var allowed = placement == NotePlacement.Over ? 2 : 1;
+            if (names.Length > allowed || !TryIndex(names[0], out var first))
+            {
+                return false;
+            }
+            var last = first;
+            if (names.Length == 2 && !TryIndex(names[1], out last))
+            {
+                return false;
+            }
+            var text = TextMetrics.Lines(note.Groups["text"].Value.Trim());
+            _steps.Add(new SequenceNote(placement, Math.Min(first, last), Math.Max(first, last), text));
+            return true;
         }
-        diagram = new SequenceDiagram(
-            participants.Select(participant => new SequenceParticipant(participant.Id, TextMetrics.Lines(participant.Name))).ToList(),
-            steps);
-        return true;
 
-        bool TryIndex(string id, out int index)
+        private bool TryIndex(string id, out int index)
         {
-            if (indexes.TryGetValue(id, out index))
+            if (_indexes.TryGetValue(id, out index))
             {
                 return true;
             }
-            index = participants.Count;
+            index = _participants.Count;
             return id.Length > 0 && TryAdd(id, id);
         }
 
-        bool TryAdd(string id, string name)
+        private bool TryAdd(string id, string name)
         {
-            if (participants.Count == MaxParticipants)
+            if (_participants.Count == MaxParticipants)
             {
                 return false;
             }
-            indexes.Add(id, participants.Count);
-            participants.Add((id, name));
+            _indexes.Add(id, _participants.Count);
+            _participants.Add((id, name));
             return true;
         }
     }
