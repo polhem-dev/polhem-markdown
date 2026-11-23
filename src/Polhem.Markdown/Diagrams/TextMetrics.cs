@@ -41,9 +41,6 @@ internal static class TextMetrics
     /// <summary>The estimated width of the widest line.</summary>
     public static double Width(IReadOnlyList<string> lines) => lines.Count == 0 ? 0 : lines.Max(Width);
 
-    /// <summary>The height of <paramref name="lines"/> stacked.</summary>
-    public static double Height(IReadOnlyList<string> lines) => lines.Count * LineHeight;
-
     /// <summary>The estimated width of one line.</summary>
     public static double Width(string line)
     {
@@ -55,6 +52,9 @@ internal static class TextMetrics
         }
         return em * DiagramDrawing.FontSize;
     }
+
+    /// <summary>The height of <paramref name="lines"/> stacked.</summary>
+    public static double Height(IReadOnlyList<string> lines) => lines.Count * LineHeight;
 
     private static double Em(string element)
     {
@@ -89,17 +89,8 @@ internal static class TextMetrics
             or (>= 0xFFE0 and <= 0xFFE6)
             or >= 0x1F300;
 
-    private static int LineBreakLength(string text, int index)
-    {
-        foreach (var form in s_lineBreaks)
-        {
-            if (string.Compare(text, index, form, 0, form.Length, StringComparison.OrdinalIgnoreCase) == 0)
-            {
-                return form.Length;
-            }
-        }
-        return 0;
-    }
+    private static int LineBreakLength(string text, int index) =>
+        s_lineBreaks.FirstOrDefault(form => string.Compare(text, index, form, 0, form.Length, StringComparison.OrdinalIgnoreCase) == 0)?.Length ?? 0;
 
     private static readonly string[] s_lineBreaks = ["<br>", "<br/>", "<br />"];
 }

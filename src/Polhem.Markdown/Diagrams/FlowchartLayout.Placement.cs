@@ -11,18 +11,7 @@ internal sealed partial class FlowchartLayout
 
         for (var sweep = 0; sweep < OrderingSweeps && bestCrossings > 0; sweep++)
         {
-            var down = sweep % 2 == 0;
-            for (var step = 1; step < _ranks.Count; step++)
-            {
-                var rank = down ? step : _ranks.Count - 1 - step;
-                var neighbours = down ? _predecessors : _successors;
-                _ranks[rank] = _ranks[rank]
-                    .OrderBy(vertex => neighbours[vertex].Count == 0
-                        ? _vertices[vertex].Order
-                        : neighbours[vertex].Average(other => _vertices[other].Order))
-                    .ToList();
-                SetOrder([_ranks[rank]]);
-            }
+            Reorder(down: sweep % 2 == 0);
 
             var crossings = Crossings();
             if (crossings < bestCrossings)
@@ -34,6 +23,25 @@ internal sealed partial class FlowchartLayout
 
         _ranks = best;
         SetOrder(_ranks);
+    }
+
+    /// <summary>
+    /// Sorts each rank by the mean position of its neighbours in the rank before it, going down from the top or up from
+    /// the bottom. A vertex without such neighbours keeps its position.
+    /// </summary>
+    private void Reorder(bool down)
+    {
+        var neighbours = down ? _predecessors : _successors;
+        for (var step = 1; step < _ranks.Count; step++)
+        {
+            var rank = down ? step : _ranks.Count - 1 - step;
+            _ranks[rank] = _ranks[rank]
+                .OrderBy(vertex => neighbours[vertex].Count == 0
+                    ? _vertices[vertex].Order
+                    : neighbours[vertex].Average(other => _vertices[other].Order))
+                .ToList();
+            SetOrder([_ranks[rank]]);
+        }
     }
 
     private void SetOrder(IEnumerable<List<int>> ranks)
@@ -71,6 +79,17 @@ internal sealed partial class FlowchartLayout
 
     private void Place()
     {
+        Pack();
+        for (var sweep = 0; sweep < PlacementSweeps; sweep++)
+        {
+            AlignSweep(sweep % 3);
+        }
+        PlaceAlong();
+    }
+
+    /// <summary>Puts the vertices of each rank side by side at their minimum separation.</summary>
+    private void Pack()
+    {
         foreach (var rank in _ranks)
         {
             var u = 0.0;
@@ -83,22 +102,29 @@ internal sealed partial class FlowchartLayout
                 _vertices[rank[index]].U = u;
             }
         }
+    }
 
-        for (var sweep = 0; sweep < PlacementSweeps; sweep++)
+    /// <summary>
+    /// Aligns every rank with its neighbours: those above it going down (mode 0), those below it going up (mode 1), or
+    /// both going down (mode 2).
+    /// </summary>
+    private void AlignSweep(int mode)
+    {
+        var order = mode == 1 ? Enumerable.Range(0, _ranks.Count).Reverse() : Enumerable.Range(0, _ranks.Count);
+        foreach (var rank in order)
         {
-            var mode = sweep % 3;
-            var order = mode == 1 ? Enumerable.Range(0, _ranks.Count).Reverse() : Enumerable.Range(0, _ranks.Count);
-            foreach (var rank in order)
+            Align(_ranks[rank], vertex => mode switch
             {
-                Align(_ranks[rank], vertex => mode switch
-                {
-                    0 => _predecessors[vertex],
-                    1 => _successors[vertex],
-                    _ => _predecessors[vertex].Concat(_successors[vertex]),
-                });
-            }
+                0 => _predecessors[vertex],
+                1 => _successors[vertex],
+                _ => _predecessors[vertex].Concat(_successors[vertex]),
+            });
         }
+    }
 
+    /// <summary>Places the ranks one after another along the chart's direction, and maps both axes to x and y.</summary>
+    private void PlaceAlong()
+    {
         var along = 0.0;
         for (var rank = 0; rank < _ranks.Count; rank++)
         {

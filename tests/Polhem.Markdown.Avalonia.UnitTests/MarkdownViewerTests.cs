@@ -62,7 +62,7 @@ public class MarkdownViewerTests(HeadlessSession session)
     {
         var (_, viewer) = Show("Hello *world*");
 
-        var text = Assert.IsAssignableFrom<SelectableTextBlock>(Assert.Single(Blocks(viewer)));
+        var text = Assert.IsType<SelectableTextBlock>(Assert.Single(Blocks(viewer)), exactMatch: false);
         Assert.Equal("Hello world", text.Inlines!.Text);
     });
 
@@ -71,7 +71,7 @@ public class MarkdownViewerTests(HeadlessSession session)
     {
         var (_, viewer) = Show("# Title");
 
-        var heading = Assert.IsAssignableFrom<TextBlock>(Assert.Single(Blocks(viewer)));
+        var heading = Assert.IsType<TextBlock>(Assert.Single(Blocks(viewer)), exactMatch: false);
         Assert.True(heading.FontSize > viewer.GetValue(TextElement.FontSizeProperty));
         Assert.Equal(FontWeight.SemiBold, heading.FontWeight);
     });

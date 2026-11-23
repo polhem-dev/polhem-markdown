@@ -82,10 +82,10 @@ internal static class SequenceLayout
             switch (step)
             {
                 case SequenceMessage message when message.From == message.To:
-                    needs.Add((message.From, message.From + 1, LoopReach + LabelGap + TextMetrics.Width(message.Label) + NoteGap));
+                    needs.Add((message.From, message.From + 1, LoopReach + LabelGap + TextMetrics.Width(message.Text) + NoteGap));
                     break;
                 case SequenceMessage message:
-                    needs.Add((Math.Min(message.From, message.To), Math.Max(message.From, message.To), TextMetrics.Width(message.Label) + 32));
+                    needs.Add((Math.Min(message.From, message.To), Math.Max(message.From, message.To), TextMetrics.Width(message.Text) + 32));
                     break;
                 case SequenceNote { Placement: NotePlacement.RightOf } note:
                     needs.Add((note.First, note.First + 1, NoteWidth(note) + 2 * NoteGap));
@@ -124,13 +124,13 @@ internal static class SequenceLayout
 
     private static double Message(List<Action> steps, DrawingBuilder builder, SequenceMessage message, double from, double to, double top)
     {
-        var labelHeight = HasText(message.Label) ? TextMetrics.Height(message.Label) : 0;
+        var labelHeight = HasText(message.Text) ? TextMetrics.Height(message.Text) : 0;
         var lineY = top + labelHeight + LabelGap;
         steps.Add(() =>
         {
             if (labelHeight > 0)
             {
-                builder.Text((from + to) / 2, top + labelHeight / 2, message.Label);
+                builder.Text((from + to) / 2, top + labelHeight / 2, message.Text);
             }
             builder.Connector([new(from, lineY), new(to, lineY)], DrawingBuilder.LineThickness, message.Dotted ? 3 : 0, message.Arrow);
         });
@@ -139,7 +139,7 @@ internal static class SequenceLayout
 
     private static double SelfMessage(List<Action> steps, DrawingBuilder builder, SequenceMessage message, double center, double top)
     {
-        var labelHeight = HasText(message.Label) ? TextMetrics.Height(message.Label) : 0;
+        var labelHeight = HasText(message.Text) ? TextMetrics.Height(message.Text) : 0;
         var overhang = Math.Max(0, (labelHeight - LoopHeight) / 2);
         var y1 = top + overhang + 4;
         var y2 = y1 + LoopHeight;
@@ -150,7 +150,7 @@ internal static class SequenceLayout
                 DrawingBuilder.LineThickness, message.Dotted ? 3 : 0, message.Arrow);
             if (labelHeight > 0)
             {
-                builder.TextFrom(center + LoopReach + LabelGap, (y1 + y2) / 2, message.Label);
+                builder.TextFrom(center + LoopReach + LabelGap, (y1 + y2) / 2, message.Text);
             }
         });
         return y2 + overhang + StepGap;
@@ -161,7 +161,7 @@ internal static class SequenceLayout
         var width = note.Placement == NotePlacement.Over && note.First != note.Last
             ? Math.Max(NoteWidth(note), centers[note.Last] - centers[note.First] + 2 * SpanOverhang)
             : NoteWidth(note);
-        var height = TextMetrics.Height(note.Lines) + 2 * NotePadding - 8;
+        var height = TextMetrics.Height(note.Text) + 2 * NotePadding - 8;
         var left = note.Placement switch
         {
             NotePlacement.RightOf => centers[note.First] + NoteGap,
@@ -172,12 +172,12 @@ internal static class SequenceLayout
         steps.Add(() =>
         {
             builder.Rectangle(left, boxTop, width, height, 0);
-            builder.Text(left + width / 2, boxTop + height / 2, note.Lines);
+            builder.Text(left + width / 2, boxTop + height / 2, note.Text);
         });
         return boxTop + height + StepGap;
     }
 
-    private static double NoteWidth(SequenceNote note) => TextMetrics.Width(note.Lines) + 2 * NotePadding;
+    private static double NoteWidth(SequenceNote note) => TextMetrics.Width(note.Text) + 2 * NotePadding;
 
     private static bool HasText(IReadOnlyList<string> lines) => lines.Any(line => line.Length > 0);
 }

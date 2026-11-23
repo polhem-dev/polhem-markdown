@@ -99,40 +99,65 @@ internal sealed partial class FlowchartLayout
 
         var reversed = ReversedEdges();
         AssignRanks(reversed);
-
         for (var index = 0; index < _chart.Edges.Count; index++)
         {
-            var edge = _chart.Edges[index];
-            if (edge.From == edge.To)
+            if (!TryAddPath(index, reversed[index]))
             {
-                _paths.Add([]);
-                _labelSegments.Add(-1);
-                continue;
+                return false;
             }
+        }
+        ConnectSegments();
 
-            var (from, to) = reversed[index] ? (edge.To, edge.From) : (edge.From, edge.To);
-            var chain = new List<int> { from };
-            for (var rank = _vertices[from].Rank + 1; rank < _vertices[to].Rank; rank++)
-            {
-                if (_vertices.Count == MaxVertices)
-                {
-                    return false;
-                }
-                chain.Add(_vertices.Count);
-                _vertices.Add(new Vertex { IsPlaceholder = true, Rank = rank });
-            }
-            chain.Add(to);
+        var rankCount = _vertices.Max(vertex => vertex.Rank) + 1;
+        _ranks = Enumerable.Range(0, rankCount).Select(_ => new List<int>()).ToList();
+        for (var index = 0; index < _vertices.Count; index++)
+        {
+            _ranks[_vertices[index].Rank].Add(index);
+        }
+        return true;
+    }
 
-            // The label sits on the first segment in rank order, so it is always in the gap after the upper rank.
-            var labelSegment = reversed[index] ? chain.Count - 2 : 0;
-            if (reversed[index])
-            {
-                chain.Reverse();
-            }
-            _paths.Add(chain);
-            _labelSegments.Add(labelSegment);
+    /// <summary>
+    /// Adds the path of a link through a placeholder vertex in every rank it crosses, or fails when that would pass
+    /// <see cref="MaxVertices"/>. A link to its own node gets an empty path; the loop is drawn beside the node.
+    /// </summary>
+    private bool TryAddPath(int index, bool reversed)
+    {
+        var edge = _chart.Edges[index];
+        if (edge.From == edge.To)
+        {
+            _paths.Add([]);
+            _labelSegments.Add(-1);
+            return true;
         }
 
+        var (from, to) = reversed ? (edge.To, edge.From) : (edge.From, edge.To);
+        var chain = new List<int> { from };
+        for (var rank = _vertices[from].Rank + 1; rank < _vertices[to].Rank; rank++)
+        {
+            if (_vertices.Count == MaxVertices)
+            {
+                return false;
+            }
+            chain.Add(_vertices.Count);
+            _vertices.Add(new Vertex { IsPlaceholder = true, Rank = rank });
+        }
+        chain.Add(to);
+
+        // The label sits on the first segment in rank order, so it is always in the gap after the upper rank.
+        var labelSegment = reversed ? chain.Count - 2 : 0;
+        if (reversed)
+        {
+            chain.Reverse();
+        }
+        _paths.Add(chain);
+        _labelSegments.Add(labelSegment);
+        return true;
+    }
+
+    /// <summary>Records each segment of every path as a link from the vertex in the upper rank to the one below it.</summary>
+    private void ConnectSegments()
+    {
         foreach (var _ in _vertices)
         {
             _predecessors.Add([]);
@@ -149,14 +174,6 @@ internal sealed partial class FlowchartLayout
                 _predecessors[b].Add(a);
             }
         }
-
-        var rankCount = _vertices.Max(vertex => vertex.Rank) + 1;
-        _ranks = Enumerable.Range(0, rankCount).Select(_ => new List<int>()).ToList();
-        for (var index = 0; index < _vertices.Count; index++)
-        {
-            _ranks[_vertices[index].Rank].Add(index);
-        }
-        return true;
     }
 
     private static (double Width, double Height) NodeSize(FlowNode node)
@@ -181,9 +198,11 @@ internal sealed partial class FlowchartLayout
     {
         foreach (var edge in _chart.Edges.Where(edge => edge.From == edge.To))
         {
-            var label = HasText(edge.Label)
-                ? LabelGap + (_horizontal ? TextMetrics.Height(edge.Label) : TextMetrics.Width(edge.Label))
-                : 0;
+            var label = 0.0;
+            if (HasText(edge.Label))
+            {
+                label = LabelGap + (_horizontal ? TextMetrics.Height(edge.Label) : TextMetrics.Width(edge.Label));
+            }
             var vertex = _vertices[edge.From];
             vertex.Across = Math.Max(vertex.Across, (_horizontal ? vertex.Height : vertex.Width) + 2 * (LoopReach + label));
         }
@@ -199,10 +218,11 @@ internal sealed partial class FlowchartLayout
             outgoing[_chart.Edges[index].From].Add(index);
         }
 
-        var state = new int[_chart.Nodes.Count];
+        var visited = new bool[_chart.Nodes.Count];
+        var onPath = new bool[_chart.Nodes.Count];
         for (var node = 0; node < _chart.Nodes.Count; node++)
         {
-            if (state[node] == 0)
+            if (!visited[node])
             {
                 Visit(node);
             }
@@ -211,20 +231,21 @@ internal sealed partial class FlowchartLayout
 
         void Visit(int node)
         {
-            state[node] = 1;
+            visited[node] = true;
+            onPath[node] = true;
             foreach (var index in outgoing[node])
             {
                 var target = _chart.Edges[index].To;
-                if (state[target] == 1)
+                if (onPath[target])
                 {
                     reversed[index] = true;
                 }
-                else if (state[target] == 0)
+                else if (!visited[target])
                 {
                     Visit(target);
                 }
             }
-            state[node] = 2;
+            onPath[node] = false;
         }
     }
 

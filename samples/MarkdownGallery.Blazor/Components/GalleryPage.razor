@@ -1,5 +1,5 @@
 @page "/"
-@implements IDisposable
+@implements IAsyncDisposable
 
 <div class="gallery @(_dark ? "dark" : "")">
     <div class="bar">
@@ -30,7 +30,7 @@
 
     private async Task Replay()
     {
-        _replay?.Cancel();
+        await StopReplayAsync();
         _replay = new CancellationTokenSource();
         var token = _replay.Token;
         var text = MarkdownGallery.SampleText.Markdown;
@@ -43,5 +43,17 @@
         }
     }
 
-    public void Dispose() => _replay?.Cancel();
+    // The loop of an earlier replay may still be running; reading the token of a disposed source is safe and reports it
+    // as cancelled, so that loop ends at its next step.
+    private async Task StopReplayAsync()
+    {
+        if (_replay is not null)
+        {
+            await _replay.CancelAsync();
+            _replay.Dispose();
+            _replay = null;
+        }
+    }
+
+    public async ValueTask DisposeAsync() => await StopReplayAsync();
 }

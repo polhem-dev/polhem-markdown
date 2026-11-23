@@ -70,7 +70,7 @@ Type[] expected =
 var missing = expected.Where(type => !found.Contains(type)).Select(type => type.Name).ToList();
 if (missing.Count > 0)
 {
-    Console.Error.WriteLine("Missing nodes: " + string.Join(", ", missing));
+    await Console.Error.WriteLineAsync("Missing nodes: " + string.Join(", ", missing));
     return 1;
 }
 
@@ -78,11 +78,11 @@ if (missing.Count > 0)
 var diagrams = document.Blocks.OfType<DiagramNode>().ToList();
 if (diagrams.Count != 2 || diagrams.Any(diagram => diagram.Drawing.Shapes.Count == 0))
 {
-    Console.Error.WriteLine($"Expected two drawn diagrams, found {diagrams.Count}.");
+    await Console.Error.WriteLineAsync($"Expected two drawn diagrams, found {diagrams.Count}.");
     return 1;
 }
 
-Console.WriteLine($"Polhem.Markdown AOT smoke test passed ({found.Count} node types).");
+await Console.Out.WriteLineAsync($"Polhem.Markdown AOT smoke test passed ({found.Count} node types).");
 return 0;
 
 void Collect(MarkdownNode node)

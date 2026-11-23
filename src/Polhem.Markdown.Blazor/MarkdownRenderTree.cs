@@ -20,6 +20,8 @@ internal sealed class MarkdownRenderTree
     private const string CopyIcon =
         "M8 2h9a2 2 0 0 1 2 2v11h-2V4H8V2zM5 6h9a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2zm0 2v12h9V8H5z";
 
+    private const string ClassAttribute = "class";
+
     private const string DoneIcon = "M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4z";
 
     private readonly MarkdownViewer _viewer;
@@ -40,7 +42,7 @@ internal sealed class MarkdownRenderTree
     public void Document(DocumentNode document, string? extraClass)
     {
         _builder.OpenElement(0, "div");
-        _builder.AddAttribute(1, "class", string.IsNullOrWhiteSpace(extraClass) ? "pmd" : "pmd " + extraClass);
+        _builder.AddAttribute(1, ClassAttribute, string.IsNullOrWhiteSpace(extraClass) ? "pmd" : "pmd " + extraClass);
         Blocks(2, document.Blocks);
         _builder.CloseElement();
     }
@@ -104,7 +106,7 @@ internal sealed class MarkdownRenderTree
         }
         if (list.IsLoose)
         {
-            _builder.AddAttribute(2, "class", "pmd-loose");
+            _builder.AddAttribute(2, ClassAttribute, "pmd-loose");
         }
         foreach (var item in list.Items)
         {
@@ -113,7 +115,7 @@ internal sealed class MarkdownRenderTree
             if (item.IsChecked is { } isChecked)
             {
                 // The check box shows the state written in the text; it is disabled because a click changes nothing.
-                _builder.AddAttribute(1, "class", "pmd-task");
+                _builder.AddAttribute(1, ClassAttribute, "pmd-task");
                 _builder.OpenElement(2, "input");
                 _builder.AddAttribute(3, "type", "checkbox");
                 _builder.AddAttribute(4, "disabled", true);
@@ -133,18 +135,18 @@ internal sealed class MarkdownRenderTree
         var copied = _viewer.IsCopied(code);
 
         _builder.OpenElement(0, "div");
-        _builder.AddAttribute(1, "class", "pmd-code");
+        _builder.AddAttribute(1, ClassAttribute, "pmd-code");
 
         _builder.OpenElement(2, "div");
-        _builder.AddAttribute(3, "class", "pmd-code-header");
+        _builder.AddAttribute(3, ClassAttribute, "pmd-code-header");
         _builder.OpenElement(4, "span");
-        _builder.AddAttribute(5, "class", "pmd-code-lang");
+        _builder.AddAttribute(5, ClassAttribute, "pmd-code-lang");
         _builder.AddContent(6, code.Language);
         _builder.CloseElement();
 
         _builder.OpenElement(7, "button");
         _builder.AddAttribute(8, "type", "button");
-        _builder.AddAttribute(9, "class", "pmd-copy");
+        _builder.AddAttribute(9, ClassAttribute, "pmd-copy");
         _builder.AddAttribute(10, "title", _viewer.CopyCodeLabel);
         _builder.AddAttribute(11, "aria-label", _viewer.CopyCodeLabel);
         _builder.AddAttribute(12, "onclick", EventCallback.Factory.Create<MouseEventArgs>(_viewer, () => _viewer.CopyAsync(code)));
@@ -171,9 +173,9 @@ internal sealed class MarkdownRenderTree
     {
         var kind = alert.Kind.ToString().ToLowerInvariant();
         _builder.OpenElement(0, "div");
-        _builder.AddAttribute(1, "class", "pmd-alert pmd-alert-" + kind);
+        _builder.AddAttribute(1, ClassAttribute, "pmd-alert pmd-alert-" + kind);
         _builder.OpenElement(2, "p");
-        _builder.AddAttribute(3, "class", "pmd-alert-title");
+        _builder.AddAttribute(3, ClassAttribute, "pmd-alert-title");
         _builder.OpenElement(4, "svg");
         _builder.AddAttribute(5, "viewBox", "0 0 16 16");
         _builder.AddAttribute(6, "aria-hidden", "true");
@@ -195,7 +197,7 @@ internal sealed class MarkdownRenderTree
     private void Diagram(DiagramDrawing drawing)
     {
         _builder.OpenElement(0, "div");
-        _builder.AddAttribute(1, "class", "pmd-diagram");
+        _builder.AddAttribute(1, ClassAttribute, "pmd-diagram");
         _builder.OpenElement(2, "svg");
         _builder.AddAttribute(3, "viewBox", "0 0 " + Number(drawing.Width) + " " + Number(drawing.Height));
         _builder.AddAttribute(4, "width", Number(drawing.Width));
@@ -218,7 +220,7 @@ internal sealed class MarkdownRenderTree
         {
             case DiagramRectangle rectangle:
                 _builder.OpenElement(0, "rect");
-                _builder.AddAttribute(1, "class", "pmd-d-box");
+                _builder.AddAttribute(1, ClassAttribute, "pmd-d-box");
                 _builder.AddAttribute(2, "x", Number(rectangle.X));
                 _builder.AddAttribute(3, "y", Number(rectangle.Y));
                 _builder.AddAttribute(4, "width", Number(rectangle.Width));
@@ -231,13 +233,13 @@ internal sealed class MarkdownRenderTree
                 break;
             case DiagramPolygon polygon:
                 _builder.OpenElement(7, "polygon");
-                _builder.AddAttribute(8, "class", polygon.IsArrowHead ? "pmd-d-arrow" : "pmd-d-box");
+                _builder.AddAttribute(8, ClassAttribute, polygon.IsArrowHead ? "pmd-d-arrow" : "pmd-d-box");
                 _builder.AddAttribute(9, "points", Points(polygon.Points));
                 _builder.CloseElement();
                 break;
             case DiagramLine line:
                 _builder.OpenElement(10, "polyline");
-                _builder.AddAttribute(11, "class", line.Stroke == DiagramStroke.Rule ? "pmd-d-line pmd-d-rule" : "pmd-d-line");
+                _builder.AddAttribute(11, ClassAttribute, line.Stroke == DiagramStroke.Rule ? "pmd-d-line pmd-d-rule" : "pmd-d-line");
                 _builder.AddAttribute(12, "points", Points(line.Points));
                 _builder.AddAttribute(13, "stroke-width", Number(line.Thickness));
                 if (line.Dash > 0)
@@ -272,7 +274,7 @@ internal sealed class MarkdownRenderTree
         _rendered.Add(typeof(TableCellNode));
 
         _builder.OpenElement(0, "div");
-        _builder.AddAttribute(1, "class", "pmd-table");
+        _builder.AddAttribute(1, ClassAttribute, "pmd-table");
         _builder.OpenElement(2, "table");
         Rows(3, "thead", "th", table.HeaderRows, table.Alignments);
         Rows(4, "tbody", "td", table.Rows, table.Alignments);
@@ -289,7 +291,7 @@ internal sealed class MarkdownRenderTree
 
         _builder.OpenRegion(sequence);
         _builder.OpenElement(0, section);
-        foreach (var row in rows)
+        foreach (var cells in rows.Select(row => row.Cells))
         {
             _builder.OpenRegion(1);
             _builder.OpenElement(0, "tr");
@@ -301,9 +303,9 @@ internal sealed class MarkdownRenderTree
                 {
                     _builder.AddAttribute(1, "style", "text-align:" + align);
                 }
-                if (column < row.Cells.Count)
+                if (column < cells.Count)
                 {
-                    Inlines(2, row.Cells[column].Inlines);
+                    Inlines(2, cells[column].Inlines);
                 }
                 _builder.CloseElement();
                 _builder.CloseRegion();
