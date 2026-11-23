@@ -228,9 +228,12 @@ internal sealed class MarkdownModelBuilder
             .Select(link => link.Index)
             .ToHashSet();
         var shown = new HashSet<int>();
-        var reached = new Queue<Footnote>();
 
-        void Visit(IEnumerable<FootnoteLink> links)
+        // The text comes first; each note joins the queue when it is first reached, so its own references are read after
+        // everything reached before it.
+        var pending = new Queue<IEnumerable<FootnoteLink>>();
+        pending.Enqueue(document.Where(block => block is not FootnoteGroup).SelectMany(FootnoteLinks));
+        while (pending.TryDequeue(out var links))
         {
             foreach (var link in links)
             {
@@ -241,15 +244,9 @@ internal sealed class MarkdownModelBuilder
                 shown.Add(link.Index);
                 if (_noteNumbers.TryAdd(note, _noteNumbers.Count + 1))
                 {
-                    reached.Enqueue(note);
+                    pending.Enqueue(FootnoteLinks(note));
                 }
             }
-        }
-
-        Visit(document.Where(block => block is not FootnoteGroup).SelectMany(FootnoteLinks));
-        while (reached.TryDequeue(out var note))
-        {
-            Visit(FootnoteLinks(note));
         }
 
         foreach (var note in _noteNumbers.Keys)
