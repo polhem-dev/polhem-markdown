@@ -4,14 +4,15 @@ using Avalonia.Controls.Documents;
 using Avalonia.Interactivity;
 using Avalonia.LogicalTree;
 using Avalonia.Media;
+using Polhem.Markdown.Avalonia.Images;
 using Polhem.Markdown.Model;
 
 namespace Polhem.Markdown.Avalonia;
 
 /// <summary>
 /// Shows a Markdown text. It renders the same model as the Blazor viewer of Polhem.Markdown, so both front ends show a
-/// text the same way, and applies the same safety policy: raw HTML shows as text, images as their alternative text, and
-/// only links whose scheme is in <see cref="Options"/> can be clicked.
+/// text the same way, and applies the same safety policy: raw HTML shows as text, only images and links whose scheme is in
+/// <see cref="Options"/> load or can be clicked, and other images show their alternative text.
 /// </summary>
 /// <remarks>
 /// When <see cref="Markdown"/> changes, only the top-level blocks whose source changed are rebuilt, so a text that grows
@@ -104,6 +105,10 @@ public class MarkdownViewer : Control
     internal static readonly AttachedProperty<IReadOnlyList<string>> AnchorIdsProperty =
         AvaloniaProperty.RegisterAttached<MarkdownViewer, Control, IReadOnlyList<string>>("AnchorIds", []);
 
+    private const int ImageCacheSize = 128;
+
+    private readonly Dictionary<Uri, Task<LoadedImage?>> _images = [];
+    private Func<Uri, CancellationToken, Task<Stream?>>? _imageLoader;
     private readonly StackPanel _panel = new() { Spacing = 8 };
     private readonly List<string> _sources = [];
 
@@ -247,6 +252,28 @@ public class MarkdownViewer : Control
     }
 
     /// <summary>
+    /// Gets or sets what loads an image: it returns the image's bytes, or <see langword="null"/> when the image cannot be
+    /// had. <see langword="null"/> uses the viewer's own loader, which fetches <c>http</c> and <c>https</c> images and
+    /// reads <c>file</c> ones.
+    /// </summary>
+    /// <remarks>
+    /// Set it to add authentication, caching or a proxy. It is called only for sources whose scheme is in
+    /// <see cref="MarkdownOptions.AllowedImageSchemes"/>, on a background thread, once per source while the viewer
+    /// remembers it; an image larger than 10 MB, or one that cannot be decoded, shows its alternative text. SVG images
+    /// are drawn without fetching anything they refer to.
+    /// </remarks>
+    public Func<Uri, CancellationToken, Task<Stream?>>? ImageLoader
+    {
+        get => _imageLoader;
+        set
+        {
+            _imageLoader = value;
+            _images.Clear();
+            Update(fullRebuild: true);
+        }
+    }
+
+    /// <summary>
     /// Occurs when a user clicks a link. When no handler marks the event handled, the viewer asks the operating system
     /// to open the link.
     /// </summary>
@@ -315,6 +342,35 @@ public class MarkdownViewer : Control
         var height = Math.Max(target.Bounds.Height, TopLevel.GetTopLevel(this)?.ClientSize.Height ?? 0);
         target.BringIntoView(new Rect(0, 0, target.Bounds.Width, height));
         return true;
+    }
+
+    /// <summary>
+    /// The image at <paramref name="source"/>, loaded once and remembered, so a reply that is still arriving does not
+    /// fetch its images again on every change. The viewer remembers a limited number of images.
+    /// </summary>
+    internal Task<LoadedImage?> LoadImage(Uri source)
+    {
+        if (_images.TryGetValue(source, out var loading))
+        {
+            return loading;
+        }
+        if (_images.Count >= ImageCacheSize)
+        {
+            _images.Clear();
+        }
+        var loader = _imageLoader ?? ImageSources.LoadAsync;
+        loading = Task.Run(async () =>
+        {
+            await using var stream = await loader(source, CancellationToken.None).ConfigureAwait(false);
+            if (stream is null)
+            {
+                return null;
+            }
+            using var data = await ImageSources.ReadLimitedAsync(stream, CancellationToken.None).ConfigureAwait(false);
+            return data is null ? null : ImageDecoder.Decode(data);
+        });
+        _images[source] = loading;
+        return loading;
     }
 
     /// <summary>

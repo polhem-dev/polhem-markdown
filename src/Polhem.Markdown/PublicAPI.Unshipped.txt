@@ -3,3 +3,4 @@ Polhem.Markdown.MarkdownOptions.RenderMermaidDiagrams.get -> bool
 Polhem.Markdown.MarkdownOptions.RenderMermaidDiagrams.set -> void
 Polhem.Markdown.MarkdownOptions.BaseUri.get -> System.Uri?
 Polhem.Markdown.MarkdownOptions.BaseUri.set -> void
+Polhem.Markdown.MarkdownOptions.AllowedImageSchemes.get -> System.Collections.Generic.ISet<string!>!

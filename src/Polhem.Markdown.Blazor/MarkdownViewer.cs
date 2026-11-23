@@ -7,8 +7,8 @@ namespace Polhem.Markdown.Blazor;
 
 /// <summary>
 /// Shows a Markdown text as semantic HTML. It renders the same model as the Avalonia viewer of Polhem.Markdown, so both
-/// front ends show a text the same way, and applies the same safety policy: raw HTML shows as text, images as their
-/// alternative text, and only links whose scheme is in <see cref="Options"/> become links.
+/// front ends show a text the same way, and applies the same safety policy: raw HTML shows as text, only images and links
+/// whose scheme is in <see cref="Options"/> load or become links, and other images show their alternative text.
 /// </summary>
 /// <remarks>
 /// The markup is built with a render tree, never from an HTML string, so no text reaches the page as markup. Styles are

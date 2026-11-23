@@ -19,8 +19,9 @@ namespace Polhem.Markdown;
 /// on the way, so every viewer receives the same, already checked result.
 /// </summary>
 /// <remarks>
-/// The policy: raw HTML is never interpreted and shows as the text it was written as; an image shows as its alternative
-/// text; a Mermaid diagram is laid out here and drawn by the viewers from shapes, never by running a script; a link
+/// The policy: raw HTML is never interpreted and shows as the text it was written as; an image whose source is not an
+/// allowed image scheme (see <see cref="MarkdownOptions.AllowedImageSchemes"/>) shows as its alternative text; a Mermaid
+/// diagram is laid out here and drawn by the viewers from shapes, never by running a script; a link
 /// whose target is not an absolute URI with an allowed scheme shows as its text, except a link to the id of a heading in
 /// the same text (<c>#id</c>), which moves to that heading; a node this builder does not know shows as its source text.
 /// Footnotes that are referenced show at the end, numbered by their first reference, as on GitHub; a reference to a note
@@ -404,7 +405,7 @@ internal sealed class MarkdownModelBuilder
                 AddLink(autolink, autolink.IsEmail ? "mailto:" + autolink.Url : autolink.Url, [new TextNode(Range(autolink), autolink.Url)], inlines);
                 break;
             case LinkInline { IsImage: true } image:
-                inlines.Add(new TextNode(Range(image), PlainText(image)));
+                inlines.Add(Image(image));
                 break;
             case LinkInline link:
                 AddLink(link, link.GetDynamicUrl?.Invoke() ?? link.Url, Inlines(link), inlines);
@@ -457,7 +458,7 @@ internal sealed class MarkdownModelBuilder
             AddAnchorLink(link, target, content, inlines);
             return;
         }
-        if (!TryCreateTarget(target, out var uri))
+        if (!TryCreateTarget(target, _options.AllowedLinkSchemes, out var uri))
         {
             inlines.AddRange(content);
             return;
@@ -488,24 +489,34 @@ internal sealed class MarkdownModelBuilder
         inlines.Add(new AnchorLinkNode(Range(link), id, content));
     }
 
+    /// <summary>An image whose source is allowed, or its alternative text.</summary>
+    private InlineNode Image(LinkInline image)
+    {
+        var alternative = PlainText(image);
+        var source = image.GetDynamicUrl?.Invoke() ?? image.Url;
+        return TryCreateTarget(source, _options.AllowedImageSchemes, out var uri)
+            ? new ImageNode(Range(image), uri, alternative, string.IsNullOrEmpty(image.Title) ? null : image.Title)
+            : new TextNode(Range(image), alternative);
+    }
+
     /// <summary>
     /// The URI a link goes to: its target when the target names its scheme, otherwise the target as a relative reference
     /// resolved against <see cref="MarkdownOptions.BaseUri"/> when one is set. Either way the scheme must be allowed.
     /// </summary>
-    private bool TryCreateTarget(string? target, out Uri uri)
+    private bool TryCreateTarget(string? target, ISet<string> schemes, out Uri uri)
     {
         // WARNING: .NET reads a rooted path such as `/etc/passwd` (on Unix) or `C:\x` (on Windows) as an absolute
         // `file` URI. Only a target that writes its scheme counts as absolute here, so such a path is a relative
         // reference: with a web base it stays on the base's host, and without a base it is text, even when the host
         // allows `file`. The scheme check applies to both outcomes; do not relax it to "any absolute URI".
-        if (Uri.TryCreate(target, UriKind.Absolute, out var created) && WritesScheme(target!, created) && IsAllowed(created))
+        if (Uri.TryCreate(target, UriKind.Absolute, out var created) && WritesScheme(target!, created) && IsAllowed(created, schemes))
         {
             uri = created;
             return true;
         }
         if (target is not null && _options.BaseUri is { } baseUri
             && Uri.TryCreate(target, UriKind.Relative, out var relative)
-            && Uri.TryCreate(baseUri, relative, out var resolved) && IsAllowed(resolved))
+            && Uri.TryCreate(baseUri, relative, out var resolved) && IsAllowed(resolved, schemes))
         {
             uri = resolved;
             return true;
@@ -522,7 +533,7 @@ internal sealed class MarkdownModelBuilder
             && written.StartsWith(uri.Scheme, StringComparison.OrdinalIgnoreCase);
     }
 
-    private bool IsAllowed(Uri uri) => uri.IsAbsoluteUri && _options.AllowedLinkSchemes.Contains(uri.Scheme);
+    private static bool IsAllowed(Uri uri, ISet<string> schemes) => uri.IsAbsoluteUri && schemes.Contains(uri.Scheme);
 
     private static string PlainText(ContainerInline container)
     {

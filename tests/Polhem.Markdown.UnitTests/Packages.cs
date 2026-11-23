@@ -10,7 +10,7 @@ internal static class Packages
     public static readonly IReadOnlyDictionary<string, string[]> AllowedReferences = new Dictionary<string, string[]>(StringComparer.Ordinal)
     {
         ["Polhem.Markdown"] = ["Markdig"],
-        ["Polhem.Markdown.Avalonia"] = ["Polhem.Markdown", "Avalonia"],
+        ["Polhem.Markdown.Avalonia"] = ["Polhem.Markdown", "Avalonia", "Svg", "SkiaSharp"],
         ["Polhem.Markdown.Blazor"] = ["Polhem.Markdown", "Microsoft.AspNetCore.Components", "Microsoft.JSInterop"],
     };
 

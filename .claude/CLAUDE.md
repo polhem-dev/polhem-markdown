@@ -20,9 +20,9 @@ The design decisions are recorded in polhem-dev/polhem#529.
 
 - **Version**: `src/Directory.Build.props`, the only place it is declared. The three packages always ship together
   under that version.
-- **Dependencies**: each package takes only its own external package (Markdig, Avalonia, the Blazor component
-  library). `src/Directory.Build.targets` (MARKDOWN9001) and `DependencyGateTests` enforce it. Do not add a package
-  reference without asking.
+- **Dependencies**: each package takes only the external packages that do its job: Markdig; Avalonia and Svg.Skia (for
+  SVG images); the Blazor component library. `src/Directory.Build.targets` (MARKDOWN9001) and `DependencyGateTests`
+  enforce it. Do not add a package reference without asking.
 - **No Markdig type in the public API.** `PublicApiGateTests` fails when a public member refers to the `Markdig`
   namespace. The model is `internal`, exposed to the viewers through `InternalsVisibleTo`.
 - **Both viewers render every node of the model.** A node one viewer does not handle is a difference between the

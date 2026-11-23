@@ -32,3 +32,5 @@ static readonly Polhem.Markdown.Avalonia.MarkdownViewer.CodeTagBrushProperty -> 
 Polhem.Markdown.Avalonia.MarkdownViewer.CodePropertyBrush.get -> Avalonia.Media.IBrush!
 Polhem.Markdown.Avalonia.MarkdownViewer.CodePropertyBrush.set -> void
 static readonly Polhem.Markdown.Avalonia.MarkdownViewer.CodePropertyBrushProperty -> Avalonia.StyledProperty<Avalonia.Media.IBrush!>!
+Polhem.Markdown.Avalonia.MarkdownViewer.ImageLoader.get -> System.Func<System.Uri!, System.Threading.CancellationToken, System.Threading.Tasks.Task<System.IO.Stream?>!>?
+Polhem.Markdown.Avalonia.MarkdownViewer.ImageLoader.set -> void

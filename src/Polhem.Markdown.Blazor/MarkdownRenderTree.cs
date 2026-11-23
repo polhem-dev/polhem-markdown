@@ -270,6 +270,9 @@ internal sealed partial class MarkdownRenderTree
                 _builder.OpenElement(3, "br");
                 _builder.CloseElement();
                 break;
+            case ImageNode image:
+                Image(image);
+                break;
             case FootnoteReferenceNode reference:
                 FootnoteReference(reference);
                 break;
@@ -299,6 +302,26 @@ internal sealed partial class MarkdownRenderTree
         _builder.AddAttribute(2, OnClickAttribute, EventCallback.Factory.Create<MouseEventArgs>(_viewer, () => _viewer.MoveToAnchorAsync(id)));
         _builder.AddEventPreventDefaultAttribute(3, OnClickAttribute, true);
         Inlines(4, anchor.Inlines);
+        _builder.CloseElement();
+    }
+
+    /// <summary>
+    /// Writes an image. The browser loads it lazily, sends no referrer, and in an <c>img</c> an SVG's scripts do not run.
+    /// A broken image shows its alternative text.
+    /// </summary>
+    private void Image(ImageNode image)
+    {
+        _builder.OpenElement(0, "img");
+        _builder.AddAttribute(1, ClassAttribute, "pmd-img");
+        _builder.AddAttribute(2, "src", image.Source.AbsoluteUri);
+        _builder.AddAttribute(3, "alt", image.AlternativeText);
+        if (image.Title is { } title)
+        {
+            _builder.AddAttribute(4, "title", title);
+        }
+        _builder.AddAttribute(5, "loading", "lazy");
+        _builder.AddAttribute(6, "decoding", "async");
+        _builder.AddAttribute(7, "referrerpolicy", "no-referrer");
         _builder.CloseElement();
     }
 

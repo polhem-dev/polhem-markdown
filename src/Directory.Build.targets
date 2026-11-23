@@ -1,8 +1,9 @@
 <Project>
 
   <!--
-    Dependency gate. Each package may take only the one external package that does its job: Markdig for the parser,
-    Avalonia for the Avalonia viewer, and the Blazor component library for the Blazor viewer. Every package reference
+    Dependency gate. Each package may take only the external packages that do its job: Markdig for the parser, Avalonia
+    and Svg.Skia (for SVG images, polhem-dev/polhem-markdown#12) for the Avalonia viewer, and the Blazor component
+    library for the Blazor viewer. Every package reference
     flows to every consumer, so one that is not on the list fails the build.
 
     Only references that flow to consumers count: a package with PrivateAssets="all" (SourceLink, analyzers) does not
@@ -11,7 +12,7 @@
   -->
   <PropertyGroup>
     <_PolhemMarkdownAllowedPackage Condition="'$(MSBuildProjectName)' == 'Polhem.Markdown'">Markdig</_PolhemMarkdownAllowedPackage>
-    <_PolhemMarkdownAllowedPackage Condition="'$(MSBuildProjectName)' == 'Polhem.Markdown.Avalonia'">Avalonia</_PolhemMarkdownAllowedPackage>
+    <_PolhemMarkdownAllowedPackage Condition="'$(MSBuildProjectName)' == 'Polhem.Markdown.Avalonia'">Avalonia;Svg.Skia</_PolhemMarkdownAllowedPackage>
     <_PolhemMarkdownAllowedPackage Condition="'$(MSBuildProjectName)' == 'Polhem.Markdown.Blazor'">Microsoft.AspNetCore.Components.Web</_PolhemMarkdownAllowedPackage>
   </PropertyGroup>
 

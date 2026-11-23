@@ -1,7 +1,7 @@
 # Heading
 
 A paragraph with *italic*, **bold**, `code`, a [link](https://example.com/) and a [link to the heading](#heading),
-then a hard line break[^note]\
+then an ![image](https://example.com/i.png) and a hard line break[^note]\
 and the next line, with ~~struck~~ text.
 
 1. one
