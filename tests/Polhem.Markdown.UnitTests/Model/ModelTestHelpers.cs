@@ -32,6 +32,7 @@ internal static class ModelTestHelpers
             ListNode list => list.Items,
             ListItemNode item => item.Blocks,
             QuoteNode quote => quote.Blocks,
+            AlertNode alert => alert.Blocks,
             TableNode table => table.HeaderRows.Concat(table.Rows),
             TableRowNode row => row.Cells,
             TableCellNode cell => cell.Inlines,

@@ -167,6 +167,21 @@ public class MarkdownViewerTests(HeadlessSession session)
         Assert.Equal(["done", "open", "plain"], Descendants<SelectableTextBlock>(list).Select(text => text.Inlines!.Text));
     });
 
+    [Fact(DisplayName = "An alert shows its title and its blocks, with the bar and title in the brush of its kind")]
+    public Task Render_Alert_ShowsTitleInKindBrush() => session.RunAsync(() =>
+    {
+        var (_, viewer) = Show("> [!CAUTION]\n> Do not delete.");
+        var brush = new SolidColorBrush(Colors.Red);
+        viewer.AlertCautionBrush = brush;
+
+        var border = Assert.IsType<Border>(Assert.Single(Blocks(viewer)));
+        Assert.Same(brush, border.BorderBrush);
+        var title = Assert.Single(Descendants<TextBlock>(border), text => text is not SelectableTextBlock);
+        Assert.Equal("Caution", title.Text);
+        Assert.Same(brush, title.Foreground);
+        Assert.Equal("Do not delete.", Assert.Single(Descendants<MarkdownTextBlock>(border)).Inlines!.Text);
+    });
+
     [Fact(DisplayName = "Struck-through text is drawn with a line through it")]
     public Task Render_Strikethrough_HasLineThrough() => session.RunAsync(() =>
     {

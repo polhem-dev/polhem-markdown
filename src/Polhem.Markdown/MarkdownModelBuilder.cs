@@ -1,5 +1,6 @@
 using System.Globalization;
 using Markdig;
+using Markdig.Extensions.Alerts;
 using Markdig.Extensions.EmphasisExtras;
 using Markdig.Extensions.Tables;
 using Markdig.Extensions.TaskLists;
@@ -30,6 +31,7 @@ internal sealed class MarkdownModelBuilder
         .UseCjkFriendlyEmphasis()
         .UseEmphasisExtras(EmphasisExtraOptions.Strikethrough)
         .UseTaskLists()
+        .UseAlertBlocks()
         .UsePreciseSourceLocation()
         .Build();
 
@@ -88,12 +90,54 @@ internal sealed class MarkdownModelBuilder
         ParagraphBlock paragraph => new ParagraphNode(Range(paragraph), Inlines(paragraph.Inline)),
         FencedCodeBlock fenced => new CodeBlockNode(Range(fenced), fenced.Info ?? "", fenced.Lines.ToString()),
         CodeBlock code => new CodeBlockNode(Range(code), "", code.Lines.ToString()),
+        AlertBlock alert => Alert(alert),
         QuoteBlock quote => new QuoteNode(Range(quote), Blocks(quote)),
         ListBlock list => List(list),
         Table table => Table(table),
         ThematicBreakBlock rule => new ThematicBreakNode(Range(rule)),
         LinkReferenceDefinitionGroup or BlankLineBlock => null,
         _ => new ParagraphNode(Range(block), [SourceText(block)]),
+    };
+
+    private BlockNode Alert(AlertBlock alert)
+    {
+        var blocks = Blocks(alert);
+        var kindText = alert.Kind.ToString();
+        if (AlertKindOf(kindText) is { } kind)
+        {
+            return new AlertNode(Range(alert), kind, blocks);
+        }
+
+        // Markdig accepts any word as the kind. GitHub shows a quote whose marker is not one of its five as an ordinary
+        // quote with the marker as text, and so does this builder.
+        var text = "[!" + kindText + "]";
+        var range = Range(alert);
+        var start = _markdown.IndexOf(text, range.Start, StringComparison.Ordinal);
+        var marker = new TextNode(start < 0 ? new SourceRange(range.Start, 0) : new SourceRange(start, text.Length), text);
+        if (blocks is [ParagraphNode first, ..])
+        {
+            blocks[0] = first with
+            {
+                Inlines = first.Inlines.Count == 0
+                    ? [marker]
+                    : [marker, new TextNode(new SourceRange(marker.Range.End, 0), " "), .. first.Inlines],
+            };
+        }
+        else
+        {
+            blocks.Insert(0, new ParagraphNode(marker.Range, [marker]));
+        }
+        return new QuoteNode(Range(alert), blocks);
+    }
+
+    private static AlertKind? AlertKindOf(string kind) => kind switch
+    {
+        "NOTE" => AlertKind.Note,
+        "TIP" => AlertKind.Tip,
+        "IMPORTANT" => AlertKind.Important,
+        "WARNING" => AlertKind.Warning,
+        "CAUTION" => AlertKind.Caution,
+        _ => null,
     };
 
     private ListNode List(ListBlock list)

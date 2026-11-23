@@ -28,6 +28,21 @@ internal static class SampleText
         > The quantity and the unit price are multiplied into the amount,
         > which is rounded to two decimals.
 
+        > [!NOTE]
+        > The order number is assigned when the form is saved.
+
+        > [!TIP]
+        > Press F4 in the customer field to search.
+
+        > [!IMPORTANT]
+        > Every order needs a customer.
+
+        > [!WARNING]
+        > Changing the unit price recalculates every line.
+
+        > [!CAUTION]
+        > Deleting an order cannot be undone.
+
         | Field      | Type    | Required |
         |:-----------|:-------:|---------:|
         | order_no   | String  | yes      |

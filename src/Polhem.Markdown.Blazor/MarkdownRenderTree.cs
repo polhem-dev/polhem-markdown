@@ -64,6 +64,9 @@ internal sealed class MarkdownRenderTree
                 Blocks(1, quote.Blocks);
                 _builder.CloseElement();
                 break;
+            case AlertNode alert:
+                Alert(alert);
+                break;
             case TableNode table:
                 Table(table);
                 break;
@@ -154,6 +157,27 @@ internal sealed class MarkdownRenderTree
         _builder.CloseElement();
         _builder.CloseElement();
 
+        _builder.CloseElement();
+    }
+
+    private void Alert(AlertNode alert)
+    {
+        var kind = alert.Kind.ToString().ToLowerInvariant();
+        _builder.OpenElement(0, "div");
+        _builder.AddAttribute(1, "class", "pmd-alert pmd-alert-" + kind);
+        _builder.OpenElement(2, "p");
+        _builder.AddAttribute(3, "class", "pmd-alert-title");
+        _builder.OpenElement(4, "svg");
+        _builder.AddAttribute(5, "viewBox", "0 0 16 16");
+        _builder.AddAttribute(6, "aria-hidden", "true");
+        _builder.OpenElement(7, "path");
+        _builder.AddAttribute(8, "fill-rule", "evenodd");
+        _builder.AddAttribute(9, "d", AlertGlyphs.IconPath(alert.Kind));
+        _builder.CloseElement();
+        _builder.CloseElement();
+        _builder.AddContent(10, AlertGlyphs.Title(alert.Kind));
+        _builder.CloseElement();
+        Blocks(11, alert.Blocks);
         _builder.CloseElement();
     }
 

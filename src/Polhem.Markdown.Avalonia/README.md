@@ -14,7 +14,8 @@ Blazor front end show the same text the same way.
 - **Links**: a click raises the bubbling `LinkActivated` event. When no handler marks it handled, the viewer asks the
   operating system to open the link.
 - **Code blocks** show their language and a copy button; set `CopyCodeLabel` to translate its tooltip.
-- **Colors** work on light and dark themes. Set `LinkForeground`, `CodeBackground` and `RuleBrush` to match a theme;
+- **Colors** work on light and dark themes. Set `LinkForeground`, `CodeBackground`, `RuleBrush` and the alert brushes
+  (`AlertNoteBrush`, `AlertTipBrush`, `AlertImportantBrush`, `AlertWarningBrush`, `AlertCautionBrush`) to match a theme;
   they apply without rebuilding the view.
 - **Updates**: when `Markdown` changes, only the top-level blocks whose source changed are rebuilt, so a reply that
   grows as it arrives does not flicker.

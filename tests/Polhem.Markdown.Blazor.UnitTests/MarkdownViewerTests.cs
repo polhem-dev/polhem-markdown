@@ -36,6 +36,19 @@ public class MarkdownViewerTests : BunitContext
             "<div class=\"pmd\"><p>Hello <em>big</em> <strong>world</strong> <code>code</code><br>next</p></div>");
     }
 
+    [Fact(DisplayName = "An alert renders a titled container whose class names its kind")]
+    public void Render_Alert_HasKindClassAndTitle()
+    {
+        var viewer = Show("> [!TIP]\n> Use *this*.");
+
+        var alert = viewer.Find("div.pmd-alert");
+        Assert.Equal("pmd-alert pmd-alert-tip", alert.GetAttribute("class"));
+        Assert.Equal("Tip", alert.QuerySelector("p.pmd-alert-title")!.TextContent);
+        Assert.Equal("true", alert.QuerySelector("svg")!.GetAttribute("aria-hidden"));
+        Assert.Equal("Use this.", alert.QuerySelectorAll("p")[1].TextContent);
+        Assert.Empty(viewer.FindAll("blockquote"));
+    }
+
     [Fact(DisplayName = "Struck-through text renders as a del element")]
     public void Render_Strikethrough_IsDel()
     {

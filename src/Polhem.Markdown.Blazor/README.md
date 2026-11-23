@@ -31,6 +31,11 @@ Link the stylesheet in the host page, then use the component:
 | `--pmd-code-bg` | Background of inline code, code blocks and table headers | `rgba(128, 128, 128, 0.12)` |
 | `--pmd-rule` | Rules, table borders and the bar beside a quote | `rgba(128, 128, 128, 0.35)` |
 | `--pmd-code-font` | Font of inline code and code blocks | `"Cascadia Mono", Consolas, Menlo, ui-monospace, monospace` |
+| `--pmd-alert-note` | Bar, icon and title of a `> [!NOTE]` alert | `#3b82f6` |
+| `--pmd-alert-tip` | The same for `> [!TIP]` | `#22a35a` |
+| `--pmd-alert-important` | The same for `> [!IMPORTANT]` | `#8b5cf6` |
+| `--pmd-alert-warning` | The same for `> [!WARNING]` | `#d97706` |
+| `--pmd-alert-caution` | The same for `> [!CAUTION]` | `#e5484d` |
 
 The defaults read on light and dark pages and match the Avalonia viewer.
 

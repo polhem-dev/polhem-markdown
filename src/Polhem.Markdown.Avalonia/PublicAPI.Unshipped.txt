@@ -1,1 +1,16 @@
 #nullable enable
+Polhem.Markdown.Avalonia.MarkdownViewer.AlertNoteBrush.get -> Avalonia.Media.IBrush!
+Polhem.Markdown.Avalonia.MarkdownViewer.AlertNoteBrush.set -> void
+static readonly Polhem.Markdown.Avalonia.MarkdownViewer.AlertNoteBrushProperty -> Avalonia.StyledProperty<Avalonia.Media.IBrush!>!
+Polhem.Markdown.Avalonia.MarkdownViewer.AlertTipBrush.get -> Avalonia.Media.IBrush!
+Polhem.Markdown.Avalonia.MarkdownViewer.AlertTipBrush.set -> void
+static readonly Polhem.Markdown.Avalonia.MarkdownViewer.AlertTipBrushProperty -> Avalonia.StyledProperty<Avalonia.Media.IBrush!>!
+Polhem.Markdown.Avalonia.MarkdownViewer.AlertImportantBrush.get -> Avalonia.Media.IBrush!
+Polhem.Markdown.Avalonia.MarkdownViewer.AlertImportantBrush.set -> void
+static readonly Polhem.Markdown.Avalonia.MarkdownViewer.AlertImportantBrushProperty -> Avalonia.StyledProperty<Avalonia.Media.IBrush!>!
+Polhem.Markdown.Avalonia.MarkdownViewer.AlertWarningBrush.get -> Avalonia.Media.IBrush!
+Polhem.Markdown.Avalonia.MarkdownViewer.AlertWarningBrush.set -> void
+static readonly Polhem.Markdown.Avalonia.MarkdownViewer.AlertWarningBrushProperty -> Avalonia.StyledProperty<Avalonia.Media.IBrush!>!
+Polhem.Markdown.Avalonia.MarkdownViewer.AlertCautionBrush.get -> Avalonia.Media.IBrush!
+Polhem.Markdown.Avalonia.MarkdownViewer.AlertCautionBrush.set -> void
+static readonly Polhem.Markdown.Avalonia.MarkdownViewer.AlertCautionBrushProperty -> Avalonia.StyledProperty<Avalonia.Media.IBrush!>!
