@@ -47,7 +47,7 @@ public class AnchorLinkTests
         Assert.True(watch.Elapsed < TimeSpan.FromSeconds(1), $"Parsing took {watch.Elapsed}.");
     }
 
-    [Theory(DisplayName = "A heading with only punctuation or symbols gets no id, so nothing can link to it")]
+    [Theory(DisplayName = "A heading with only punctuation or symbols gets an empty id")]
     [InlineData("## !!!")]
     [InlineData("## :tada:")]
     public void Build_SymbolHeading_HasNoId(string markdown)

@@ -1,6 +1,7 @@
 using Bunit;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.JSInterop;
 
 namespace Polhem.Markdown.Blazor.UnitTests;
 
@@ -30,16 +31,16 @@ public class AnchorLinkTests : BunitContext
         var viewer = Show("[setup](#setup)\n\n## Setup");
 
         viewer.MarkupMatches(
-            "<div class=\"pmd\"><p><a href=\"http://localhost/#setup\">setup</a></p><h2 tabindex=\"-1\">Setup</h2></div>");
+            "<div class=\"pmd\"><p><a href=\"#setup\">setup</a></p><h2 tabindex=\"-1\">Setup</h2></div>");
     }
 
-    [Fact(DisplayName = "The href names the current page, so a base element cannot send the link to another page")]
+    [Fact(DisplayName = "The href names the current page relative to the base, so a base element cannot send the link to another page")]
     public void Render_AnchorLink_HrefKeepsCurrentPage()
     {
         Services.GetRequiredService<NavigationManager>().NavigateTo("/docs/guide?tab=2#old");
         var viewer = Show("[setup](#setup)\n\n## Setup");
 
-        Assert.Equal("http://localhost/docs/guide?tab=2#setup", viewer.Find("a").GetAttribute("href"));
+        Assert.Equal("docs/guide?tab=2#setup", viewer.Find("a").GetAttribute("href"));
     }
 
     [Fact(DisplayName = "A click whose script call times out does nothing, and the component keeps working")]
@@ -52,6 +53,38 @@ public class AnchorLinkTests : BunitContext
         viewer.Find("a").Click();
 
         Assert.Equal("Setup", viewer.Find("h2").TextContent);
+    }
+
+    [Fact(DisplayName = "An import that failed is tried again on the next click")]
+    public void Click_AnchorLink_AfterFailedImport_TriesAgain()
+    {
+        using var context = new BunitContext();
+        var runtime = new FailingImportRuntime();
+        context.Services.AddSingleton<IJSRuntime>(runtime);
+        var viewer = context.Render<MarkdownViewer>(parameters => parameters.Add(component => component.Markdown, "[setup](#setup)\n\n## Setup"));
+
+        viewer.Find("a").Click();
+        viewer.Find("a").Click();
+
+        Assert.Equal(2, runtime.Imports);
+    }
+
+    /// <summary>A script runtime whose module import always fails, as when the file cannot be loaded.</summary>
+    private sealed class FailingImportRuntime : IJSRuntime
+    {
+        public int Imports { get; private set; }
+
+        public ValueTask<TValue> InvokeAsync<TValue>(string identifier, object?[]? args) =>
+            InvokeAsync<TValue>(identifier, CancellationToken.None, args);
+
+        public ValueTask<TValue> InvokeAsync<TValue>(string identifier, CancellationToken cancellationToken, object?[]? args)
+        {
+            if (identifier == "import")
+            {
+                Imports++;
+            }
+            return ValueTask.FromException<TValue>(new JSException("The module could not be loaded."));
+        }
     }
 
     [Fact(DisplayName = "The heading's id is not written as an HTML id, so it cannot clash with the page")]

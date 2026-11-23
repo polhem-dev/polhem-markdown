@@ -4,14 +4,16 @@ using System.Text;
 namespace Polhem.Markdown;
 
 /// <summary>
-/// Gives headings the ids GitHub gives them: the text in lower case, with everything but letters, digits, marks,
-/// underscores, hyphens and spaces dropped and spaces turned into hyphens; a repeated id gets <c>-1</c>, <c>-2</c> and so
-/// on, skipping any id already taken.
+/// Gives headings ids the way github-slugger, which GitHub uses, does: the text in lower case, with everything but
+/// letters, digits, marks, underscores, hyphens and spaces dropped and spaces turned into hyphens; a repeated id gets
+/// <c>-1</c>, <c>-2</c> and so on, skipping any id already taken.
 /// </summary>
 /// <remarks>
 /// NOTE: this follows github-slugger rather than Markdig's auto identifiers, whose numbering of repeats tries every
 /// number from one on each repeat. A reply with thousands of headings of the same name then took seconds to parse,
 /// on every chunk while it streamed; the counts kept here make each id cost the same however many came before.
+/// Lower-casing uses .NET's invariant culture, which differs from JavaScript's for a few letters, such as a dotted
+/// capital I or a final sigma.
 /// </remarks>
 internal sealed class HeadingSlugger
 {

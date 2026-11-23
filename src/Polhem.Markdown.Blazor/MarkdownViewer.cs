@@ -133,7 +133,9 @@ public class MarkdownViewer : ComponentBase, IAsyncDisposable
         {
             if (Services.GetService(typeof(NavigationManager)) is NavigationManager navigation)
             {
-                var page = navigation.Uri;
+                // Relative to the base, the page resolves to itself without naming the host, which during prerendering
+                // is the one the server saw and may be an internal one behind a proxy.
+                var page = navigation.ToBaseRelativePath(navigation.Uri);
                 var hash = page.IndexOf('#', StringComparison.Ordinal);
                 return (hash < 0 ? page : page[..hash]) + "#" + id;
             }
@@ -172,10 +174,21 @@ public class MarkdownViewer : ComponentBase, IAsyncDisposable
         {
             // The heading left the page between the click and the call, as a text that is still arriving is
             // re-rendered, or the module could not load. The click then does nothing.
+            ForgetFailedImport();
         }
         catch (TaskCanceledException)
         {
             // The call timed out on a slow connection. Left unhandled, it would end the circuit over a click.
+            ForgetFailedImport();
+        }
+    }
+
+    /// <summary>Drops an import that failed, so the next click tries again instead of failing the same way.</summary>
+    private void ForgetFailedImport()
+    {
+        if (_module is { IsCompleted: true, IsCompletedSuccessfully: false })
+        {
+            _module = null;
         }
     }
 
