@@ -27,7 +27,8 @@ public class MarkdownViewer : ComponentBase, IAsyncDisposable
     private string? _parsedMarkdown;
     private MarkdownOptions? _parsedOptions;
     private CodeBlockNode? _copiedBlock;
-    private readonly Dictionary<string, ElementReference> _headings = new(StringComparer.Ordinal);
+    // Keyed by heading id; string keys compare ordinally by default.
+    private readonly Dictionary<string, ElementReference> _headings = [];
     private IJSObjectReference? _module;
 
     /// <summary>Gets or sets the Markdown text to show.</summary>
