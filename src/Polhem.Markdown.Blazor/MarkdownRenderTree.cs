@@ -22,6 +22,8 @@ internal sealed class MarkdownRenderTree
 
     private const string ClassAttribute = "class";
 
+    private const string OnClickAttribute = "onclick";
+
     private const string DoneIcon = "M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4z";
 
     private readonly MarkdownViewer _viewer;
@@ -172,7 +174,7 @@ internal sealed class MarkdownRenderTree
         _builder.AddAttribute(9, ClassAttribute, "pmd-copy");
         _builder.AddAttribute(10, "title", _viewer.CopyCodeLabel);
         _builder.AddAttribute(11, "aria-label", _viewer.CopyCodeLabel);
-        _builder.AddAttribute(12, "onclick", EventCallback.Factory.Create<MouseEventArgs>(_viewer, () => _viewer.CopyAsync(code)));
+        _builder.AddAttribute(12, OnClickAttribute, EventCallback.Factory.Create<MouseEventArgs>(_viewer, () => _viewer.CopyAsync(code)));
         _builder.OpenElement(13, "svg");
         _builder.AddAttribute(14, "viewBox", "0 0 24 24");
         _builder.AddAttribute(15, "aria-hidden", "true");
@@ -429,8 +431,8 @@ internal sealed class MarkdownRenderTree
         var id = anchor.Id;
         _builder.OpenElement(0, "a");
         _builder.AddAttribute(1, "href", "#" + id);
-        _builder.AddAttribute(2, "onclick", EventCallback.Factory.Create<MouseEventArgs>(_viewer, () => _viewer.FocusHeadingAsync(id)));
-        _builder.AddEventPreventDefaultAttribute(3, "onclick", true);
+        _builder.AddAttribute(2, OnClickAttribute, EventCallback.Factory.Create<MouseEventArgs>(_viewer, () => _viewer.FocusHeadingAsync(id)));
+        _builder.AddEventPreventDefaultAttribute(3, OnClickAttribute, true);
         Inlines(4, anchor.Inlines);
         _builder.CloseElement();
     }
@@ -442,8 +444,8 @@ internal sealed class MarkdownRenderTree
         _builder.AddAttribute(1, "href", target.AbsoluteUri);
         if (_viewer.HandlesLinks)
         {
-            _builder.AddAttribute(2, "onclick", EventCallback.Factory.Create<MouseEventArgs>(_viewer, () => _viewer.ActivateLinkAsync(target)));
-            _builder.AddEventPreventDefaultAttribute(3, "onclick", true);
+            _builder.AddAttribute(2, OnClickAttribute, EventCallback.Factory.Create<MouseEventArgs>(_viewer, () => _viewer.ActivateLinkAsync(target)));
+            _builder.AddEventPreventDefaultAttribute(3, OnClickAttribute, true);
         }
         else
         {
