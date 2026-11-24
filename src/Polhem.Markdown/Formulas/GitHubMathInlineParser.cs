@@ -1,4 +1,3 @@
-using System.Text.RegularExpressions;
 using Markdig.Extensions.Mathematics;
 using Markdig.Helpers;
 using Markdig.Parsers;
@@ -11,7 +10,7 @@ namespace Polhem.Markdown.Formulas;
 /// <c>$</c> followed by a space or preceded by one, as in <c>$ 5 and $ 6</c>, opens or closes nothing; and in a table,
 /// where GitHub splits a row into cells before it reads math, a formula does not run across a cell's <c>|</c>.
 /// </summary>
-internal sealed partial class GitHubMathInlineParser : MathInlineParser
+internal sealed class GitHubMathInlineParser : MathInlineParser
 {
     public override bool Match(InlineProcessor processor, ref StringSlice slice)
     {
@@ -30,7 +29,7 @@ internal sealed partial class GitHubMathInlineParser : MathInlineParser
         return true;
     }
 
-    private static bool IsRefused(MathInline math, InlineProcessor processor, string text, int start, int end)
+    private bool IsRefused(MathInline math, InlineProcessor processor, string text, int start, int end)
     {
         var count = math.DelimiterCount;
         if (count == 1 && (char.IsWhiteSpace(text[start + 1]) || char.IsWhiteSpace(text[end - 2])))
@@ -40,22 +39,46 @@ internal sealed partial class GitHubMathInlineParser : MathInlineParser
         return text.AsSpan(start, end - start).Contains('|') && processor.Block is ParagraphBlock && IsTable(text);
     }
 
+    /// <summary>The last paragraph checked, so a paragraph with many formulas is scanned once.</summary>
+    private TableCheck? _lastCheck;
+
     /// <summary>
-    /// Whether the paragraph's text, which the inline parsers read, is a pipe table: its second line is a delimiter row
-    /// such as <c>|---|:--:|</c>.
+    /// Whether the paragraph's text, which the inline parsers read, holds a pipe table: one of its lines is a delimiter
+    /// row such as <c>|---|:--:|</c>. A table may follow lines of text in the same paragraph.
     /// </summary>
-    private static bool IsTable(string paragraph)
+    /// <remarks>
+    /// NOTE: the answer is kept for the paragraph's text, since each formula with a bar asks again; scanning every time
+    /// would cost the length of the paragraph per formula. Parsers run on several threads at once share this one, so the
+    /// check is kept in one immutable object; a race only scans again.
+    /// </remarks>
+    private bool IsTable(string paragraph)
     {
-        var first = paragraph.IndexOf('\n', StringComparison.Ordinal);
-        if (first < 0)
+        var last = Volatile.Read(ref _lastCheck);
+        if (last is not null && ReferenceEquals(last.Text, paragraph))
         {
-            return false;
+            return last.IsTable;
         }
-        var second = paragraph.IndexOf('\n', first + 1);
-        var line = second < 0 ? paragraph[(first + 1)..] : paragraph[(first + 1)..second];
-        return DelimiterRow().IsMatch(line);
+        var isTable = HasDelimiterRow(paragraph);
+        Volatile.Write(ref _lastCheck, new TableCheck(paragraph, isTable));
+        return isTable;
     }
 
-    [GeneratedRegex(@"^\s*\|?\s*:?-+:?\s*(\|\s*:?-+:?\s*)*\|?\s*$", RegexOptions.CultureInvariant, matchTimeoutMilliseconds: 1000)]
-    private static partial Regex DelimiterRow();
+    /// <summary>Whether a line after the first consists of dashes, colons, bars and spaces, with a dash: a delimiter row.</summary>
+    private static bool HasDelimiterRow(string paragraph)
+    {
+        var lineStart = paragraph.IndexOf('\n', StringComparison.Ordinal) + 1;
+        while (lineStart > 0 && lineStart <= paragraph.Length)
+        {
+            var lineEnd = paragraph.IndexOf('\n', lineStart);
+            var line = paragraph.AsSpan(lineStart, (lineEnd < 0 ? paragraph.Length : lineEnd) - lineStart);
+            if (line.Contains('-') && !line.ContainsAnyExcept("-:| \t\r"))
+            {
+                return true;
+            }
+            lineStart = lineEnd + 1;
+        }
+        return false;
+    }
+
+    private sealed record TableCheck(string Text, bool IsTable);
 }

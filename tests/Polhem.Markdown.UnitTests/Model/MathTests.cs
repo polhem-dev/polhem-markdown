@@ -5,6 +5,7 @@ using static Polhem.Markdown.UnitTests.Model.ModelTestHelpers;
 namespace Polhem.Markdown.UnitTests.Model;
 
 /// <summary>Math written as on GitHub: <c>$…$</c>, <c>$$…$$</c> and <c>math</c> code blocks.</summary>
+[Collection(ScalingCollection.Name)]
 public class MathTests
 {
     private static IFormulaItem Formula(string latex)
@@ -24,6 +25,8 @@ public class MathTests
     [InlineData("costs 5 $ and 10 $ total")]
     [InlineData("| Item | Price ($) | Tax ($) |\n|---|---|---|\n| pen | 2 | 1 |")]
     [InlineData("| $x | y$ |\n|---|---|")]
+    [InlineData("Prices:\n| Item | Price ($) | Tax ($) |\n|---|---|---|\n| pen | 2 | 1 |")]
+    [InlineData("> Prices:\n> | Item | Price ($) | Tax ($) |\n> |---|---|---|")]
     public void Build_DollarsInProse_StayText(string markdown)
     {
         var document = Parse(markdown);
@@ -39,6 +42,17 @@ public class MathTests
 
         Assert.Equal(3, table.HeaderRows[0].Cells.Count);
         Assert.Single(table.Rows[0].Cells[0].Inlines.OfType<MathNode>());
+    }
+
+    [Fact(DisplayName = "Many formulas with bars in one paragraph take time in proportion to its length")]
+    [Trait("Category", Scaling.Category)]
+    public void Build_ManyBarredFormulas_IsLinear()
+    {
+        // Each formula with a bar asks whether its paragraph is a table; answering by scanning the paragraph every time
+        // grew with the square of the input.
+        static string Text(int count) => string.Concat(Enumerable.Repeat("$|$ ", count)) + "\n" + new string('-', 10 * count) + "x";
+
+        Scaling.AssertLinear(Text, markdown => Parse(markdown), 100, 20_000, "formulas with bars over a long second line");
     }
 
     [Fact(DisplayName = "Outside a table, math may hold a vertical bar")]

@@ -35,7 +35,7 @@ internal sealed class FormulaView : Control
     internal FormulaBox Box => _box ??= LayOut();
 
     /// <summary>Where the formula's baseline lies below the view's top, for tests.</summary>
-    internal double BaselineFromTop => _padding + Box.Ascent;
+    internal double BaselineFromTop => Box.Ascent + _padding;
 
     protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
     {
