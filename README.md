@@ -9,13 +9,14 @@
 [![Code Smells](https://sonarcloud.io/api/project_badges/measure?project=polhem-dev_polhem-markdown&metric=code_smells)](https://sonarcloud.io/project/overview?id=polhem-dev_polhem-markdown)
 [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=polhem-dev_polhem-markdown&metric=coverage)](https://sonarcloud.io/project/overview?id=polhem-dev_polhem-markdown)
 
-Markdown viewers for .NET that show the same text the same way on different front ends. One package parses the text
-and applies the safety policy; a viewer package for each UI framework renders the result.
+Markdown viewers for .NET that show the same text the same way on different front ends, and a Markdown source editor
+for Avalonia. One package parses the text and applies the safety policy; a viewer package for each UI framework renders
+the result.
 
 | Package | For |
 |---------|-----|
 | `Polhem.Markdown` | Parsing (with [Markdig](https://github.com/xoofx/markdig)) and the safety policy shared by the viewers |
-| `Polhem.Markdown.Avalonia` | A viewer control for Avalonia |
+| `Polhem.Markdown.Avalonia` | A viewer control and a source editor control for Avalonia |
 | `Polhem.Markdown.Blazor` | A viewer component for Blazor, rendering semantic HTML styled with CSS variables |
 
 The packages are published on [nuget.org](https://www.nuget.org/packages?q=Polhem.Markdown); the changes of each release
@@ -61,10 +62,30 @@ shows the start of the sample text in each.
 Each viewer's README lists what it supports in detail, and how to set its colors:
 [Avalonia](src/Polhem.Markdown.Avalonia/README.md), [Blazor](src/Polhem.Markdown.Blazor/README.md).
 
+## The editor
+
+![The sample text in the editor, beside the viewer showing it](docs/images/editor.png)
+
+`MarkdownEditor` in `Polhem.Markdown.Avalonia` edits Markdown as source, with a live preview in `MarkdownViewer` beside
+it, not as rich text.
+
+- **Colours the source the way the viewer reads it**: markers, headings, emphasis, inline code, links and their
+  addresses, raw HTML and formulas, and fenced code with the viewer's highlighting.
+- **Formats and list keys**: `ApplyFormat` toggles bold, italic, strikethrough, inline code, links, headings, lists,
+  task lists, quotes and code blocks, with Ctrl or Cmd and B, I, K or E for the inline ones. Enter continues a list,
+  and Tab and Shift+Tab move an item in and out.
+- **Keeps in step with the viewer**: the editor reports the source at the top of its view and scrolls to a source
+  offset; the viewer maps source offsets to positions and back, and a command-click asks for the source of what was
+  clicked. The gallery wires the two together.
+- **Works under any theme** with no styles from the host, and its links cannot be opened from the source: the viewer
+  checks their scheme.
+
+The [Avalonia README](src/Polhem.Markdown.Avalonia/README.md) has the details. There is no Blazor editor yet.
+
 ## Samples
 
 `samples/MarkdownGallery` shows every kind of node on a Semi theme, light or dark, with a replay that types the text in
-chunks as a streamed reply arrives.
+chunks as a streamed reply arrives. Its Edit switch puts the editor beside the viewer, scrolling together.
 
 ```bash
 dotnet run --project samples/MarkdownGallery.Desktop

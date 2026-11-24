@@ -14,7 +14,8 @@ Markdown viewers for .NET that render the same text the same way on different fr
 
 - `Polhem.Markdown` parses with Markdig and turns the syntax tree into a small model of its own, applying one safety
   policy (raw HTML shown as text, link schemes checked).
-- `Polhem.Markdown.Avalonia` and `Polhem.Markdown.Blazor` render that model.
+- `Polhem.Markdown.Avalonia` and `Polhem.Markdown.Blazor` render that model. The Avalonia package also has
+  `MarkdownEditor`, a source editor on AvaloniaEdit (polhem-dev/polhem-markdown#37).
 
 The design decisions are recorded in polhem-dev/polhem#529 and this repository's issues; decisions that need their
 reasons kept are ADRs under `maintainers/adr/` (English only).
