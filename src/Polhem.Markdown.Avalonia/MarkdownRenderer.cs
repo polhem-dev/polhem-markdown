@@ -3,7 +3,7 @@ using Avalonia.Controls;
 using Avalonia.Controls.Documents;
 using Avalonia.Layout;
 using Avalonia.Media;
-using Polhem.Markdown.Avalonia.Images;
+using Polhem.Markdown.Avalonia.Formulas;
 using Polhem.Markdown.Model;
 
 namespace Polhem.Markdown.Avalonia;
@@ -12,7 +12,7 @@ namespace Polhem.Markdown.Avalonia;
 /// Builds the controls of a <see cref="MarkdownViewer"/> from the model. Colors and the code font are bound to the
 /// viewer's properties, so changing them needs no rebuild.
 /// </summary>
-internal sealed class MarkdownRenderer
+internal sealed partial class MarkdownRenderer
 {
     private static readonly string[] s_bullets = ["•", "◦", "▪"];
     private static readonly double[] s_headingScale = [1.5, 1.3, 1.15, 1.0, 1.0, 1.0];
@@ -20,6 +20,7 @@ internal sealed class MarkdownRenderer
     private readonly MarkdownViewer _viewer;
     private readonly HashSet<Type> _rendered = [];
     private readonly HashSet<Type> _renderedShapes = [];
+    private readonly HashSet<Type> _renderedFormulas = [];
 
     public MarkdownRenderer(MarkdownViewer viewer)
     {
@@ -32,6 +33,9 @@ internal sealed class MarkdownRenderer
     /// <summary>The diagram shape types drawn so far.</summary>
     public IReadOnlySet<Type> RenderedShapeTypes => _renderedShapes;
 
+    /// <summary>The formula part types laid out so far.</summary>
+    public IReadOnlySet<Type> RenderedFormulaTypes => _renderedFormulas;
+
     public Control Block(BlockNode block, int depth)
     {
         Control? control = block switch
@@ -41,6 +45,7 @@ internal sealed class MarkdownRenderer
             ListNode list => List(list, depth),
             CodeBlockNode code => new CodeBlockView(_viewer, code),
             DiagramNode diagram => Diagram(diagram),
+            MathBlockNode math => MathBlock(math),
             QuoteNode quote => Quote(quote, depth),
             AlertNode alert => Alert(alert, depth),
             AlignedBlockNode aligned => Aligned(aligned, depth),
@@ -70,6 +75,14 @@ internal sealed class MarkdownRenderer
         StretchDirection = StretchDirection.DownOnly,
         HorizontalAlignment = HorizontalAlignment.Center,
         Child = new DiagramView(_viewer, diagram, _renderedShapes),
+    };
+
+    /// <summary>A formula on its own, centered, scrolling sideways when it is wider than the viewer.</summary>
+    private ScrollViewer MathBlock(MathBlockNode math) => new()
+    {
+        HorizontalScrollBarVisibility = global::Avalonia.Controls.Primitives.ScrollBarVisibility.Auto,
+        VerticalScrollBarVisibility = global::Avalonia.Controls.Primitives.ScrollBarVisibility.Disabled,
+        Content = new FormulaView(_viewer, math.Formula, display: true, _renderedFormulas) { HorizontalAlignment = HorizontalAlignment.Center },
     };
 
     private MarkdownTextBlock Heading(HeadingNode heading)
@@ -356,152 +369,4 @@ internal sealed class MarkdownRenderer
         }
         return panel;
     }
-
-    /// <summary>Builds selectable text from inlines, recording where each link lies in the text.</summary>
-    public MarkdownTextBlock Text(IReadOnlyList<InlineNode> inlines)
-    {
-        var text = new MarkdownTextBlock(_viewer) { TextWrapping = TextWrapping.Wrap, Inlines = [] };
-        var offset = 0;
-        foreach (var inline in inlines)
-        {
-            text.Inlines.Add(Inline(inline, text, ref offset));
-        }
-        return text;
-    }
-
-    private Inline Inline(InlineNode inline, MarkdownTextBlock owner, ref int offset)
-    {
-        if (DrawInline(inline, owner, ref offset) is { } drawn)
-        {
-            _rendered.Add(inline.GetType());
-            return drawn;
-        }
-        return new Run("");
-    }
-
-    private Inline? DrawInline(InlineNode inline, MarkdownTextBlock owner, ref int offset)
-    {
-        switch (inline)
-        {
-            case TextNode text:
-                offset += text.Text.Length;
-                return new Run(text.Text);
-
-            case CodeSpanNode code:
-                offset += code.Code.Length;
-                var run = new Run(code.Code);
-                run.Bind(TextElement.FontFamilyProperty, _viewer.GetObservable(MarkdownViewer.CodeFontFamilyProperty));
-                run.Bind(TextElement.BackgroundProperty, _viewer.GetObservable(MarkdownViewer.CodeBackgroundProperty));
-                return run;
-
-            case EmphasisNode emphasis:
-                var span = Emphasis(emphasis.Kind);
-                foreach (var child in emphasis.Inlines)
-                {
-                    span.Inlines.Add(Inline(child, owner, ref offset));
-                }
-                return span;
-
-            case LinkNode link:
-                var start = offset;
-                var linkSpan = LinkSpan(link.Inlines, owner, ref offset);
-                owner.AddLink(start, offset - start, link.Target);
-                return linkSpan;
-
-            case AnchorLinkNode anchor:
-                var anchorStart = offset;
-                var anchorSpan = LinkSpan(anchor.Inlines, owner, ref offset);
-                owner.AddAnchorLink(anchorStart, offset - anchorStart, anchor.Id);
-                return anchorSpan;
-
-            case LineBreakNode:
-                offset += LineBreakLength;
-                return new LineBreak();
-
-            case ImageNode image:
-                // NOTE: an embedded control takes one character of the text, which keeps link ranges after it in step.
-                offset += EmbeddedControlLength;
-                return new InlineUIContainer(new ImageView(_viewer, image)) { BaselineAlignment = BaselineAlignment.Center };
-
-            case FootnoteReferenceNode reference:
-                var number = reference.Number.ToString(System.Globalization.CultureInfo.InvariantCulture);
-                owner.AddAnchorLink(offset, number.Length, reference.NoteId);
-                owner.AddAnchor(reference.Id);
-                offset += number.Length;
-                var superscript = new Run(number)
-                {
-                    BaselineAlignment = BaselineAlignment.Superscript,
-                    FontSize = _viewer.GetValue(TextElement.FontSizeProperty) * SuperscriptScale,
-                };
-                superscript.Bind(TextElement.ForegroundProperty, _viewer.GetObservable(MarkdownViewer.LinkForegroundProperty));
-                return superscript;
-
-            case FootnoteBackLinkNode back:
-                // A space keeps the arrow off the last word, as on GitHub; it is not part of the link.
-                offset += 1;
-                var arrow = back.Position > 1
-                    ? BackArrow + back.Position.ToString(System.Globalization.CultureInfo.InvariantCulture)
-                    : BackArrow;
-                owner.AddAnchorLink(offset, arrow.Length, back.ReferenceId);
-                offset += arrow.Length;
-                var arrowRun = new Run(arrow);
-                arrowRun.Bind(TextElement.ForegroundProperty, _viewer.GetObservable(MarkdownViewer.LinkForegroundProperty));
-                return new Span { Inlines = { new Run(" "), arrowRun } };
-
-            default:
-                return null;
-        }
-    }
-
-    private Span Emphasis(EmphasisKind kind)
-    {
-        switch (kind)
-        {
-            case EmphasisKind.Bold:
-                return new Bold();
-            case EmphasisKind.Strikethrough:
-                return new Span { TextDecorations = TextDecorations.Strikethrough };
-            case EmphasisKind.Superscript or EmphasisKind.Subscript:
-                return new Span
-                {
-                    BaselineAlignment = kind == EmphasisKind.Superscript ? BaselineAlignment.Superscript : BaselineAlignment.Subscript,
-                    FontSize = _viewer.GetValue(TextElement.FontSizeProperty) * SuperscriptScale,
-                };
-            case EmphasisKind.Keyboard:
-                var key = new Span();
-                key.Bind(TextElement.FontFamilyProperty, _viewer.GetObservable(MarkdownViewer.CodeFontFamilyProperty));
-                key.Bind(TextElement.BackgroundProperty, _viewer.GetObservable(MarkdownViewer.CodeBackgroundProperty));
-                return key;
-            default:
-                return new Italic();
-        }
-    }
-
-    private Span LinkSpan(IReadOnlyList<InlineNode> inlines, MarkdownTextBlock owner, ref int offset)
-    {
-        var span = new Span { TextDecorations = TextDecorations.Underline };
-        span.Bind(TextElement.ForegroundProperty, _viewer.GetObservable(MarkdownViewer.LinkForegroundProperty));
-        foreach (var child in inlines)
-        {
-            span.Inlines.Add(Inline(child, owner, ref offset));
-        }
-        return span;
-    }
-
-    /// <summary>
-    /// The number of characters a <see cref="LineBreak"/> adds to the text of a text block: one, a line feed, on every
-    /// platform. <c>Render_Link_RangeMatchesText</c> checks the link offsets it produces against
-    /// <see cref="InlineCollection.Text"/>.
-    /// </summary>
-    internal const int LineBreakLength = 1;
-
-    /// <summary>
-    /// The number of characters an <see cref="InlineUIContainer"/> adds to the text of a text block, as its layout counts
-    /// them. <c>Render_LinkAfterImage_RangeMatchesText</c> checks it.
-    /// </summary>
-    internal const int EmbeddedControlLength = 1;
-
-    private const string BackArrow = "\u21A9";
-    private const double SuperscriptScale = 0.75;
-    private const double FootnoteScale = 0.875;
 }

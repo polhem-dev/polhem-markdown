@@ -22,6 +22,24 @@ internal sealed class MarkdownTextBlock : SelectableTextBlock
         _viewer = viewer;
     }
 
+    /// <summary>
+    /// Makes room below the text for a formula reaching <paramref name="depth"/> below its baseline, deeper than the
+    /// text's own descenders. The text engine makes a line taller above an embedded control only, so the formula's
+    /// lower part is drawn outside its line, and the text must neither clip it nor let the next block cover it.
+    /// </summary>
+    public void ReserveDepth(double depth)
+    {
+        var extra = depth - FontSize * TextDescent;
+        ClipToBounds = false;
+        if (extra > Padding.Bottom)
+        {
+            Padding = new global::Avalonia.Thickness(Padding.Left, Padding.Top, Padding.Right, extra);
+        }
+    }
+
+    /// <summary>How far a line's own descenders reach below its baseline, as a fraction of the font size.</summary>
+    private const double TextDescent = 0.22;
+
     /// <summary>The links of the text, by character range.</summary>
     public IReadOnlyList<LinkRange> Links => _links;
 

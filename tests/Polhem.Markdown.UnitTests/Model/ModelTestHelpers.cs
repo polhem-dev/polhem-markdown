@@ -21,6 +21,7 @@ internal static class ModelTestHelpers
         LinkNode link => Text(link.Inlines),
         AnchorLinkNode anchor => Text(anchor.Inlines),
         ImageNode image => image.AlternativeText,
+        MathNode math => "$" + math.Source + "$",
         FootnoteReferenceNode reference => "[" + reference.Number + "]",
         FootnoteBackLinkNode back => back.Position > 1 ? " \u21A9" + back.Position : " \u21A9",
         LineBreakNode => "\n",
@@ -47,7 +48,7 @@ internal static class ModelTestHelpers
             AnchorLinkNode anchor => anchor.Inlines,
             FootnotesNode footnotes => footnotes.Notes,
             FootnoteNode note => note.Blocks,
-            CodeBlockNode or DiagramNode or ThematicBreakNode or TextNode or CodeSpanNode or LineBreakNode
+            CodeBlockNode or DiagramNode or MathBlockNode or MathNode or ThematicBreakNode or TextNode or CodeSpanNode or LineBreakNode
                 or FootnoteReferenceNode or FootnoteBackLinkNode or ImageNode => [],
             _ => throw new ArgumentOutOfRangeException(nameof(node), node.GetType().Name),
         };

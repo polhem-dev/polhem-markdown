@@ -27,6 +27,14 @@ public class MarkdownViewerTests(HeadlessSession session)
         Assert.Equal(ModelNodeTypes.Shapes.OrderBy(type => type.Name), viewer.RenderedShapeTypes.OrderBy(type => type.Name));
     });
 
+    [Fact(DisplayName = "The viewer lays out every formula part type, so formulas cannot drift apart between the front ends")]
+    public Task Render_AllNodesSample_LaysOutEveryFormulaType() => session.RunAsync(() =>
+    {
+        var (_, viewer) = Show(ModelNodeTypes.AllNodesMarkdown());
+
+        Assert.Equal(ModelNodeTypes.Formulas.OrderBy(type => type.Name), viewer.RenderedFormulaTypes.OrderBy(type => type.Name));
+    });
+
     [Fact(DisplayName = "A diagram is drawn centered at its own size and scaled down, never up, to the viewer's width")]
     public Task Render_Diagram_ScalesDownOnly() => session.RunAsync(() =>
     {

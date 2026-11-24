@@ -103,6 +103,20 @@ internal static class SampleText
             "South" : 58
         ```
 
+        ## Math
+
+        Euler's identity $e^{i\pi} + 1 = 0$ sits in a line, prices such as $5 and $10 stay text, and a formula can stand on
+        its own:
+
+        $$
+        x = \frac{-b \pm \sqrt{b^2 - 4ac}}{2a}, \qquad \sum_{n=1}^{\infty} \frac{1}{n^2} = \frac{\pi^2}{6}
+        $$
+
+        ```math
+        f(x) = \begin{cases} x^2 & \text{if } x \ge 0 \\ -x & \text{otherwise} \end{cases}, \quad
+        A = \begin{pmatrix} 1 & 2 \\ 3 & 4 \end{pmatrix}, \quad \lim_{h \to 0} \frac{f(x+h) - f(x)}{h}
+        ```
+
         <div align="center">
 
         The HTML README files use works: <b>bold</b>, x<sup>2</sup>, H<sub>2</sub>O, <kbd>Ctrl</kbd> + <kbd>C</kbd>.

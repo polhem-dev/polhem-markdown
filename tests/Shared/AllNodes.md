@@ -23,6 +23,12 @@ flowchart LR
     A[Start] -->|go| B{Done?}
 ```
 
+Inline math: $\hat{x}_i^2 + \sqrt[3]{y}\,$.
+
+$$
+\sum_{n=1}^{\infty} \frac{1}{n^2} = \left( \begin{pmatrix} a & b \\ c & d \end{pmatrix} \right)
+$$
+
 <div align="center">
 
 A centered paragraph with <sup>raised</sup> text and <kbd>Ctrl</kbd>.

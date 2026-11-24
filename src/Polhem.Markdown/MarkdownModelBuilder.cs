@@ -3,6 +3,7 @@ using Markdig;
 using Markdig.Extensions.Alerts;
 using Markdig.Extensions.EmphasisExtras;
 using Markdig.Extensions.Footnotes;
+using Markdig.Extensions.Mathematics;
 using Markdig.Extensions.Tables;
 using Markdig.Extensions.TaskLists;
 using Markdig.Extensions.Yaml;
@@ -45,6 +46,7 @@ internal sealed partial class MarkdownModelBuilder
         .UseEmojiAndSmiley(enableSmileys: false)
         .UseYamlFrontMatter()
         .UseFootnotes()
+        .UseMathematics()
         .UsePreciseSourceLocation()
         .Build();
 
@@ -109,6 +111,9 @@ internal sealed partial class MarkdownModelBuilder
 
     private BlockNode? Block(Block block) => block switch
     {
+        MathBlock math => FormulaBlockOrCode(Range(math), math.Lines.ToString()),
+        ParagraphBlock { Inline: { FirstChild: MathInline { DelimiterCount: 2 } display } inline } paragraph
+            when ReferenceEquals(inline.LastChild, display) => FormulaBlockOrCode(Range(paragraph), display.Content.ToString()),
         HeadingBlock heading => new HeadingNode(Range(heading), heading.Level, Inlines(heading.Inline), _headingIds.GetValueOrDefault(heading, "")),
         ParagraphBlock paragraph => new ParagraphNode(Range(paragraph), Inlines(paragraph.Inline)),
         // NOTE: front matter is metadata for tools, not part of the document, so it is hidden. GitHub shows it as a
@@ -189,6 +194,10 @@ internal sealed partial class MarkdownModelBuilder
     {
         var language = fenced.Info ?? "";
         var code = fenced.Lines.ToString();
+        if (string.Equals(language, "math", StringComparison.OrdinalIgnoreCase))
+        {
+            return FormulaBlockOrCode(Range(fenced), code);
+        }
         if (_options.RenderMermaidDiagrams
             && string.Equals(language, "mermaid", StringComparison.OrdinalIgnoreCase)
             && MermaidDiagram.TryDraw(code, out var drawing))
@@ -306,6 +315,9 @@ internal sealed partial class MarkdownModelBuilder
                 break;
             case CodeInline code:
                 inlines.Add(new CodeSpanNode(Range(code), code.Content));
+                break;
+            case MathInline math:
+                inlines.Add(FormulaOrCode(math));
                 break;
             case EmphasisInline emphasis:
                 inlines.Add(new EmphasisNode(Range(emphasis), Kind(emphasis), Inlines(emphasis)));

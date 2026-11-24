@@ -52,6 +52,12 @@ const string Markdown = """
 
     <details><summary>More</summary>Hidden</details>
 
+    Math $\frac{a}{b}$ and
+
+    $$
+    \sqrt{x^2}
+    $$
+
     | a | b |
     |:--|--:|
     | 1 | 2 |
@@ -75,7 +81,7 @@ Type[] expected =
     typeof(CodeBlockNode), typeof(DiagramNode), typeof(TableNode), typeof(TableRowNode), typeof(TableCellNode), typeof(ThematicBreakNode),
     typeof(TextNode), typeof(EmphasisNode), typeof(CodeSpanNode), typeof(LinkNode), typeof(AnchorLinkNode), typeof(ImageNode), typeof(LineBreakNode),
     typeof(FootnotesNode), typeof(FootnoteNode), typeof(FootnoteReferenceNode), typeof(FootnoteBackLinkNode),
-    typeof(AlignedBlockNode), typeof(DetailsNode),
+    typeof(AlignedBlockNode), typeof(DetailsNode), typeof(MathNode), typeof(MathBlockNode),
 ];
 var missing = expected.Where(type => !found.Contains(type)).Select(type => type.Name).ToList();
 if (missing.Count > 0)

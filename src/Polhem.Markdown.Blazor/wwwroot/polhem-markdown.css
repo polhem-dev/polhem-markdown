@@ -7,6 +7,7 @@
     --pmd-code-bg    background of inline code, keys (<kbd>), code blocks and table headers
     --pmd-rule       rules, table borders, the bar beside a quote and the border of a key
     --pmd-code-font  font of inline code, keys and code blocks
+    --pmd-math-font  font of math, which needs math tables for delimiters and large operators to grow
     --pmd-alert-note, --pmd-alert-tip, --pmd-alert-important, --pmd-alert-warning, --pmd-alert-caution
                      bar, icon and title of each kind of alert (> [!NOTE] and so on)
     --pmd-code-keyword, --pmd-code-string, --pmd-code-comment, --pmd-code-constant, --pmd-code-tag,
@@ -20,15 +21,30 @@
 
 /* Blocks carry no margins of their own; space between siblings comes from the rule after this one. */
 .pmd :where(p, h1, h2, h3, h4, h5, h6, ul, ol, li, blockquote, pre, table, hr, .pmd-code, .pmd-table, .pmd-diagram,
-  .pmd-align-center, .pmd-align-right, .pmd-details) {
+  .pmd-align-center, .pmd-align-right, .pmd-details, .pmd-math) {
   margin: 0;
 }
 
 .pmd :where(p, h1, h2, h3, h4, h5, h6, ul, ol, blockquote, hr, .pmd-code, .pmd-table, .pmd-diagram, .pmd-align-center,
-  .pmd-align-right, .pmd-details, summary)
+  .pmd-align-right, .pmd-details, .pmd-math, summary)
   + :where(p, h1, h2, h3, h4, h5, h6, ul, ol, blockquote, hr, .pmd-code, .pmd-table, .pmd-diagram, .pmd-align-center,
-  .pmd-align-right, .pmd-details) {
+  .pmd-align-right, .pmd-details, .pmd-math) {
   margin-top: 8px;
+}
+
+/* Math, laid out by the browser from MathML. Delimiters and large operators grow only with a font that has math tables,
+   so those come first. A formula shown on its own scrolls when it is wider than the viewer. */
+.pmd math {
+  font-family: var(--pmd-math-font, "STIX Two Math", "Cambria Math", "Latin Modern Math", math);
+}
+
+.pmd .pmd-math {
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.pmd mtd.pmd-math-left {
+  text-align: left;
 }
 
 /* Blocks centered or right-aligned by <div align> or <p align>, as README files center their logos and badges. */
