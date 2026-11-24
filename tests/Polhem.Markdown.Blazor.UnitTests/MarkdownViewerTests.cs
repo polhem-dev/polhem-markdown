@@ -120,12 +120,14 @@ public class MarkdownViewerTests : BunitContext
         Show("now ~~was~~").MarkupMatches("<div class=\"pmd\"><p>now <del>was</del></p></div>");
     }
 
-    [Fact(DisplayName = "A task list item renders a disabled check box, and an ordinary item keeps its bullet")]
+    [Fact(DisplayName = "A task list item renders a disabled check box, with a drawn check mark when checked, and an ordinary item keeps its bullet")]
     public void Render_TaskList_HasDisabledCheckBoxes()
     {
         Show("- [x] done\n- [ ] open\n- plain").MarkupMatches(
             "<div class=\"pmd\"><ul>" +
-            "<li class=\"pmd-task\"><input type=\"checkbox\" disabled checked><p>done</p></li>" +
+            "<li class=\"pmd-task\"><input type=\"checkbox\" disabled checked>" +
+            "<svg viewBox=\"0 0 14 14\" aria-hidden=\"true\"><path d=\"M3.5 7.25 6 9.75 10.5 4.75\"></path></svg>" +
+            "<p>done</p></li>" +
             "<li class=\"pmd-task\"><input type=\"checkbox\" disabled><p>open</p></li>" +
             "<li><p>plain</p></li>" +
             "</ul></div>");

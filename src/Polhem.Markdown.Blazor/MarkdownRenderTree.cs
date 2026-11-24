@@ -155,8 +155,20 @@ internal sealed partial class MarkdownRenderTree
                 _builder.AddAttribute(4, "disabled", true);
                 _builder.AddAttribute(5, "checked", isChecked);
                 _builder.CloseElement();
+                if (isChecked)
+                {
+                    // The browser's own check mark is turned off by the stylesheet, so that the box looks the same as in
+                    // the Avalonia viewer; this one is drawn over it.
+                    _builder.OpenElement(6, "svg");
+                    _builder.AddAttribute(7, "viewBox", "0 0 14 14");
+                    _builder.AddAttribute(8, "aria-hidden", "true");
+                    _builder.OpenElement(9, "path");
+                    _builder.AddAttribute(10, "d", TaskGlyphs.CheckPath);
+                    _builder.CloseElement();
+                    _builder.CloseElement();
+                }
             }
-            Blocks(6, item.Blocks);
+            Blocks(11, item.Blocks);
             _builder.CloseElement();
             _builder.CloseRegion();
             _rendered.Add(typeof(ListItemNode));

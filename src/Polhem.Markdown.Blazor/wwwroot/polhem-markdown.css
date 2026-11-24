@@ -3,9 +3,9 @@
   from the surrounding page; these variables set the rest, with defaults that read on light and dark pages and match
   the Avalonia viewer:
 
-    --pmd-link       link color
+    --pmd-link       link color, and the fill of a checked task box
     --pmd-code-bg    background of inline code, keys (<kbd>), code blocks and table headers
-    --pmd-rule       rules, table borders, the bar beside a quote and the border of a key
+    --pmd-rule       rules, table borders, the bar beside a quote, and the border of a key and of an unchecked task box
     --pmd-code-font  font of inline code, keys and code blocks
     --pmd-math-font  font of math, which needs math tables for delimiters and large operators to grow
     --pmd-alert-note, --pmd-alert-tip, --pmd-alert-important, --pmd-alert-warning, --pmd-alert-caution
@@ -199,11 +199,38 @@
   position: relative;
 }
 
-.pmd .pmd-task > input {
+/* The box and its check mark are drawn here rather than by the browser, so that they look the same in every browser and
+   as in the Avalonia viewer. */
+.pmd .pmd-task > input,
+.pmd .pmd-task > svg {
   position: absolute;
   left: -1.4em;
   top: 0.3em;
+  width: 14px;
+  height: 14px;
   margin: 0;
+}
+
+.pmd .pmd-task > input {
+  appearance: none;
+  box-sizing: border-box;
+  border: 1px solid var(--pmd-rule, rgba(128, 128, 128, 0.35));
+  border-radius: 3px;
+  background: transparent;
+}
+
+.pmd .pmd-task > input:checked {
+  border-color: var(--pmd-link, #3b82f6);
+  background: var(--pmd-link, #3b82f6);
+}
+
+.pmd .pmd-task > svg {
+  fill: none;
+  stroke: #fff;
+  stroke-width: 1.75;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  pointer-events: none;
 }
 
 .pmd :where(p, h1, h2, h3, h4, h5, h6, ul, ol, blockquote, hr, .pmd-code, .pmd-table, .pmd-diagram, .pmd-alert) + .pmd-alert,
