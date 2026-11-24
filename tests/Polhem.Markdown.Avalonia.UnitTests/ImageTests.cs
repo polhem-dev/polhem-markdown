@@ -435,6 +435,11 @@ public class ImageTests(HeadlessSession session)
     [InlineData("https://github.com/polhem-dev/polhem-markdown/workflows/CI/badge.svg", true)]
     [InlineData("https://github.com/polhem-dev/polhem-markdown/raw/main/logo.svg", false)]
     [InlineData("https://raw.githubusercontent.com/polhem-dev/polhem-markdown/main/badge.svg", false)]
+    [InlineData("https://gitlab.com/someone/repo/-/raw/main/x.svg", false)]
+    [InlineData("https://dev.azure.com/org/project/_apis/git/repositories/repo/items?path=/x.svg", false)]
+    [InlineData("https://ci.appveyor.com/api/buildjobs/1/artifacts/x.svg", false)]
+    [InlineData("https://badgen.net/badge/build/passing/green", true)]
+    [InlineData("https://codecov.io/gh/o/r/branch/main/graph/badge.svg", true)]
     public void IsTrusted_Source(string source, bool trusted)
     {
         var hosts = new HashSet<string>(SvgTrust.DefaultHosts, StringComparer.OrdinalIgnoreCase);

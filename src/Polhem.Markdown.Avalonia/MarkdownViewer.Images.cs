@@ -46,15 +46,16 @@ public partial class MarkdownViewer
     }
 
     /// <summary>
-    /// Gets the hosts whose <c>https</c> SVG images the viewer draws, compared without regard to case. The default is
-    /// the list of badge hosts VS Code accepts SVG badges from, such as <c>img.shields.io</c>, <c>badgen.net</c> and
-    /// <c>codecov.io</c>; GitHub's workflow badges are drawn too.
+    /// Gets the hosts whose <c>https</c> SVG images the viewer draws, compared without regard to case. The default is a
+    /// few badge services, such as <c>img.shields.io</c>, <c>badgen.net</c> and <c>codecov.io</c>; GitHub's workflow
+    /// badges are drawn too.
     /// </summary>
     /// <remarks>
     /// An SVG from any other host shows its alternative text. Drawing an SVG means running a complex parser on what the
     /// server sends, and a small hostile file can exhaust the processor and memory, which no SVG renderer for .NET
-    /// bounds; the badge hosts send SVG built from fixed templates. Add a host only when its SVG files are trusted as
-    /// much as code. With the viewer's own loader, the address an image finally came from, after any redirect, must be
+    /// bounds. The default hosts generate their badges themselves and serve nothing a user uploaded. Add a host only when
+    /// it serves no file a user can upload (a code host's raw files, a build's artifacts) and its SVG is trusted as much
+    /// as code. With the viewer's own loader, the address an image finally came from, after any redirect, must be
     /// trusted too. A change applies to images loaded afterwards.
     /// </remarks>
     public ISet<string> TrustedSvgHosts { get; } = new HashSet<string>(SvgTrust.DefaultHosts, StringComparer.OrdinalIgnoreCase);

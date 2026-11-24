@@ -19,7 +19,7 @@ Blazor front end show the same text the same way.
   fetches `http` and `https` images and reads `file` ones itself, at most 10 MB each, and remembers them, so a reply that
   is still arriving does not fetch them again; set `ImageLoader` to load them another way, for example with
   authentication or through a proxy. SVG images are drawn with Svg.Skia, which this package depends on, only from the
-  badge hosts in `TrustedSvgHosts` (by default the ones VS Code accepts SVG badges from, such as `img.shields.io`) and
+  badge hosts in `TrustedSvgHosts` (by default a few badge services, such as `img.shields.io` and `badgen.net`) and
   GitHub's workflow badges, without fetching anything they refer to; any other SVG shows its alternative text, because
   a hostile SVG can exhaust a renderer's processor time and memory. The Blazor viewer shows every allowed SVG, since
   the browser draws it in its own sandbox.

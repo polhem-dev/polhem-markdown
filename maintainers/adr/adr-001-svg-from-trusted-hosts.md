@@ -58,14 +58,29 @@ An SVG image is drawn when its address is `https` and its host is in `MarkdownVi
 GitHub workflow badge (`https://github.com/{owner}/{repository}/(actions/)workflows/{file}/badge.svg`). Any other SVG
 shows its alternative text, as an image that fails to load does. Raster images are not affected.
 
-The default list is VS Code's `TrustedSVGSources` as it stood on 2026-11-24: `img.shields.io`, `badgen.net`,
-`codecov.io`, `coveralls.io`, `dev.azure.com`, `gitlab.com` and the other badge services in it. Those services send SVG
-built from their own templates, with only text filled in. A host adds or removes entries; the remarks of
-`TrustedSvgHosts` say to add only hosts whose SVG is trusted as much as code.
+The default list is taken from VS Code's `TrustedSVGSources`, but not copied whole: VS Code can trust those hosts
+because a browser draws what they send, and we cannot. A host is in the default only if, checked on 2026-11-24:
 
-- The list is the one an established tool already uses for the same reason, which keeps the choice from being ours
-  alone and makes it easy to compare when that list changes.
-- Badges, which are most SVG in a README, keep working.
+- it answers with SVG it generates itself;
+- the same host serves no file a user uploaded, such as a repository's raw files or a build's artifacts;
+- it answers directly, not through a redirect, since a redirect to another host is not trusted (decision 2).
+
+That leaves `img.shields.io`, `badgen.net`, `flat.badgen.net`, `codecov.io`, `vsmarketplacebadges.dev`,
+`goreportcard.com`, `circleci.com` and `snyk.io`, with GitHub's workflow badges. Left out, among others:
+
+| Host | Why |
+|---|---|
+| `gitlab.com`, `dev.azure.com` | Serve any repository's raw files: anyone can publish a hostile SVG there. |
+| `ci.appveyor.com` | Serves build artifacts from the same host. |
+| `docs.rs`, `marketplace.visualstudio.com` | Serve files from published packages; `docs.rs` badges also redirect. |
+| `coveralls.io`, `badge.fury.io`, `codeclimate.com` | Badges redirect to another host (S3, CloudFront, qlty.sh), so they would never show. |
+| The rest of VS Code's list | Not checked against the criteria; a host can add them. |
+
+A host adds or removes entries; the remarks of `TrustedSvgHosts` give the criteria above.
+
+- The candidates come from an established tool that trusts them for the same purpose, and the criteria say why each
+  one is in or out, so the list can be checked again.
+- The badges most READMEs use (shields.io, badgen, Codecov, GitHub Actions) keep working.
 
 ### 2. A redirect does not carry trust
 
@@ -79,7 +94,9 @@ answers for where its loader fetches.
 The list is the boundary; these limit the damage if a trusted service is compromised or the list is extended carelessly:
 
 - DTD processing is prohibited and external resources are disabled per document, so an SVG reaches nothing outside
-  itself.
+  itself. This is also what makes the badge services safe to trust: shields.io (`?logo=`) and badgen (`?icon=`) embed
+  an image the requester chooses, as a `data:` URI in an `<image>`, and with external resources disabled Svg.Skia
+  draws a grey placeholder for it without parsing it.
 - A pre-scan refuses SVG past 64 levels of nesting, 2000 elements or 64 `use` elements, or with a `use` of an element
   that holds a `use`.
 - Filters are not drawn, and the bitmap is at most 2048 pixels a side.
@@ -101,8 +118,10 @@ The difference is accepted because the browser is a sandbox the Avalonia viewer 
   Avalonia until the host trusts that host. The Blazor viewer shows it.
 - `TrustedSvgHosts` is public API. Removing it later, for example once SVG can be drawn safely, is a breaking change;
   emptying its default is not.
-- The default list is a copy. When VS Code's list changes, ours does not follow by itself; the date above says which
-  version it is.
+- The default list is a selection checked on one day. A service can change what it serves, and VS Code's list can
+  change; neither reaches ours by itself.
+- Drawing a trusted SVG has no time limit: .NET cannot stop a thread, so a slow SVG from a trusted host holds one of the
+  viewer's four load slots until Svg.Skia finishes. The criteria are what keep such a file off the trusted hosts.
 - Svg.Skia remains a dependency of the Avalonia viewer, for the trusted SVG.
 - Revisit when a released Svg.Skia on SkiaSharp 3 carries the recursion limits, or when Avalonia moves to SkiaSharp 4:
   the large-stack thread may then be dropped, but not the list, since no renderer bounds time or memory.
