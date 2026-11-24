@@ -135,7 +135,7 @@ public partial class MarkdownViewer : Control
         set => SetValue(OptionsProperty, value);
     }
 
-    /// <summary>Gets or sets the brush of link text.</summary>
+    /// <summary>Gets or sets the brush of link text, which also fills a checked task box.</summary>
     public IBrush LinkForeground
     {
         get => GetValue(LinkForegroundProperty);
@@ -149,7 +149,10 @@ public partial class MarkdownViewer : Control
         set => SetValue(CodeBackgroundProperty, value);
     }
 
-    /// <summary>Gets or sets the brush of horizontal rules, table borders and the bar beside a quote.</summary>
+    /// <summary>
+    /// Gets or sets the brush of horizontal rules, table borders, the bar beside a quote and the border of an unchecked
+    /// task box.
+    /// </summary>
     public IBrush RuleBrush
     {
         get => GetValue(RuleBrushProperty);

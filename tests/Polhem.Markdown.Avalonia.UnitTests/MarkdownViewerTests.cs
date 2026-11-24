@@ -3,6 +3,7 @@ using Avalonia.Controls.Documents;
 using Avalonia.Input.Platform;
 using Avalonia.Layout;
 using Avalonia.Media;
+using Avalonia.VisualTree;
 using Polhem.Markdown.Tests.Shared;
 using static Polhem.Markdown.Avalonia.UnitTests.ViewerHost;
 
@@ -233,6 +234,8 @@ public class MarkdownViewerTests(HeadlessSession session)
         var boxes = Descendants<CheckBox>(list).ToList();
         Assert.Equal([true, false], boxes.Select(box => box.IsChecked));
         Assert.All(boxes, box => Assert.False(box.IsEnabled));
+        Assert.Single(boxes[0].GetVisualDescendants().OfType<global::Avalonia.Controls.Shapes.Path>());
+        Assert.Empty(boxes[1].GetVisualDescendants().OfType<global::Avalonia.Controls.Shapes.Path>());
         Assert.Equal(["•"], Descendants<TextBlock>(list).Where(text => text is not SelectableTextBlock).Select(text => text.Text));
         Assert.Equal(["done", "open", "plain"], Descendants<SelectableTextBlock>(list).Select(text => text.Inlines!.Text));
     });

@@ -57,9 +57,9 @@ Link the stylesheet in the host page, then use the component:
 
 | Variable | Sets | Default |
 |----------|------|---------|
-| `--pmd-link` | Link color | `#3b82f6` |
+| `--pmd-link` | Link color, and the fill of a checked task box | `#3b82f6` |
 | `--pmd-code-bg` | Background of inline code, keys (`<kbd>`), code blocks and table headers | `rgba(128, 128, 128, 0.12)` |
-| `--pmd-rule` | Rules, table borders, the bar beside a quote and the border of a key | `rgba(128, 128, 128, 0.35)` |
+| `--pmd-rule` | Rules, table borders, the bar beside a quote, and the border of a key and of an unchecked task box | `rgba(128, 128, 128, 0.35)` |
 | `--pmd-code-font` | Font of inline code, keys and code blocks | `"Cascadia Mono", Consolas, Menlo, ui-monospace, monospace` |
 | `--pmd-math-font` | Font of math; delimiters and large operators grow only in a font with math tables | `"STIX Two Math", "Cambria Math", "Latin Modern Math", math` |
 | `--pmd-alert-note` | Bar, icon and title of a `> [!NOTE]` alert | `#3b82f6` |

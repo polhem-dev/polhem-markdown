@@ -1,6 +1,7 @@
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Documents;
+using Avalonia.Controls.Templates;
 using Avalonia.Layout;
 using Avalonia.Media;
 using Polhem.Markdown.Avalonia.Formulas;
@@ -159,17 +160,47 @@ internal sealed partial class MarkdownRenderer
         return grid;
     }
 
-    /// <summary>The check box of a task list item, which shows the state written in the text and cannot be changed.</summary>
-    private static CheckBox TaskCheckBox(bool isChecked) => new()
+    /// <summary>
+    /// The check box of a task list item, which shows the state written in the text and cannot be changed. It is drawn
+    /// with the viewer's brushes instead of the theme's check box, so it looks the same as in the Blazor viewer.
+    /// </summary>
+    private CheckBox TaskCheckBox(bool isChecked) => new()
     {
         IsChecked = isChecked,
         IsEnabled = false,
+        Width = 14,
+        Height = 14,
         MinWidth = 0,
         MinHeight = 0,
-        Padding = new Thickness(0),
-        Margin = new Thickness(0, 0, 6, 0),
+        Margin = new Thickness(0, 3, 6, 0),
         VerticalAlignment = VerticalAlignment.Top,
+        Template = new FuncControlTemplate<CheckBox>((_, _) => TaskBox(isChecked)),
     };
+
+    private Panel TaskBox(bool isChecked)
+    {
+        var box = new Border { CornerRadius = new CornerRadius(3), BorderThickness = new Thickness(1) };
+        var panel = new Panel { Children = { box } };
+        if (isChecked)
+        {
+            var fill = _viewer.GetObservable(MarkdownViewer.LinkForegroundProperty);
+            box.Bind(Border.BorderBrushProperty, fill);
+            box.Bind(Border.BackgroundProperty, fill);
+            panel.Children.Add(new global::Avalonia.Controls.Shapes.Path
+            {
+                Data = Geometry.Parse(TaskGlyphs.CheckPath),
+                Stroke = Brushes.White,
+                StrokeThickness = 1.75,
+                StrokeLineCap = PenLineCap.Round,
+                StrokeJoin = PenLineJoin.Round,
+            });
+        }
+        else
+        {
+            box.Bind(Border.BorderBrushProperty, _viewer.GetObservable(MarkdownViewer.RuleBrushProperty));
+        }
+        return panel;
+    }
 
     private Border Quote(QuoteNode quote, int depth)
     {
@@ -274,7 +305,7 @@ internal sealed partial class MarkdownRenderer
     }
 
     /// <summary>The marker before a list item: a check box for a task, otherwise its number or a bullet.</summary>
-    private static Control Marker(ListNode list, ListItemNode item, int index, int depth)
+    private Control Marker(ListNode list, ListItemNode item, int index, int depth)
     {
         if (item.IsChecked is { } isChecked)
         {
