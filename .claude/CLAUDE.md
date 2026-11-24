@@ -41,6 +41,8 @@ reasons kept are ADRs under `maintainers/adr/` (English only).
 ```bash
 dotnet build Polhem.Markdown.slnx --configuration Release
 dotnet test Polhem.Markdown.slnx --configuration Release --no-build
+# The Blazor editor's script module, with Node's own test runner
+node --test tests/js/*.test.mjs
 ./check-md-links.sh
 # Native AOT: what the `aot` job of build-ci.yml runs
 dotnet publish tests/Polhem.Markdown.AotSmoke/Polhem.Markdown.AotSmoke.csproj --configuration Release --output aot-smoke

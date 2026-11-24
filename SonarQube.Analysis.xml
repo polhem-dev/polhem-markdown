@@ -4,8 +4,9 @@
   /s:"$GITHUB_WORKSPACE/SonarQube.Analysis.xml".
 
   The command line keeps the settings that are not about the files of this repository: the project key (/k:), the
-  organization (/o:), the token (/d:sonar.token, from the SONAR_TOKEN secret) and the host URL. Quality profiles and the
-  quality gate are set in the SonarCloud UI.
+  organization (/o:), the token (/d:sonar.token, from the SONAR_TOKEN secret) and the host URL. It also gives the path of
+  the scripts' LCOV coverage report, which must be absolute and so is built from $GITHUB_WORKSPACE. Quality profiles and
+  the quality gate are set in the SonarCloud UI.
 -->
 <SonarQubeAnalysisProperties xmlns="http://www.sonarsource.com/msbuild/integration/2015/1">
   <!-- The Visual Studio XML reports that "dotnet test -collect "Code Coverage;Format=xml"" writes. -->

@@ -45,6 +45,17 @@ jobs:
         if: steps.changes.outputs.build == 'true'
         run: dotnet test Polhem.Markdown.slnx --configuration Release --no-build
 
+      # The script module of the Blazor editor, tested with Node's own test runner; no npm package is involved.
+      - name: Setup Node.js
+        if: steps.changes.outputs.build == 'true'
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1  # v7.1.0
+        with:
+          node-version: 24
+
+      - name: Test the scripts
+        if: steps.changes.outputs.build == 'true'
+        run: node --test tests/js/*.test.mjs
+
   # Native AOT: publishes the smoke test, which parses a text with every kind of node the model has, with Native AOT and
   # runs it. Every AOT warning is an error, so a change that breaks AOT compatibility fails here even when the analyzers
   # of a normal build do not see it.
@@ -147,6 +158,7 @@ jobs:
           /d:sonar.token="$SONAR_TOKEN"
           /d:sonar.host.url="https://sonarcloud.io"
           /d:sonar.qualitygate.wait=true
+          /d:sonar.javascript.lcov.reportPaths="$GITHUB_WORKSPACE/TestResults/js/lcov.info"
           /s:"$GITHUB_WORKSPACE/SonarQube.Analysis.xml"
 
       - name: Build
@@ -157,6 +169,26 @@ jobs:
         if: steps.token.outputs.enabled == 'true'
         # The scaling tests compare run times, which the coverage collector distorts; the build job runs them.
         run: dotnet test Polhem.Markdown.slnx --configuration Release --no-build --collect "Code Coverage;Format=xml" --results-directory TestResults/sonar --filter "Category!=Scaling"
+
+      - name: Setup Node.js
+        if: steps.token.outputs.enabled == 'true'
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1  # v7.1.0
+        with:
+          node-version: 24
+
+      # The coverage of the script modules under src/, as an LCOV report that "SonarScanner begin" points to. Node does
+      # not create the folder of a report, so the step does. The scanner analyzes each project from its own folder, so
+      # both the report's path (given to "SonarScanner begin") and the paths of the files in it must be absolute.
+      - name: Test the scripts with coverage
+        if: steps.token.outputs.enabled == 'true'
+        run: |
+          mkdir -p TestResults/js
+          node --test --experimental-test-coverage --test-coverage-include='src/**' \
+            --test-reporter=spec --test-reporter-destination=stdout \
+            --test-reporter=lcov --test-reporter-destination=TestResults/js/lcov.info \
+            tests/js/*.test.mjs
+          sed -i "s|^SF:|SF:$GITHUB_WORKSPACE/|" TestResults/js/lcov.info
+          grep '^SF:' TestResults/js/lcov.info
 
       - name: SonarScanner end
         if: steps.token.outputs.enabled == 'true'
