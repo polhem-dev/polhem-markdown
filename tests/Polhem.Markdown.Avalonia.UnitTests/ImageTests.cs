@@ -24,9 +24,19 @@ public class ImageTests(HeadlessSession session)
         return data.ToArray();
     }
 
+    /// <summary>
+    /// A loader that serves <paramref name="bytes"/> and records each call. The viewer loads several images at once, so
+    /// the calls are recorded under a lock.
+    /// </summary>
     private static Func<Uri, CancellationToken, Task<Stream?>> Serve(byte[] bytes, List<Uri>? calls = null) => (source, _) =>
     {
-        calls?.Add(source);
+        if (calls is not null)
+        {
+            lock (calls)
+            {
+                calls.Add(source);
+            }
+        }
         return Task.FromResult<Stream?>(new MemoryStream(bytes));
     };
 
