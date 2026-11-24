@@ -273,13 +273,11 @@ public partial class MarkdownViewer : Control
     {
         base.OnPropertyChanged(change);
 
-        if (change.Property == MarkdownProperty)
+        // NOTE: a change of theme rebuilds only the blocks with a picture whose source depends on it, since the block key
+        // holds the source shown.
+        if (change.Property == MarkdownProperty
+            || (change.Property == ThemeVariantScope.ActualThemeVariantProperty && _hasThemedImages))
         {
-            Update(fullRebuild: false);
-        }
-        else if (change.Property == ThemeVariantScope.ActualThemeVariantProperty && _hasThemedImages)
-        {
-            // Only blocks with a picture whose source depends on the theme are rebuilt: the key holds the source shown.
             Update(fullRebuild: false);
         }
         else if (change.Property == OptionsProperty || change.Property == TextElement.FontSizeProperty
@@ -386,6 +384,7 @@ public partial class MarkdownViewer : Control
         }
 
         ForgetImagesNotIn(document);
+        ForgetDetailsNotIn(document);
         _hasThemedImages = document.Blocks.SelectMany(NodeTree.SelfAndDescendants)
             .Any(node => node is ImageNode { DarkSource: not null } or ImageNode { LightSource: not null });
         RenderedNodeTypes = renderer.RenderedNodeTypes;

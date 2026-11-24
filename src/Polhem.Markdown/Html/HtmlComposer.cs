@@ -10,7 +10,8 @@ namespace Polhem.Markdown.Html;
 /// </summary>
 /// <remarks>
 /// Elements nest as in a browser, simplified: an end tag closes the nearest open element of its name and any opened
-/// inside it, an element left open closes where the run ends, and a block closes the inline elements around it. In a
+/// inside it, and a block closes the inline elements around it. An element left open closes where a run of blocks ends,
+/// but in a paragraph it shows as written, since prose names tags far more often than it leaves them open. In a
 /// block context, text from HTML has its white space collapsed, as a browser shows it, and inlines between blocks
 /// become paragraphs. Links and images go through the same policy as Markdown's.
 /// </remarks>
@@ -39,6 +40,10 @@ internal sealed class HtmlComposer
             if (token.Kind == HtmlTokenKind.EndTag && token.Name == Top.Name)
             {
                 Close(token.End);
+            }
+            else if (!_blocks)
+            {
+                Top.Children.Add(new TextNode(new SourceRange(token.Start, token.Length), token.Text));
             }
             return;
         }
@@ -71,10 +76,6 @@ internal sealed class HtmlComposer
                 Close(null);
             }
         }
-        else if (Top.IsDiscarded)
-        {
-            return;
-        }
         Top.Children.Add(node);
     }
 
@@ -85,10 +86,25 @@ internal sealed class HtmlComposer
         return ToBlocks(_open[0].Children);
     }
 
-    /// <summary>The inlines of a paragraph, once every token and node has been added.</summary>
+    /// <summary>
+    /// The inlines of a paragraph, once every token and node has been added. An element whose end tag never came shows
+    /// as written, start tag and content, as prose that names a tag (<c>wrap it in &lt;code&gt;</c>, <c>a &lt;script&gt;
+    /// tag</c>) means it.
+    /// </summary>
     public List<InlineNode> Inlines()
     {
-        CloseAll();
+        while (_open.Count > 1)
+        {
+            var frame = _open[^1];
+            _open.RemoveAt(_open.Count - 1);
+            if (!frame.IsDiscarded)
+            {
+                _builder.LeaveHtml();
+            }
+            var tag = frame.Tag!;
+            Top.Children.Add(new TextNode(new SourceRange(tag.Start, tag.Length), tag.Text));
+            Top.Children.AddRange(frame.Children);
+        }
         return [.. _open[0].Children.OfType<InlineNode>()];
     }
 
@@ -130,10 +146,14 @@ internal sealed class HtmlComposer
 
     private void Push(HtmlToken tag)
     {
-        // An element past the nesting limit is dropped, and its content kept, like an element that is not allowed.
+        // An element past the nesting limit shows as written, and its content after it.
         if (_builder.TryEnterHtml())
         {
             _open.Add(new HtmlFrame(tag));
+        }
+        else
+        {
+            Top.Children.Add(new TextNode(new SourceRange(tag.Start, tag.Length), tag.Text));
         }
     }
 
@@ -212,33 +232,45 @@ internal sealed class HtmlComposer
                 AddLink(parent, range, tag.Attribute("href"), inlines);
                 break;
             case "p" or "div":
-                var blocks = ToBlocks(frame.Children);
-                if (blocks.Count > 0 && Alignment(tag.Attribute("align")) is { } alignment)
-                {
-                    parent.Children.Add(new AlignedBlockNode(range, alignment, blocks));
-                }
-                else
-                {
-                    parent.Children.AddRange(blocks);
-                }
+                AddDivision(parent, range, frame);
                 break;
             case "details":
                 var summary = frame.Summary ?? [new TextNode(new SourceRange(tag.Start, 0), "Details")];
                 parent.Children.Add(new DetailsNode(range, summary, ToBlocks(frame.Children), tag.Attribute("open") is not null));
                 break;
             case "summary":
-                if (parent.Name == "details" && parent.Summary is null)
-                {
-                    parent.Summary = Trim(inlines);
-                }
-                else
-                {
-                    parent.Children.AddRange(inlines);
-                }
+                AddSummary(parent, inlines);
                 break;
             default:
                 parent.Children.AddRange(frame.Children);
                 break;
+        }
+    }
+
+    /// <summary>The blocks of a paragraph or division, aligned when it says so.</summary>
+    private void AddDivision(HtmlFrame parent, SourceRange range, HtmlFrame frame)
+    {
+        var blocks = ToBlocks(frame.Children);
+        if (blocks.Count > 0 && Alignment(frame.Tag!.Attribute("align")) is { } alignment)
+        {
+            parent.Children.Add(new AlignedBlockNode(range, alignment, blocks));
+        }
+        else
+        {
+            parent.Children.AddRange(blocks);
+        }
+    }
+
+    /// <summary>The first summary of a details element becomes its summary; any other summary is text.</summary>
+    private static void AddSummary(HtmlFrame parent, List<InlineNode> inlines)
+    {
+        if (parent.Name == "details" && parent.Summary is null)
+        {
+            parent.Summary = Trim(inlines);
+        }
+        else
+        {
+            parent.Children.AddRange(inlines);
         }
     }
 

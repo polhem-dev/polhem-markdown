@@ -234,20 +234,30 @@ internal sealed class MarkdownRenderer
 
     /// <summary>
     /// A section the reader opens and closes. The summary does not take the pointer, so a click anywhere on it toggles
-    /// the section, as in a browser; a link in a summary therefore does not open.
+    /// the section, as in a browser; a link in a summary therefore does not open. The viewer remembers what the reader
+    /// did, so a section that is rebuilt while its text arrives stays as the reader left it.
     /// </summary>
     private Expander Details(DetailsNode details, int depth)
     {
         var summary = Text(details.Summary);
         summary.IsHitTestVisible = false;
-        return new Expander
+        var key = MarkdownViewer.DetailsKey(details);
+        var expander = new Expander
         {
             Header = summary,
             Content = Blocks(details.Blocks, depth, spacing: 8),
-            IsExpanded = details.IsOpen,
+            IsExpanded = _viewer.IsDetailsOpen(key, details.IsOpen),
             HorizontalAlignment = HorizontalAlignment.Stretch,
             HorizontalContentAlignment = HorizontalAlignment.Stretch,
         };
+        expander.PropertyChanged += (_, change) =>
+        {
+            if (change.Property == Expander.IsExpandedProperty)
+            {
+                _viewer.RememberDetails(key, expander.IsExpanded);
+            }
+        };
+        return expander;
     }
 
     /// <summary>The marker before a list item: a check box for a task, otherwise its number or a bullet.</summary>

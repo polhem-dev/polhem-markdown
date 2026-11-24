@@ -33,14 +33,28 @@ public class HtmlConversionTests
         Assert.Equal(EmphasisKind.Italic, Assert.IsType<EmphasisNode>(Assert.Single(sup.Inlines)).Kind);
     }
 
-    [Fact(DisplayName = "An element left open ends with its paragraph, and an end tag without a start is dropped")]
-    public void Build_UnbalancedTags_CloseAtParagraphEnd()
+    [Fact(DisplayName = "An element without an end tag in its paragraph shows as written, and an end tag without a start is dropped")]
+    public void Build_UnbalancedTags_ShowAsWritten()
     {
         var document = Parse("a <b>bold\n\nplain</b> text");
 
         var first = Assert.IsType<ParagraphNode>(document.Blocks[0]);
-        Assert.Equal(EmphasisKind.Bold, Assert.IsType<EmphasisNode>(first.Inlines[1]).Kind);
+        Assert.Equal("a <b>bold", Text(first.Inlines));
+        Assert.DoesNotContain(first.Inlines, inline => inline is EmphasisNode);
         Assert.Equal("plain text", Text(Assert.IsType<ParagraphNode>(document.Blocks[1]).Inlines));
+    }
+
+    [Theory(DisplayName = "Prose that names a tag keeps the rest of its paragraph as written")]
+    [InlineData("Set the page name with <title> and *style* it.", "Set the page name with <title> and style it.")]
+    [InlineData("Put it in a <script> tag and **call** it.", "Put it in a <script> tag and call it.")]
+    [InlineData("Wrap the name in <code> tags, then **bold** this.", "Wrap the name in <code> tags, then bold this.")]
+    [InlineData("The <a> element and the <b> element are **inline**.", "The <a> element and the <b> element are inline.")]
+    public void Build_ProseNamingTags_IsKept(string markdown, string text)
+    {
+        var paragraph = Single<ParagraphNode>(Parse(markdown));
+
+        Assert.Equal(text, Text(paragraph.Inlines));
+        Assert.Contains(paragraph.Inlines, inline => inline is EmphasisNode);
     }
 
     [Fact(DisplayName = "An HTML code element becomes inline code of its text")]
@@ -305,7 +319,7 @@ public class HtmlConversionTests
 
         var paragraph = Single<ParagraphNode>(Parse(markdown));
 
-        Assert.Equal("x", Text(paragraph.Inlines));
+        Assert.EndsWith("x", Text(paragraph.Inlines), StringComparison.Ordinal);
         Assert.InRange(Depth(paragraph), 1, 20);
     }
 
@@ -316,7 +330,9 @@ public class HtmlConversionTests
     [InlineData("<div>\n<b></i></b></div></div></p>")]
     public void Build_MalformedHtml_DoesNotFail(string markdown)
     {
-        _ = AllNodes(Parse(markdown)).ToList();
+        var nodes = AllNodes(Parse(markdown)).ToList();
+
+        Assert.All(nodes, node => Assert.InRange(node.Range.End, 0, markdown.Length));
     }
 
     private static int Depth(MarkdownNode node) => 1 + (node switch

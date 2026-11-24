@@ -2,8 +2,8 @@ namespace Polhem.Markdown.Html;
 
 /// <summary>
 /// A piece of HTML: text, or a tag. <see cref="Start"/> and <see cref="Length"/> locate it in the text that was
-/// tokenized. A tag's <see cref="Name"/> and attribute names are lower case, and its attribute values are decoded; a
-/// text token's <see cref="Text"/> is decoded.
+/// tokenized. A tag's <see cref="Name"/> and attribute names are lower case, its attribute values are decoded, and its
+/// <see cref="Text"/> is the tag as written; a text token's <see cref="Text"/> is decoded.
 /// </summary>
 internal sealed record HtmlToken(
     HtmlTokenKind Kind,
