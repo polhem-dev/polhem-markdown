@@ -5,7 +5,7 @@ namespace Polhem.Markdown.Avalonia;
 public partial class MarkdownViewer
 {
     /// <summary>The sections the reader opened or closed, by <see cref="DetailsKey"/>, while the text shows them.</summary>
-    private readonly Dictionary<string, bool> _detailsOpen = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, bool> _detailsOpen = [];
 
     /// <summary>
     /// Identifies a section across rebuilds: where it starts and its summary. A reply that is still arriving changes the

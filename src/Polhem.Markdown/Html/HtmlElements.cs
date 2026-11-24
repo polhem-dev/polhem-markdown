@@ -10,8 +10,8 @@ internal static class HtmlElements
     // NOTE: the elements of the HTML standard, with the obsolete ones README files still use. Prose about code writes
     // `List<string>` or `Task<T>` without backticks, which CommonMark reads as tags; such names are none of these, so the
     // text shows as written instead of losing the type argument.
-    private static readonly HashSet<string> s_elements = new(StringComparer.Ordinal)
-    {
+    private static readonly HashSet<string> s_elements =
+    [
         "a", "abbr", "acronym", "address", "area", "article", "aside", "audio", "b", "base", "bdi", "bdo", "big",
         "blockquote", "body", "br", "button", "canvas", "caption", "center", "cite", "code", "col", "colgroup", "data",
         "datalist", "dd", "del", "details", "dfn", "dialog", "dir", "div", "dl", "dt", "em", "embed", "fieldset",
@@ -22,7 +22,7 @@ internal static class HtmlElements
         "ruby", "s", "samp", "script", "search", "section", "select", "slot", "small", "source", "span", "strike",
         "strong", "style", "sub", "summary", "sup", "svg", "math", "table", "tbody", "td", "template", "textarea",
         "tfoot", "th", "thead", "time", "title", "tr", "track", "tt", "u", "ul", "var", "video", "wbr", "xmp",
-    };
+    ];
 
     /// <summary>Whether the name is an HTML element's; a tag with any other name is text that only looks like a tag.</summary>
     public static bool IsElement(string name) => s_elements.Contains(name);
