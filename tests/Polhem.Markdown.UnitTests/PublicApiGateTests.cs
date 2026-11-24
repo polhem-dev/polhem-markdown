@@ -3,20 +3,23 @@ using System.Reflection;
 namespace Polhem.Markdown.UnitTests;
 
 /// <summary>
-/// No public API of the packages refers to a Markdig type, so the parser can be replaced or forked without a breaking
-/// change. The model the viewers render is internal for the same reason.
+/// No public API of the packages refers to a type of the engines they are built on, Markdig for parsing and AvaloniaEdit
+/// for editing, so either can be upgraded, forked or replaced without a breaking change. The model the viewers render is
+/// internal for the same reason.
 /// </summary>
 public class PublicApiGateTests
 {
     private const BindingFlags Declared = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance
         | BindingFlags.Static | BindingFlags.DeclaredOnly;
 
-    [Theory(DisplayName = "No public type or member of a package refers to the Markdig namespace")]
+    private static readonly string[] s_engineNamespaces = ["Markdig", "AvaloniaEdit"];
+
+    [Theory(DisplayName = "No public type or member of a package refers to the Markdig or AvaloniaEdit namespace")]
     [MemberData(nameof(Packages.Names), MemberType = typeof(Packages))]
-    public void PublicSurface_EachPackage_HasNoMarkdigType(string package)
+    public void PublicSurface_EachPackage_HasNoEngineType(string package)
     {
         var offenders = Assembly.Load(package).GetExportedTypes()
-            .SelectMany(type => SurfaceOf(type).Where(entry => entry.Types.Any(IsMarkdig)).Select(entry => entry.Name))
+            .SelectMany(type => SurfaceOf(type).Where(entry => entry.Types.Any(IsEngineType)).Select(entry => entry.Name))
             .ToList();
 
         Assert.Empty(offenders);
@@ -51,16 +54,17 @@ public class PublicApiGateTests
         _ => [],
     };
 
-    private static bool IsMarkdig(Type type)
+    private static bool IsEngineType(Type type)
     {
         if (type.HasElementType)
         {
-            return IsMarkdig(type.GetElementType()!);
+            return IsEngineType(type.GetElementType()!);
         }
-        if (type.IsGenericType && !type.IsGenericTypeDefinition && type.GetGenericArguments().Any(IsMarkdig))
+        if (type.IsGenericType && !type.IsGenericTypeDefinition && type.GetGenericArguments().Any(IsEngineType))
         {
             return true;
         }
-        return type.Namespace is { } ns && (ns == "Markdig" || ns.StartsWith("Markdig.", StringComparison.Ordinal));
+        return type.Namespace is { } ns
+            && s_engineNamespaces.Any(engine => ns == engine || ns.StartsWith(engine + ".", StringComparison.Ordinal));
     }
 }
