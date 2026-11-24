@@ -211,7 +211,10 @@
   margin: 0;
 }
 
+/* NOTE: a form control does not inherit the font size, so without it the box's em offsets would differ from the check
+   mark's, and the mark would sit off center. */
 .pmd .pmd-task > input {
+  font-size: inherit;
   appearance: none;
   box-sizing: border-box;
   border: 1px solid var(--pmd-rule, rgba(128, 128, 128, 0.35));
