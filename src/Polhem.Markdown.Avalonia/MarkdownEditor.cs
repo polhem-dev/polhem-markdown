@@ -1,6 +1,7 @@
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Data;
+using Avalonia.Interactivity;
 using Avalonia.Media;
 using Avalonia.Threading;
 using AvaloniaEdit;
@@ -82,6 +83,7 @@ public partial class MarkdownEditor : Control
         _colorizer = new SyntaxColorizer(this);
         _editor.TextArea.TextView.LineTransformers.Add(_colorizer);
         _editor.Document.Changed += OnDocumentChanged;
+        _editor.TextArea.AddHandler(KeyDownEvent, OnTextAreaKeyDown, RoutingStrategies.Tunnel);
         _scanTimer = new DispatcherTimer(s_scanDelay, DispatcherPriority.Background, (_, _) =>
         {
             _scanTimer!.Stop();

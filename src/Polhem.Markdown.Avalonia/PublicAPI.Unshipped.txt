@@ -101,3 +101,4 @@ static readonly Polhem.Markdown.Avalonia.MarkdownEditor.SelectionBrushProperty -
 static readonly Polhem.Markdown.Avalonia.MarkdownEditor.ShowLineNumbersProperty -> Avalonia.StyledProperty<bool>!
 static readonly Polhem.Markdown.Avalonia.MarkdownEditor.UrlBrushProperty -> Avalonia.StyledProperty<Avalonia.Media.IBrush!>!
 static readonly Polhem.Markdown.Avalonia.MarkdownEditor.WordWrapProperty -> Avalonia.StyledProperty<bool>!
+Polhem.Markdown.Avalonia.MarkdownEditor.ApplyFormat(Polhem.Markdown.MarkdownFormat format) -> void
