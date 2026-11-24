@@ -142,7 +142,7 @@ public class ImageTests(HeadlessSession session)
               <script>alert(1)</script>
             </svg>
             """;
-        var (_, viewer) = Show("![build passing](https://img.example/badge.svg)", images: Serve(Encoding.UTF8.GetBytes(svg)));
+        var (_, viewer) = Show("![build passing](https://img.shields.io/badge/build-passing-green.svg)", images: Serve(Encoding.UTF8.GetBytes(svg)));
 
         var view = await LoadedView(viewer);
         await Task.Delay(500);
@@ -161,7 +161,7 @@ public class ImageTests(HeadlessSession session)
             <!DOCTYPE svg [<!ENTITY a "aaaaaaaaaa"><!ENTITY b "&a;&a;&a;&a;&a;&a;&a;&a;&a;&a;"><!ENTITY c "&b;&b;&b;&b;&b;&b;&b;&b;&b;&b;">]>
             <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10"><text>&c;</text></svg>
             """;
-        var (_, viewer) = Show("![laughs](https://img.example/x.svg)", images: Serve(Encoding.UTF8.GetBytes(Laughs)));
+        var (_, viewer) = Show("![laughs](https://img.shields.io/x.svg)", images: Serve(Encoding.UTF8.GetBytes(Laughs)));
 
         var view = await LoadedView(viewer);
 
@@ -253,7 +253,7 @@ public class ImageTests(HeadlessSession session)
         var svg = "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"10\" height=\"10\">"
             + string.Concat(Enumerable.Repeat("<g>", 5000)) + "<rect width=\"1\" height=\"1\"/>"
             + string.Concat(Enumerable.Repeat("</g>", 5000)) + "</svg>";
-        var (_, viewer) = Show("![deep](https://img.example/deep.svg)", images: Serve(Encoding.UTF8.GetBytes(svg)));
+        var (_, viewer) = Show("![deep](https://img.shields.io/deep.svg)", images: Serve(Encoding.UTF8.GetBytes(svg)));
 
         var view = await LoadedView(viewer);
 
@@ -269,7 +269,7 @@ public class ImageTests(HeadlessSession session)
             levels.Append(System.Globalization.CultureInfo.InvariantCulture, $"<g id=\"l{level}\"><use href=\"#l{level - 1}\"/><use href=\"#l{level - 1}\"/></g>");
         }
         var svg = $"<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"10\" height=\"10\"><defs>{levels}</defs><use href=\"#l20\"/></svg>";
-        var (_, viewer) = Show("![bomb](https://img.example/use.svg)", images: Serve(Encoding.UTF8.GetBytes(svg)));
+        var (_, viewer) = Show("![bomb](https://img.shields.io/use.svg)", images: Serve(Encoding.UTF8.GetBytes(svg)));
 
         var view = await LoadedView(viewer);
 
@@ -281,7 +281,7 @@ public class ImageTests(HeadlessSession session)
     {
         var uses = string.Concat(Enumerable.Range(0, 20).Select(index => $"<use href=\"#dot\" x=\"{index}\"/>"));
         var svg = $"<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"20\" height=\"2\"><defs><rect id=\"dot\" width=\"1\" height=\"1\"/></defs>{uses}</svg>";
-        var (_, viewer) = Show("![dots](https://img.example/dots.svg)", images: Serve(Encoding.UTF8.GetBytes(svg)));
+        var (_, viewer) = Show("![dots](https://img.shields.io/dots.svg)", images: Serve(Encoding.UTF8.GetBytes(svg)));
 
         var view = await LoadedView(viewer);
 
@@ -292,7 +292,7 @@ public class ImageTests(HeadlessSession session)
     public Task Render_ManyLargeImages_StayWithinBudget() => session.RunAsync(async () =>
     {
         var svg = Encoding.UTF8.GetBytes("<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"2048\" height=\"2048\"><rect width=\"9\" height=\"9\"/></svg>");
-        var markdown = string.Concat(Enumerable.Range(0, 40).Select(index => $"![{index}](https://img.example/{index}.svg) "));
+        var markdown = string.Concat(Enumerable.Range(0, 40).Select(index => $"![{index}](https://img.shields.io/{index}.svg) "));
         var (_, viewer) = Show(markdown, images: Serve(svg));
 
         await AllLoaded(viewer);
@@ -379,4 +379,90 @@ public class ImageTests(HeadlessSession session)
         {
         }
     }
+
+    private const string Badge = "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"90\" height=\"20\"><rect width=\"90\" height=\"20\" fill=\"#4c1\"/></svg>";
+
+    [Fact(DisplayName = "An SVG from a host that is not trusted keeps its alternative text, while a raster image from it shows")]
+    public Task Render_SvgFromUntrustedHost_KeepsAltText() => session.RunAsync(async () =>
+    {
+        var bytes = new Dictionary<string, byte[]>
+        {
+            ["https://img.example/badge.svg"] = Encoding.UTF8.GetBytes(Badge),
+            ["https://img.example/pen.png"] = Png(8, 8),
+        };
+        var (_, viewer) = Show("![svg](https://img.example/badge.svg) ![png](https://img.example/pen.png)",
+            images: (source, _) => Task.FromResult<Stream?>(new MemoryStream(bytes[source.AbsoluteUri])));
+
+        await AllLoaded(viewer);
+
+        var views = Descendants<ImageView>(viewer).ToDictionary(view => view.Source.AbsoluteUri);
+        Assert.Null(views["https://img.example/badge.svg"].LoadedImage);
+        Assert.NotNull(views["https://img.example/pen.png"].LoadedImage);
+    });
+
+    [Fact(DisplayName = "A host the application adds to the trusted hosts has its SVG drawn")]
+    public Task Render_SvgFromAddedHost_IsDrawn() => session.RunAsync(async () =>
+    {
+        var viewer = new MarkdownViewer { ImageLoader = Serve(Encoding.UTF8.GetBytes(Badge)) };
+        viewer.TrustedSvgHosts.Add("badges.internal.example");
+        viewer.Markdown = "![ok](https://badges.internal.example/ok.svg)";
+        var window = new Window { Content = viewer };
+        window.Show();
+        Dispatcher.UIThread.RunJobs();
+
+        var view = await LoadedView(viewer);
+
+        Assert.NotNull(view.LoadedImage);
+    });
+
+    [Theory(DisplayName = "Only https SVG from a trusted host, or a GitHub workflow badge, is trusted")]
+    [InlineData("https://img.shields.io/badge/a-b-green", true)]
+    [InlineData("https://IMG.SHIELDS.IO/badge/a-b-green", true)]
+    [InlineData("http://img.shields.io/badge/a-b-green", false)]
+    [InlineData("https://shields.io.evil.example/badge", false)]
+    [InlineData("https://evil.example/img.shields.io/badge", false)]
+    [InlineData("https://github.com/polhem-dev/polhem-markdown/actions/workflows/build-ci.yml/badge.svg", true)]
+    [InlineData("https://github.com/polhem-dev/polhem-markdown/workflows/CI/badge.svg", true)]
+    [InlineData("https://github.com/polhem-dev/polhem-markdown/raw/main/logo.svg", false)]
+    [InlineData("https://raw.githubusercontent.com/polhem-dev/polhem-markdown/main/badge.svg", false)]
+    public void IsTrusted_Source(string source, bool trusted)
+    {
+        var hosts = new HashSet<string>(SvgTrust.DefaultHosts, StringComparer.OrdinalIgnoreCase);
+
+        Assert.Equal(trusted, SvgTrust.IsTrusted(new Uri(source), hosts));
+    }
+
+    [Fact(DisplayName = "A chain of references deep enough to overflow a normal stack does not end the process")]
+    public Task Render_SvgReferenceChain_DoesNotCrash() => session.RunAsync(async () =>
+    {
+        var patterns = string.Concat(Enumerable.Range(0, 300).Select(index =>
+            $"<pattern id=\"p{index}\" width=\"1\" height=\"1\"><rect width=\"1\" height=\"1\" fill=\"url(#p{index + 1})\"/></pattern>"));
+        var svg = $"<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"10\" height=\"10\"><defs>{patterns}</defs><rect width=\"10\" height=\"10\" fill=\"url(#p0)\"/></svg>";
+        var (_, viewer) = Show("![chain](https://img.shields.io/chain.svg)", images: Serve(Encoding.UTF8.GetBytes(svg)));
+
+        // On a thread pool thread this chain overflowed the stack and ended the test process; the load finishing at all
+        // is the check. Whether Svg.Skia draws it or gives up does not matter.
+        var view = await LoadedView(viewer);
+
+        Assert.Same(view, Descendants<ImageView>(viewer).Single());
+    });
+
+    [Theory(DisplayName = "A use whose reference is padded with spaces counts as the reference it is")]
+    [InlineData(" #l{0}")]
+    [InlineData("#l{0} ")]
+    public Task Render_SvgUseWithPaddedReference_KeepsAltText(string reference) => session.RunAsync(async () =>
+    {
+        var levels = new StringBuilder("<g id=\"l0\"><rect width=\"1\" height=\"1\"/></g>");
+        for (var level = 1; level <= 20; level++)
+        {
+            var previous = string.Format(System.Globalization.CultureInfo.InvariantCulture, reference, level - 1);
+            levels.Append(System.Globalization.CultureInfo.InvariantCulture, $"<g id=\"l{level}\"><use href=\"{previous}\"/><use href=\"{previous}\"/></g>");
+        }
+        var svg = $"<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"10\" height=\"10\"><defs>{levels}</defs><use href=\"#l20\"/></svg>";
+        var (_, viewer) = Show("![bomb](https://img.shields.io/padded.svg)", images: Serve(Encoding.UTF8.GetBytes(svg)));
+
+        var view = await LoadedView(viewer);
+
+        Assert.Null(view.LoadedImage);
+    });
 }

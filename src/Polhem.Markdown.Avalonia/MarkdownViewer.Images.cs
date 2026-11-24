@@ -27,7 +27,8 @@ public partial class MarkdownViewer
     /// Set it to add authentication, caching or a proxy. It is called only for sources whose scheme is in
     /// <see cref="MarkdownOptions.AllowedImageSchemes"/>, on a background thread, once per source while the viewer
     /// remembers it; an image larger than 10 MB, one that cannot be decoded, and one past the viewer's budget for decoded
-    /// images show their alternative text. SVG images are drawn without fetching anything they refer to.
+    /// images show their alternative text. An SVG image is drawn only from a host in <see cref="TrustedSvgHosts"/>, and
+    /// without fetching anything it refers to.
     /// </remarks>
     public Func<Uri, CancellationToken, Task<Stream?>>? ImageLoader
     {
@@ -44,6 +45,20 @@ public partial class MarkdownViewer
         }
     }
 
+    /// <summary>
+    /// Gets the hosts whose <c>https</c> SVG images the viewer draws, compared without regard to case. The default is
+    /// the list of badge hosts VS Code accepts SVG badges from, such as <c>img.shields.io</c>, <c>badgen.net</c> and
+    /// <c>codecov.io</c>; GitHub's workflow badges are drawn too.
+    /// </summary>
+    /// <remarks>
+    /// An SVG from any other host shows its alternative text. Drawing an SVG means running a complex parser on what the
+    /// server sends, and a small hostile file can exhaust the processor and memory, which no SVG renderer for .NET
+    /// bounds; the badge hosts send SVG built from fixed templates. Add a host only when its SVG files are trusted as
+    /// much as code. With the viewer's own loader, the address an image finally came from, after any redirect, must be
+    /// trusted too. A change applies to images loaded afterwards.
+    /// </remarks>
+    public ISet<string> TrustedSvgHosts { get; } = new HashSet<string>(SvgTrust.DefaultHosts, StringComparer.OrdinalIgnoreCase);
+
     /// <summary>The bytes the decoded images take now, for tests.</summary>
     internal long ImageBytesInUse => _imageBudget.Used;
 
@@ -57,7 +72,8 @@ public partial class MarkdownViewer
         {
             return loading;
         }
-        var loader = _imageLoader ?? ImageSources.LoadAsync;
+        var loader = _imageLoader;
+        var trustedHosts = new HashSet<string>(TrustedSvgHosts, StringComparer.OrdinalIgnoreCase);
         loading = Task.Run(async () =>
         {
             // NOTE: loads wait for one another past a few at a time, so a reply with many image addresses costs no more
@@ -65,13 +81,28 @@ public partial class MarkdownViewer
             await _imageSlots.WaitAsync().ConfigureAwait(false);
             try
             {
-                await using var stream = await loader(source, CancellationToken.None).ConfigureAwait(false);
+                // NOTE: an SVG is drawn only when trusted (ADR-001). With the viewer's own loader the address it finally
+                // came from counts too, so a trusted host cannot redirect to an untrusted one; a host's loader answers for
+                // where it fetches.
+                Stream? stream;
+                var trusted = SvgTrust.IsTrusted(source, trustedHosts);
+                if (loader is null)
+                {
+                    var (data, final) = await ImageSources.FetchAsync(source, CancellationToken.None).ConfigureAwait(false);
+                    stream = data;
+                    trusted = trusted && SvgTrust.IsTrusted(final, trustedHosts);
+                }
+                else
+                {
+                    stream = await loader(source, CancellationToken.None).ConfigureAwait(false);
+                }
+                await using var owned = stream;
                 if (stream is null)
                 {
                     return null;
                 }
-                using var data = await ImageSources.ReadLimitedAsync(stream, CancellationToken.None).ConfigureAwait(false);
-                return data is null ? null : ImageDecoder.Decode(data, _imageBudget);
+                using var bytes = await ImageSources.ReadLimitedAsync(stream, CancellationToken.None).ConfigureAwait(false);
+                return bytes is null ? null : ImageDecoder.Decode(bytes, _imageBudget, svgTrusted: trusted);
             }
             finally
             {

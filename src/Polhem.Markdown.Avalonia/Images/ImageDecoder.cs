@@ -19,14 +19,14 @@ internal static class ImageDecoder
     public const long MaxPixels = 4096L * 4096;
 
     /// <summary>
-    /// The decoded image, or <see langword="null"/> when the bytes are not an image the viewer can show or
-    /// <paramref name="budget"/> cannot hold the bytes its pixels need.
+    /// The decoded image, or <see langword="null"/> when the bytes are not an image the viewer can show, are an SVG that
+    /// is not <paramref name="svgTrusted"/>, or <paramref name="budget"/> cannot hold the bytes its pixels need.
     /// </summary>
-    public static LoadedImage? Decode(MemoryStream data, ImageBudget budget)
+    public static LoadedImage? Decode(MemoryStream data, ImageBudget budget, bool svgTrusted)
     {
         if (SvgRasterizer.IsSvg(data.GetBuffer().AsSpan(0, (int)data.Length)))
         {
-            return RasterizeSvg(data, budget);
+            return svgTrusted ? RasterizeSvg(data, budget) : null;
         }
         return DecodeBitmap(data, budget);
     }
@@ -70,7 +70,29 @@ internal static class ImageDecoder
         }
     }
 
+    /// <summary>The stack of the thread an SVG is drawn on: far more than a thread pool thread has.</summary>
+    private const int SvgStackBytes = 64 * 1024 * 1024;
+
+    /// <summary>
+    /// Draws the SVG on a thread of its own with a large stack. Svg.Skia recurses through nested elements and the
+    /// references between them, and a stack overflow ends the process, which nothing can catch. Only SVG from trusted
+    /// hosts gets here (ADR-001); the large stack keeps a file from one of them that recurses too far from taking the
+    /// application down.
+    /// </summary>
     private static LoadedImage? RasterizeSvg(MemoryStream data, ImageBudget budget)
+    {
+        LoadedImage? result = null;
+        var thread = new Thread(() => result = RasterizeOrNull(data, budget), SvgStackBytes)
+        {
+            IsBackground = true,
+            Name = "Polhem.Markdown SVG",
+        };
+        thread.Start();
+        thread.Join();
+        return result;
+    }
+
+    private static LoadedImage? RasterizeOrNull(MemoryStream data, ImageBudget budget)
     {
         try
         {

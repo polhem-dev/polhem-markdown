@@ -109,50 +109,80 @@ internal static class SvgRasterizer
     private static bool IsWithinLimits(MemoryStream data)
     {
         data.Position = 0;
-        var elements = 0;
-        var uses = new List<string>();
-        var holdsUse = new HashSet<string>(StringComparer.Ordinal);
-        var open = new List<string?>();
+        var scan = new LimitScan();
         using var reader = XmlReader.Create(data, ReaderSettings());
         while (reader.Read())
         {
-            if (reader.NodeType != XmlNodeType.Element)
-            {
-                continue;
-            }
-            if (++elements > MaxElements || reader.Depth >= MaxDepth)
+            if (reader.NodeType == XmlNodeType.Element && !scan.Accept(reader))
             {
                 return false;
             }
-            while (open.Count > reader.Depth)
+        }
+        return scan.UsesAreFlat();
+    }
+
+    /// <summary>The state of <see cref="IsWithinLimits"/> as it reads one element after another.</summary>
+    private sealed class LimitScan
+    {
+        private readonly List<string> _useTargets = [];
+        private readonly HashSet<string> _holdsUse = new(StringComparer.Ordinal);
+        private readonly List<string?> _openIds = [];
+        private int _elements;
+
+        /// <summary>Takes in the element the reader is on; returns whether the limits still hold.</summary>
+        public bool Accept(XmlReader reader)
+        {
+            if (++_elements > MaxElements || reader.Depth >= MaxDepth)
             {
-                open.RemoveAt(open.Count - 1);
+                return false;
             }
-            if (reader.LocalName == "use")
+            _openIds.RemoveRange(reader.Depth, _openIds.Count - reader.Depth);
+            if (reader.LocalName == "use" && !AcceptUse(reader))
             {
-                if (uses.Count >= MaxUses)
-                {
-                    return false;
-                }
-                var target = reader.GetAttribute("href") ?? reader.GetAttribute("href", "http://www.w3.org/1999/xlink");
-                if (target is ['#', ..])
-                {
-                    uses.Add(target[1..]);
-                }
-                foreach (var ancestor in open)
-                {
-                    if (ancestor is not null)
-                    {
-                        holdsUse.Add(ancestor);
-                    }
-                }
+                return false;
             }
             if (!reader.IsEmptyElement)
             {
-                open.Add(reader.GetAttribute("id"));
+                _openIds.Add(reader.GetAttribute("id")?.Trim());
             }
+            return true;
         }
-        return !uses.Exists(holdsUse.Contains);
+
+        /// <summary>Whether no <c>use</c> refers to an element holding another <c>use</c>.</summary>
+        public bool UsesAreFlat() => !_useTargets.Exists(_holdsUse.Contains);
+
+        private bool AcceptUse(XmlReader reader)
+        {
+            if (_useTargets.Count >= MaxUses)
+            {
+                return false;
+            }
+            // `href` and `xlink:href` alike; Svg.Skia trims a reference before it resolves it, so the check does too.
+            if (Href(reader) is ['#', .. var id])
+            {
+                _useTargets.Add(id.Trim());
+            }
+            _holdsUse.UnionWith(_openIds.OfType<string>());
+            return true;
+        }
+
+        private static string? Href(XmlReader reader)
+        {
+            string? href = null;
+            if (reader.MoveToFirstAttribute())
+            {
+                do
+                {
+                    if (reader.LocalName == "href")
+                    {
+                        href = reader.Value.Trim();
+                    }
+                }
+                while (reader.MoveToNextAttribute());
+                reader.MoveToElement();
+            }
+            return href;
+        }
     }
 
     private static XmlReaderSettings ReaderSettings() => new()
