@@ -78,9 +78,7 @@ internal sealed partial class MarkdownRenderer
             case MathNode math:
                 // NOTE: like an image, an embedded formula takes one character of the text.
                 offset += EmbeddedControlLength;
-                var formula = new FormulaView(_viewer, math.Formula, display: false, _renderedFormulas);
-                owner.ReserveDepth(formula.Box.Descent);
-                return new InlineUIContainer(formula);
+                return new InlineUIContainer(new FormulaView(math.Formula, display: false, _renderedFormulas, owner));
 
             case FootnoteReferenceNode reference:
                 var number = reference.Number.ToString(System.Globalization.CultureInfo.InvariantCulture);

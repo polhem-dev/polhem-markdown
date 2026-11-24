@@ -10,6 +10,7 @@ using Markdig.Extensions.Yaml;
 using Markdig.Syntax;
 using Markdig.Syntax.Inlines;
 using Polhem.Markdown.Diagrams;
+using Polhem.Markdown.Formulas;
 using Polhem.Markdown.Highlighting;
 using Polhem.Markdown.Model;
 
@@ -34,21 +35,27 @@ namespace Polhem.Markdown;
 internal sealed partial class MarkdownModelBuilder
 {
     // NOTE: only the extensions whose nodes the viewers render are enabled. `UseAdvancedExtensions` would parse
-    // math, definition lists and others that no viewer draws. Markdig reads raw HTML into HTML blocks and inlines, which
+    // definition lists and others that no viewer draws. Inline math follows GitHub's rules (`GitHubMathExtension`). Markdig reads raw HTML into HTML blocks and inlines, which
     // this builder turns into nodes (see `HtmlComposer`); no HTML ever reaches a viewer as markup.
-    private static readonly MarkdownPipeline s_pipeline = new MarkdownPipelineBuilder()
-        .UsePipeTables()
-        .UseAutoLinks()
-        .UseCjkFriendlyEmphasis()
-        .UseEmphasisExtras(EmphasisExtraOptions.Strikethrough)
-        .UseTaskLists()
-        .UseAlertBlocks()
-        .UseEmojiAndSmiley(enableSmileys: false)
-        .UseYamlFrontMatter()
-        .UseFootnotes()
-        .UseMathematics()
-        .UsePreciseSourceLocation()
-        .Build();
+    private static readonly MarkdownPipeline s_pipeline = Pipeline();
+
+    private static MarkdownPipeline Pipeline()
+    {
+        var builder = new MarkdownPipelineBuilder()
+            .UsePipeTables()
+            .UseAutoLinks()
+            .UseCjkFriendlyEmphasis()
+            .UseEmphasisExtras(EmphasisExtraOptions.Strikethrough)
+            .UseTaskLists()
+            .UseAlertBlocks()
+            .UseEmojiAndSmiley(enableSmileys: false)
+            .UseYamlFrontMatter()
+            .UseFootnotes()
+            .UseMathematics()
+            .UsePreciseSourceLocation();
+        builder.Extensions.Add(new GitHubMathExtension());
+        return builder.Build();
+    }
 
     private readonly string _markdown;
     private readonly MarkdownOptions _options;

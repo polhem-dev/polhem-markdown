@@ -82,7 +82,7 @@ internal sealed partial class MarkdownRenderer
     {
         HorizontalScrollBarVisibility = global::Avalonia.Controls.Primitives.ScrollBarVisibility.Auto,
         VerticalScrollBarVisibility = global::Avalonia.Controls.Primitives.ScrollBarVisibility.Disabled,
-        Content = new FormulaView(_viewer, math.Formula, display: true, _renderedFormulas) { HorizontalAlignment = HorizontalAlignment.Center },
+        Content = new FormulaView(math.Formula, display: true, _renderedFormulas, line: null) { HorizontalAlignment = HorizontalAlignment.Center },
     };
 
     private MarkdownTextBlock Heading(HeadingNode heading)

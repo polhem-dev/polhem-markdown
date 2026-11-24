@@ -47,6 +47,34 @@ public class MathTests(HeadlessSession session)
         Assert.True(text.Padding.Bottom >= view.Box.Descent - text.FontSize * 0.22 - 0.01);
     });
 
+    [Fact(DisplayName = "A deep inline formula on one line of a paragraph spaces its lines so it covers none of them")]
+    public Task Render_DeepInlineFormula_SpacesLines() => session.RunAsync(() =>
+    {
+        var words = string.Join(" ", Enumerable.Repeat("word", 200));
+        var (_, viewer) = Show("M $\\sum_{i=1}^{n}$ " + words);
+
+        var text = Assert.IsType<MarkdownTextBlock>(Assert.Single(Blocks(viewer)));
+        var view = Descendants<FormulaView>(viewer).Single();
+        var lines = text.TextLayout.TextLines;
+        Assert.True(lines.Count > 2);
+        var formulaBottom = view.Bounds.Top + view.BaselineFromTop + view.Box.Descent;
+        Assert.True(formulaBottom <= lines[0].Height + text.LineSpacing + 0.5, $"{formulaBottom} > {lines[0].Height} + {text.LineSpacing}");
+    });
+
+    [Fact(DisplayName = "A formula takes the size of the text it is in, and follows a change of font")]
+    public Task Render_Formula_FollowsInheritedFont() => session.RunAsync(() =>
+    {
+        var (_, viewer) = Show("# Big $x^2$\n\nsmall $x^2$");
+
+        var views = Descendants<FormulaView>(viewer).ToList();
+        Assert.True(views[0].Box.Width > views[1].Box.Width);
+
+        var before = views[1].Box;
+        viewer.SetValue(global::Avalonia.Controls.Documents.TextElement.FontFamilyProperty, new global::Avalonia.Media.FontFamily("Courier New"));
+        global::Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+        Assert.NotSame(before, views[1].Box);
+    });
+
     [Fact(DisplayName = "A fraction sets its numerator above the bar and its denominator below")]
     public Task Layout_Fraction_StacksParts() => session.RunAsync(() =>
     {

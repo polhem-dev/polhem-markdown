@@ -170,6 +170,18 @@ internal sealed class LatexParser
                 }
                 return new FormulaSymbol(_source[start.._position], FormulaSymbolKind.Number);
             }
+            if (char.IsSurrogate(c))
+            {
+                // A character outside the Basic Multilingual Plane, such as 𝔽 or an emoji, is a pair of code units.
+                if (!char.IsSurrogatePair(_source, _position))
+                {
+                    throw Unsupported();
+                }
+                var pair = _source.Substring(_position, 2);
+                var letter = char.IsLetter(_source, _position);
+                _position += 2;
+                return new FormulaSymbol(pair, letter ? FormulaSymbolKind.Identifier : FormulaSymbolKind.Operator);
+            }
             _position++;
             if (char.IsLetter(c))
             {

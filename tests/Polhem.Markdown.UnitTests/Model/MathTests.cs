@@ -20,9 +20,31 @@ public class MathTests
     [InlineData("Costs $5 and $10 today.")]
     [InlineData("It is \\$x$ here.")]
     [InlineData("$x$5")]
+    [InlineData("I have $ 5 and you $ 6")]
+    [InlineData("costs 5 $ and 10 $ total")]
+    [InlineData("| Item | Price ($) | Tax ($) |\n|---|---|---|\n| pen | 2 | 1 |")]
+    [InlineData("| $x | y$ |\n|---|---|")]
     public void Build_DollarsInProse_StayText(string markdown)
     {
-        Assert.DoesNotContain(AllNodes(Parse(markdown)), node => node is MathNode or MathBlockNode);
+        var document = Parse(markdown);
+
+        Assert.DoesNotContain(AllNodes(document), node => node is MathNode or MathBlockNode);
+        Assert.Contains("$", string.Concat(AllNodes(document).OfType<TextNode>().Select(text => text.Text)), StringComparison.Ordinal);
+    }
+
+    [Fact(DisplayName = "A table keeps its cells when a cell holds dollar signs, and math within one cell still renders")]
+    public void Build_TableWithDollars_KeepsCells()
+    {
+        var table = Single<TableNode>(Parse("| Item | Price ($) | Tax ($) |\n|---|---|---|\n| $\\alpha$ | $x^2$ | 1 |"));
+
+        Assert.Equal(3, table.HeaderRows[0].Cells.Count);
+        Assert.Single(table.Rows[0].Cells[0].Inlines.OfType<MathNode>());
+    }
+
+    [Fact(DisplayName = "Outside a table, math may hold a vertical bar")]
+    public void Build_AbsoluteValue_IsMath()
+    {
+        Assert.Equal("|x|", Assert.Single(AllNodes(Parse("so $|x| < 1$ holds")).OfType<MathNode>()).Source[..3]);
     }
 
     [Fact(DisplayName = "Inline math becomes a formula in the line, with its source")]
@@ -147,6 +169,16 @@ public class MathTests
         Assert.Equal(("(", ")"), (fenced.Open, fenced.Close));
         Assert.Equal([2, 2], matrix.Rows.Select(row => row.Count));
         Assert.True(Assert.IsType<FormulaMatrix>(Only<FormulaFenced>(Formula("\\begin{cases} 1 & x > 0 \\\\ 0 & \\text{else} \\end{cases}")).Content).AlignLeft);
+    }
+
+    [Fact(DisplayName = "A character outside the Basic Multilingual Plane stays whole")]
+    public void Parse_SurrogatePair_StaysWhole()
+    {
+        var items = Assert.IsType<FormulaRow>(Formula("\U0001D53D + \U0001F600")).Items.Cast<FormulaSymbol>().ToList();
+
+        Assert.Equal(new FormulaSymbol("\U0001D53D", FormulaSymbolKind.Identifier), items[0]);
+        Assert.Equal(new FormulaSymbol("\U0001F600", FormulaSymbolKind.Operator), items[2]);
+        Assert.False(LatexParser.TryParse("x\uD835", out _));
     }
 
     [Fact(DisplayName = "Accents and spaces are kept")]

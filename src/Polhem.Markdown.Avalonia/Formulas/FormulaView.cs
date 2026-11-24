@@ -7,49 +7,70 @@ using Polhem.Markdown.Formulas;
 namespace Polhem.Markdown.Avalonia.Formulas;
 
 /// <summary>
-/// A formula laid out with the viewer's font and drawn in its text color. In a line of text its baseline sits on the
-/// line's baseline.
+/// A formula laid out with the font it inherits, so one in a heading takes the heading's size, and drawn in the text
+/// color. In a line of text its baseline sits on the line's baseline.
 /// </summary>
 internal sealed class FormulaView : Control
 {
-    private readonly FormulaBox _box;
-    private readonly double _padding;
-    private readonly double _height;
+    private readonly FormulaItem _formula;
+    private readonly bool _display;
+    private readonly ISet<Type> _laidOut;
+    private readonly MarkdownTextBlock? _line;
+    private FormulaBox? _box;
+    private double _padding;
 
-    public FormulaView(MarkdownViewer viewer, FormulaItem formula, bool display, ISet<Type> laidOut)
+    /// <param name="formula">The formula.</param>
+    /// <param name="display">Whether it is shown on its own rather than in a line.</param>
+    /// <param name="laidOut">Collects the formula part types laid out, for the coverage test.</param>
+    /// <param name="line">The text a formula in a line belongs to, which makes room for its depth.</param>
+    public FormulaView(FormulaItem formula, bool display, ISet<Type> laidOut, MarkdownTextBlock? line)
     {
-        var fontSize = viewer.GetValue(TextElement.FontSizeProperty);
-        _box = new FormulaLayout(viewer.GetValue(TextElement.FontFamilyProperty), fontSize, laidOut).Layout(formula, display);
-        _padding = fontSize * 0.05;
-
-        // NOTE: the text engine sets an embedded control's bottom on the line's baseline and makes the line taller
-        // above it only. In a line the view therefore ends at the formula's baseline, and what reaches below it, a
-        // subscript or a denominator, is drawn below the view, in the room the text keeps for its own descenders.
-        _height = display ? _box.Height + 2 * _padding : _padding + _box.Ascent;
+        _formula = formula;
+        _display = display;
+        _laidOut = laidOut;
+        _line = line;
     }
 
+    /// <summary>The laid-out formula, laid out when first needed.</summary>
+    internal FormulaBox Box => _box ??= LayOut();
+
     /// <summary>Where the formula's baseline lies below the view's top, for tests.</summary>
-    internal double BaselineFromTop => _padding + _box.Ascent;
+    internal double BaselineFromTop => _padding + Box.Ascent;
 
-    /// <summary>The laid-out formula, for tests.</summary>
-    internal FormulaBox Box => _box;
+    protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
+    {
+        base.OnPropertyChanged(change);
+        if (change.Property == TextElement.FontSizeProperty || change.Property == TextElement.FontFamilyProperty)
+        {
+            _box = null;
+            InvalidateMeasure();
+            InvalidateVisual();
+        }
+    }
 
-    protected override Size MeasureOverride(Size availableSize) => new(_box.Width + 2 * _padding, _height);
+    // NOTE: the text engine sets an embedded control's bottom on the line's baseline and makes the line taller above it
+    // only. In a line the view therefore ends at the formula's baseline, and what reaches below it, a subscript or a
+    // denominator, is drawn below the view, in room the text makes for it (see `MarkdownTextBlock.ReserveDepth`).
+    protected override Size MeasureOverride(Size availableSize)
+    {
+        var box = Box;
+        return new Size(box.Width + 2 * _padding, _display ? box.Height + 2 * _padding : _padding + box.Ascent);
+    }
 
     public override void Render(DrawingContext context)
     {
+        var box = Box;
         var brush = GetValue(TextElement.ForegroundProperty) ?? Brushes.Black;
-        var origin = new Vector(_padding, _padding + _box.Ascent);
-        foreach (var piece in _box.Pieces)
+        var origin = new Vector(_padding, _padding + box.Ascent);
+        foreach (var piece in box.Pieces)
         {
             switch (piece.MovedBy(origin.X, origin.Y))
             {
                 case FormulaTextPiece text:
                     text.Text.SetForegroundBrush(brush);
-                    var top = new Point(text.Origin.X, text.Origin.Y - text.Text.Baseline * text.ScaleY);
                     if (text.ScaleX == 1 && text.ScaleY == 1)
                     {
-                        context.DrawText(text.Text, top);
+                        context.DrawText(text.Text, new Point(text.Origin.X, text.Origin.Y - text.Text.Baseline));
                     }
                     else
                     {
@@ -72,5 +93,17 @@ internal sealed class FormulaView : Control
                     break;
             }
         }
+    }
+
+    private FormulaBox LayOut()
+    {
+        var fontSize = GetValue(TextElement.FontSizeProperty);
+        _padding = fontSize * 0.05;
+        var box = new FormulaLayout(GetValue(TextElement.FontFamilyProperty), fontSize, _laidOut).Layout(_formula, _display);
+        if (!_display)
+        {
+            _line?.ReserveDepth(box.Descent);
+        }
+        return box;
     }
 }
