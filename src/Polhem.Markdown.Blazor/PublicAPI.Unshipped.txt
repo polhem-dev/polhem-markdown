@@ -2,6 +2,7 @@
 Polhem.Markdown.Blazor.MarkdownEditor
 Polhem.Markdown.Blazor.MarkdownEditor.AdditionalAttributes.get -> System.Collections.Generic.IReadOnlyDictionary<string!, object!>?
 Polhem.Markdown.Blazor.MarkdownEditor.AdditionalAttributes.set -> void
+Polhem.Markdown.Blazor.MarkdownEditor.ApplyFormatAsync(Polhem.Markdown.MarkdownFormat format) -> System.Threading.Tasks.Task!
 Polhem.Markdown.Blazor.MarkdownEditor.Class.get -> string?
 Polhem.Markdown.Blazor.MarkdownEditor.Class.set -> void
 Polhem.Markdown.Blazor.MarkdownEditor.DisposeAsync() -> System.Threading.Tasks.ValueTask

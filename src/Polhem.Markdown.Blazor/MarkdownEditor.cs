@@ -130,6 +130,56 @@ public class MarkdownEditor : ComponentBase, IAsyncDisposable
     /// <returns>Whether there was an edit to redo.</returns>
     public async Task<bool> RedoAsync() => _module is not null && await _module.InvokeAsync<bool>("redo", _root);
 
+    /// <summary>
+    /// Applies <paramref name="format"/> to the selection, or removes it when the selection already has it, as the
+    /// shortcuts do.
+    /// </summary>
+    /// <remarks>
+    /// An inline format wraps the selection in its markers, or inserts a pair with the caret between them when nothing
+    /// is selected; a line format applies to every line the selection touches. The change is one step to undo. The
+    /// shortcuts are Ctrl (Command on a Mac) with B for bold, I for italic, K for a link and E for inline code.
+    /// </remarks>
+    /// <param name="format">The format to apply or remove.</param>
+    /// <returns>A task that completes when the request has reached the page; the edit follows from there.</returns>
+    public async Task ApplyFormatAsync(MarkdownFormat format)
+    {
+        if (_module is not null)
+        {
+            await _module.InvokeVoidAsync("command", _root, format.ToString());
+        }
+    }
+
+    /// <summary>
+    /// The edit of a command the module asks for, for the text as it was after edit <paramref name="version"/>:
+    /// <c>format</c> with a <see cref="MarkdownFormat"/> name as <paramref name="argument"/>, <c>continueList</c>,
+    /// <c>indent</c> or <c>outdent</c>. It is the start, length and text of the change and the selection after it, or
+    /// <see langword="null"/> when there is nothing to do or the text has changed since, in which case the module
+    /// drops the command.
+    /// </summary>
+    /// <remarks>
+    /// Under interactive server rendering the values come from the browser; the formatter keeps the selection within
+    /// the text, and an unknown command or format does nothing.
+    /// </remarks>
+    internal object?[]? Command(string command, int version, int start, int length, string? argument)
+    {
+        if (version != _version)
+        {
+            return null;
+        }
+        var edit = command switch
+        {
+            "format" when Enum.TryParse<MarkdownFormat>(argument, out var format) && Enum.IsDefined(format) =>
+                MarkdownFormatter.Apply(_text, start, length, format),
+            "continueList" => MarkdownFormatter.ContinueList(_text, start),
+            "indent" => MarkdownFormatter.IndentListItem(_text, start, length, outdent: false),
+            "outdent" => MarkdownFormatter.IndentListItem(_text, start, length, outdent: true),
+            _ => (MarkdownEdit?)null,
+        };
+        return edit is { } change
+            ? [change.Start, change.Length, change.Text, change.SelectionStart, change.SelectionLength]
+            : null;
+    }
+
     /// <inheritdoc/>
     protected override async Task OnParametersSetAsync()
     {

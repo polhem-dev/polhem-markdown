@@ -34,7 +34,7 @@ test("the layer shows the text line by line, and the editor is marked ready", ()
   assert.equal(layer.textContent, "# Title\n\nSome <b> & text\n");
   assert.deepEqual(lines(layer), ["# Title\n", "\n", "Some &lt;b&gt; &amp; text\n"]);
   assert.ok(root.classes.has("pmd-editor-ready"));
-  assert.equal(component.calls.length, 0);
+  assert.equal(component.edits.length, 0);
 });
 
 test("text typed before the module loaded is kept and sent as an edit", () => {
@@ -42,7 +42,7 @@ test("text typed before the module loaded is kept and sent as an edit", () => {
 
   editor.init(root, component, "abc", kinds);
 
-  assert.deepEqual(component.calls.map(call => call.args), [[1, 3, 0, "!", false]]);
+  assert.deepEqual(component.edits.map(call => call.args), [[1, 3, 0, "!", false]]);
   assert.equal(root.layer.textContent, "abc!\n");
 });
 
@@ -54,7 +54,7 @@ test("typing sends each edit and keeps the layer in step", () => {
   textarea.type("Hi");
 
   assert.equal(component.textFrom("Hello"), "Hi world");
-  assert.deepEqual(component.calls.map(call => call.args[0]), [1, 2]);
+  assert.deepEqual(component.edits.map(call => call.args[0]), [1, 2]);
   assert.equal(layer.textContent, "Hi world\n");
 });
 
@@ -64,7 +64,7 @@ test("an edit next to an emoji does not split its surrogate pair", () => {
   textarea.value = "a😁b";
   textarea.dispatch("input", { inputType: "insertText" });
 
-  assert.deepEqual(component.calls[0].args.slice(1, 4), [1, 2, "😁"]);
+  assert.deepEqual(component.edits[0].args.slice(1, 4), [1, 2, "😁"]);
 });
 
 test("a large edit goes to the component in parts", () => {
@@ -72,7 +72,7 @@ test("a large edit goes to the component in parts", () => {
 
   textarea.type("x".repeat(20_000), "insertFromPaste");
 
-  assert.deepEqual(component.calls.map(call => [call.args[1], call.args[3].length, call.args[4]]),
+  assert.deepEqual(component.edits.map(call => [call.args[1], call.args[3].length, call.args[4]]),
     [[0, 8000, true], [8000, 8000, true], [16000, 4000, false]]);
   assert.equal(component.textFrom(""), "x".repeat(20_000));
 });
@@ -238,7 +238,7 @@ test("what an input method composed is one step, sent when it ends", () => {
   textarea.type("ㄑ");
   textarea.setSelectionRange(1, 2);
   textarea.type("請");
-  assert.equal(component.calls.length, 0);
+  assert.equal(component.edits.length, 0);
   assert.equal(textarea.key("z", { ctrlKey: true }).defaultPrevented, false);
   textarea.dispatch("compositionend", { data: "請" });
 
@@ -259,7 +259,7 @@ test("a text the host sets replaces the text and the history", () => {
   assert.equal(textarea.value, "new\ntext");
   assert.equal(layer.textContent, "new\ntext\n");
   assert.equal(editor.undo(root), false);
-  assert.equal(component.calls.length, 1);
+  assert.equal(component.edits.length, 1);
 });
 
 test("scrolling and resizing the textarea move and size the layer", () => {
@@ -288,4 +288,177 @@ test("focus and dispose act on the editor, and calls after dispose do nothing", 
   editor.setText(root, "b");
   editor.applySpans(root, 0, patchBytes(0, 0, 0, []));
   assert.equal(textarea.value, "a");
+});
+
+// The edit the component's formatter would give, as the array the bridge returns: start, length, text, selection.
+const edit = (start, length, text, selectionStart, selectionLength) => [start, length, text, selectionStart, selectionLength];
+
+test("a format shortcut asks the component for the edit and applies it as one step", async () => {
+  const { root, textarea, component } = start("a word");
+  component.answer = (command, version, at, length, argument) =>
+    command === "format" && argument === "Bold" ? edit(at, length, "**word**", at + 2, 4) : null;
+  textarea.setSelectionRange(2, 6);
+
+  assert.ok(textarea.key("b", { ctrlKey: true }).defaultPrevented);
+  await component.release();
+
+  assert.deepEqual(component.commands, [["format", 0, 2, 4, "Bold"]]);
+  assert.equal(textarea.value, "a **word**");
+  assert.deepEqual([textarea.selectionStart, textarea.selectionEnd], [4, 8]);
+  assert.equal(component.textFrom("a word"), "a **word**");
+  editor.undo(root);
+  assert.equal(textarea.value, "a word");
+  assert.deepEqual([textarea.selectionStart, textarea.selectionEnd], [2, 6]);
+});
+
+test("each shortcut names its format, and the host's call does the same", async () => {
+  const { root, textarea, component } = start("x");
+
+  for (const key of ["i", "k", "e"]) {
+    textarea.key(key, { ctrlKey: true });
+    await component.release();
+  }
+  editor.command(root, "Heading2");
+  await component.release();
+
+  assert.deepEqual(component.commands.map(args => args[4]), ["Italic", "Link", "InlineCode", "Heading2"]);
+  assert.equal(textarea.key("b", { ctrlKey: true, shiftKey: true }).defaultPrevented, false);
+});
+
+test("Enter on a list item continues the list, and elsewhere types a line break as usual", async () => {
+  const { textarea, component } = start("- one\ntext");
+  component.answer = (command, version, at) => command === "continueList" ? edit(at, 0, "\n- ", at + 3, 0) : null;
+
+  textarea.setSelectionRange(5, 5);
+  assert.ok(textarea.key("Enter").defaultPrevented);
+  await component.release();
+  assert.equal(textarea.value, "- one\n- \ntext");
+
+  textarea.setSelectionRange(textarea.value.length, textarea.value.length);
+  assert.equal(textarea.key("Enter").defaultPrevented, false);
+  assert.equal(textarea.key("Enter", { shiftKey: true }).defaultPrevented, false);
+});
+
+test("Enter on a list item the component has no edit for types a line break", async () => {
+  const { textarea, component } = start("1. one");
+  textarea.setSelectionRange(6, 6);
+
+  textarea.key("Enter");
+  await component.release();
+
+  assert.equal(textarea.value, "1. one\n");
+});
+
+test("Tab and Shift+Tab move a list item in and out, and Tab elsewhere moves the focus on", async () => {
+  const { textarea, component } = start("- a\n- b\nplain");
+  component.answer = (command, version, at) => command === "indent" ? edit(at - 3, 0, "  ", at + 2, 0) : edit(at - 5, 2, "", at - 2, 0);
+
+  textarea.setSelectionRange(7, 7);
+  textarea.key("Tab");
+  await component.release();
+  assert.equal(textarea.value, "- a\n  - b\nplain");
+  textarea.key("Tab", { shiftKey: true });
+  await component.release();
+  assert.equal(textarea.value, "- a\n- b\nplain");
+
+  assert.deepEqual(component.commands.map(args => args[0]), ["indent", "outdent"]);
+  textarea.setSelectionRange(textarea.value.length, textarea.value.length);
+  assert.equal(textarea.key("Tab").defaultPrevented, false);
+  textarea.setSelectionRange(2, 9);
+  assert.equal(textarea.key("Tab").defaultPrevented, false);
+});
+
+test("keys typed while a command waits are held back and come after its edit, in order", async () => {
+  const { root, textarea, component } = start("- one");
+  component.answer = (command, version, at) => command === "continueList" ? edit(at, 0, "\n- ", at + 3, 0) : null;
+  textarea.setSelectionRange(5, 5);
+
+  textarea.key("Enter");
+  for (const data of ["a", "b", "c"]) {
+    assert.ok(textarea.dispatch("beforeinput", { inputType: "insertText", data }).defaultPrevented);
+  }
+  textarea.dispatch("beforeinput", { inputType: "deleteContentBackward" });
+  textarea.dispatch("beforeinput", { inputType: "insertFromPaste", dataTransfer: { getData: () => "P" } });
+  textarea.key("Enter");
+  textarea.dispatch("beforeinput", { inputType: "insertText", data: "x" });
+  textarea.key("z", { ctrlKey: true });
+  await component.release();
+
+  assert.equal(textarea.value, "- one\n- abP\n- ");
+  assert.equal(component.textFrom("- one"), textarea.value);
+  editor.undo(root);
+  assert.equal(textarea.value, "- one\n- abP");
+});
+
+test("deletions and line breaks held back come after the command too", async () => {
+  const { textarea, component } = start("ab");
+  textarea.setSelectionRange(1, 1);
+
+  textarea.key("b", { ctrlKey: true });
+  textarea.dispatch("beforeinput", { inputType: "deleteContentBackward" });
+  textarea.dispatch("beforeinput", { inputType: "deleteContentForward" });
+  textarea.dispatch("beforeinput", { inputType: "insertLineBreak" });
+  await component.release();
+
+  assert.equal(textarea.value, "\n");
+});
+
+test("an answer for a text the host has replaced since is dropped", async () => {
+  const { root, textarea, component } = start("word");
+  component.answer = () => edit(0, 4, "**word**", 2, 4);
+  textarea.setSelectionRange(0, 4);
+
+  textarea.key("b", { ctrlKey: true });
+  textarea.dispatch("beforeinput", { inputType: "insertText", data: "x" });
+  editor.setText(root, "other");
+  await component.release();
+
+  assert.equal(textarea.value, "other");
+});
+
+test("a command whose call fails leaves the text as it was", async () => {
+  const { textarea, component } = start("- a");
+  textarea.setSelectionRange(3, 3);
+
+  textarea.key("Tab");
+  await component.release(true);
+
+  assert.equal(textarea.value, "- a");
+  textarea.type("!");
+  assert.equal(textarea.value, "- a!");
+});
+
+test("a read-only editor takes no command, and lets Enter and Tab be", () => {
+  const { root, textarea, component } = start("- a");
+  textarea.readOnly = true;
+  textarea.setSelectionRange(3, 3);
+
+  assert.equal(textarea.key("b", { ctrlKey: true }).defaultPrevented, false);
+  assert.equal(textarea.key("Enter").defaultPrevented, false);
+  editor.command(root, "Bold");
+
+  assert.equal(component.commands.length, 0);
+});
+
+test("keys and commands during an input method's composition are left to it", () => {
+  const { textarea, component } = start("- a");
+  textarea.setSelectionRange(3, 3);
+  textarea.dispatch("compositionstart");
+
+  assert.equal(textarea.key("Enter").defaultPrevented, false);
+  assert.equal(textarea.key("b", { ctrlKey: true, isComposing: true }).defaultPrevented, false);
+  assert.equal(component.commands.length, 0);
+});
+
+test("a command the host asks for while another waits comes after it", async () => {
+  const { root, textarea, component } = start("w");
+  component.answer = (command, version, at, length, argument) => edit(0, textarea.value.length, argument + ":" + textarea.value, 0, 0);
+  textarea.setSelectionRange(0, 1);
+
+  textarea.key("b", { ctrlKey: true });
+  editor.command(root, "Italic");
+  await component.release();
+
+  assert.deepEqual(component.commands.map(args => args[4]), ["Bold", "Italic"]);
+  assert.equal(textarea.value, "Italic:Bold:w");
 });
