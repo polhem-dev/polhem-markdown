@@ -3,7 +3,7 @@
   <PropertyGroup>
     <!-- The single source of the package version. Only the projects under src/ are packed, and the three packages are
          always released together under this one version, because the viewers depend on internals of Polhem.Markdown. -->
-    <Version>0.1.0</Version>
+    <Version>0.2.0</Version>
 
     <!-- Package metadata -->
     <Authors>Polhem contributors</Authors>

@@ -2,10 +2,26 @@
 
 **English** | [繁體中文](CHANGELOG.zh-TW.md)
 
-Notable changes to the Polhem.Markdown packages. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions follow
-[Semantic Versioning](https://semver.org/).
+Notable changes to the Polhem.Markdown packages, a few lines per version. From 0.2.0, each version links to its release
+notes under [`docs/en/changelogs/`](docs/en/changelogs/), which describe every change in full and, for each change in
+behaviour, who it affects and what to do. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
+and versions follow [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
+
+## [0.2.0] - 2026-11-24
+
+Details: [docs/en/changelogs/0.2.0.md](docs/en/changelogs/0.2.0.md)
+
+- Both viewers render Mermaid diagrams, highlighted code, images, math, footnotes, GitHub alerts, strikethrough, task
+  lists, emoji shortcodes and links to headings, and turn README-style raw HTML into nodes through an allowlist.
+- Relative links and images resolve against `MarkdownOptions.BaseUri`.
+- `Polhem.Markdown.Avalonia` adds `MarkdownEditor`, a Markdown source editor with formatting commands
+  (`Polhem.Markdown.MarkdownFormat`), and the viewer can be kept in step with it.
+- `MarkdownViewer.CjkFontFamily` keeps bold CJK text bold in the Avalonia viewer.
+- `Polhem.Markdown.Avalonia` depends on `Svg.Skia` and `Avalonia.AvaloniaEdit`.
+- Images load by default, and allowed raw HTML renders instead of showing as text.
+- Deeply nested inline syntax no longer overflows the stack and ends the application.
 
 ## [0.1.0] - 2026-11-21
 
@@ -21,5 +37,6 @@ Notable changes to the Polhem.Markdown packages. The format follows [Keep a Chan
 - `Polhem.Markdown.Blazor` adds `MarkdownViewer`, a component that renders a Markdown text as semantic HTML, with
   `OnLinkActivated` for links, code blocks with a copy button, and a stylesheet set through `--pmd-*` CSS variables.
 
-[Unreleased]: https://github.com/polhem-dev/polhem-markdown/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/polhem-dev/polhem-markdown/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/polhem-dev/polhem-markdown/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/polhem-dev/polhem-markdown/releases/tag/v0.1.0
