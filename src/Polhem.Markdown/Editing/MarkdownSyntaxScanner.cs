@@ -27,10 +27,20 @@ internal sealed class MarkdownSyntaxScanner
     private readonly string _markdown;
     private readonly SyntaxPainter _painter;
 
+    /// <summary>Where each line of the source starts, so finding a line costs a search rather than a scan.</summary>
+    private readonly List<int> _lineStarts = [0];
+
     private MarkdownSyntaxScanner(string markdown)
     {
         _markdown = markdown;
         _painter = new SyntaxPainter(markdown.Length);
+        for (var index = 0; index < markdown.Length; index++)
+        {
+            if (markdown[index] == '\n' || (markdown[index] == '\r' && (index + 1 == markdown.Length || markdown[index + 1] != '\n')))
+            {
+                _lineStarts.Add(index + 1);
+            }
+        }
     }
 
     /// <summary>The spans of <paramref name="markdown"/>, in order and not overlapping, leaving out plain text.</summary>
@@ -244,29 +254,32 @@ internal sealed class MarkdownSyntaxScanner
 
     /// <summary>
     /// The <c>&gt;</c> that starts each line of a quote. Markdig does not keep their positions, so each line of the quote
-    /// is read from the quote's column; a lazy continuation line has none.
+    /// is read at the quote's column, allowing the three spaces of indentation Markdown does; a lazy continuation line has
+    /// none.
     /// </summary>
+    /// <remarks>
+    /// NOTE: each quote looks only at its own lines. Quotes nest, so a scan to the end of the line from every level would
+    /// take time in proportion to the square of the nesting on one line.
+    /// </remarks>
     private void QuoteMarkers(QuoteBlock quote)
     {
         var range = Range(quote);
-        var lineStart = range.Start - quote.Column;
-        while (lineStart >= 0 && lineStart < range.End)
+        for (var line = LineOf(range.Start); line < _lineStarts.Count && _lineStarts[line] < range.End; line++)
         {
-            var marker = lineStart + quote.Column;
-            var lineEnd = LineEnd(lineStart);
-            for (var index = Math.Max(lineStart, range.Start - quote.Column); index < Math.Min(lineEnd, marker + 4); index++)
+            var marker = _lineStarts[line] + quote.Column;
+            var end = Math.Min(LineEndOf(line), marker + 4);
+            for (var index = marker; index < end; index++)
             {
-                if (index >= marker && _markdown[index] == '>')
+                if (_markdown[index] == '>')
                 {
                     _painter.Paint(new SourceRange(index, 1), MarkdownSyntaxKind.Marker);
                     break;
                 }
-                if (_markdown[index] is not (' ' or '>') && index >= marker)
+                if (_markdown[index] != ' ')
                 {
                     break;
                 }
             }
-            lineStart = NextLine(lineEnd);
         }
     }
 
@@ -460,19 +473,23 @@ internal sealed class MarkdownSyntaxScanner
         return range.Start > owner.Start && range.End <= owner.End ? range : new SourceRange(owner.Start, 0);
     }
 
-    private int LineEnd(int position)
+    /// <summary>The end of the line <paramref name="position"/> is on, before its line break.</summary>
+    private int LineEnd(int position) => LineEndOf(LineOf(position));
+
+    private int LineEndOf(int line)
     {
-        var end = _markdown.IndexOfAny(['\n', '\r'], Math.Min(position, _markdown.Length));
-        return end < 0 ? _markdown.Length : end;
+        var end = line + 1 < _lineStarts.Count ? _lineStarts[line + 1] : _markdown.Length;
+        while (end > _lineStarts[line] && _markdown[end - 1] is '\n' or '\r')
+        {
+            end--;
+        }
+        return end;
     }
 
-    private int NextLine(int lineEnd)
+    private int LineOf(int position)
     {
-        if (lineEnd >= _markdown.Length)
-        {
-            return -1;
-        }
-        return _markdown[lineEnd] == '\r' && lineEnd + 1 < _markdown.Length && _markdown[lineEnd + 1] == '\n' ? lineEnd + 2 : lineEnd + 1;
+        var line = _lineStarts.BinarySearch(position);
+        return line >= 0 ? line : ~line - 1;
     }
 
     private SourceRange Range(MarkdownObject node) => Range(node.Span);
