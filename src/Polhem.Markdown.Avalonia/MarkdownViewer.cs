@@ -265,6 +265,9 @@ public partial class MarkdownViewer : Control
     /// <summary>The diagram shape types the last full or partial rebuild drew, for the shape coverage test.</summary>
     internal IReadOnlySet<Type> RenderedShapeTypes { get; private set; } = new HashSet<Type>();
 
+    /// <summary>The formula part types the last update laid out, for the formula coverage test.</summary>
+    internal IReadOnlySet<Type> RenderedFormulaTypes { get; private set; } = new HashSet<Type>();
+
     /// <summary>The number of top-level blocks the last update built, as opposed to kept.</summary>
     internal int LastBuiltBlockCount { get; private set; }
 
@@ -389,6 +392,7 @@ public partial class MarkdownViewer : Control
             .Any(node => node is ImageNode { DarkSource: not null } or ImageNode { LightSource: not null });
         RenderedNodeTypes = renderer.RenderedNodeTypes;
         RenderedShapeTypes = renderer.RenderedShapeTypes;
+        RenderedFormulaTypes = renderer.RenderedFormulaTypes;
         LastBuiltBlockCount = built;
     }
 

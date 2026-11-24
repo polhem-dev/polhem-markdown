@@ -15,3 +15,4 @@ are recorded in polhem-dev/polhem#529 and in this repository's issues.
 | # | Decision | Status |
 |---|----------|--------|
 | [001](adr-001-svg-from-trusted-hosts.md) | The Avalonia viewer draws SVG images only from trusted hosts | ✅ Accepted |
+| [002](adr-002-math-one-structure-two-layouts.md) | Math is parsed once and laid out by each viewer | ✅ Accepted |

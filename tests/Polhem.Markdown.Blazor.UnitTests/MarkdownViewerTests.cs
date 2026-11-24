@@ -29,6 +29,14 @@ public class MarkdownViewerTests : BunitContext
         Assert.Equal(ModelNodeTypes.Shapes.OrderBy(type => type.Name), viewer.Instance.RenderedShapeTypes.OrderBy(type => type.Name));
     }
 
+    [Fact(DisplayName = "The viewer writes every formula part type, so formulas cannot drift apart between the front ends")]
+    public void Render_AllNodesSample_WritesEveryFormulaType()
+    {
+        var viewer = Show(ModelNodeTypes.AllNodesMarkdown());
+
+        Assert.Equal(ModelNodeTypes.Formulas.OrderBy(type => type.Name), viewer.Instance.RenderedFormulaTypes.OrderBy(type => type.Name));
+    }
+
     [Fact(DisplayName = "A diagram renders as inline SVG with its text as content, and no script")]
     public void Render_Diagram_IsInlineSvg()
     {

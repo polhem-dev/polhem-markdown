@@ -64,6 +64,9 @@ internal sealed partial class MarkdownRenderTree
             case DiagramNode diagram:
                 Diagram(diagram.Drawing);
                 break;
+            case MathBlockNode math:
+                MathBlock(math);
+                break;
             case QuoteNode quote:
                 _builder.OpenElement(0, "blockquote");
                 Blocks(1, quote.Blocks);
@@ -284,6 +287,9 @@ internal sealed partial class MarkdownRenderTree
                 break;
             case ImageNode image:
                 Image(image);
+                break;
+            case MathNode math:
+                Formula(math.Formula, math.Source, display: false);
                 break;
             case FootnoteReferenceNode reference:
                 FootnoteReference(reference);

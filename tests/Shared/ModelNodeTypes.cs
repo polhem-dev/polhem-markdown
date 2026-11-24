@@ -1,4 +1,5 @@
 using Polhem.Markdown.Diagrams;
+using Polhem.Markdown.Formulas;
 using Polhem.Markdown.Model;
 
 namespace Polhem.Markdown.Tests.Shared;
@@ -7,7 +8,7 @@ namespace Polhem.Markdown.Tests.Shared;
 /// The node types of the model, found by reflection, and a text that contains every one of them. Each viewer's node
 /// coverage test renders the text and compares the types it drew with <see cref="All"/>, so a node type added to the
 /// model fails the tests of every viewer that does not draw it. The diagram in the text likewise contains every
-/// <see cref="Shapes"/> type.
+/// <see cref="Shapes"/> type, and the math every <see cref="Formulas"/> type.
 /// </summary>
 internal static class ModelNodeTypes
 {
@@ -18,6 +19,11 @@ internal static class ModelNodeTypes
     /// <summary>The shape types a diagram drawing is made of.</summary>
     public static IReadOnlySet<Type> Shapes { get; } = typeof(DiagramShape).Assembly.GetTypes()
         .Where(type => type.IsSubclassOf(typeof(DiagramShape)) && !type.IsAbstract)
+        .ToHashSet();
+
+    /// <summary>The part types a formula is made of.</summary>
+    public static IReadOnlySet<Type> Formulas { get; } = typeof(IFormulaItem).Assembly.GetTypes()
+        .Where(type => typeof(IFormulaItem).IsAssignableFrom(type) && !type.IsInterface && !type.IsAbstract)
         .ToHashSet();
 
     /// <summary>The contents of AllNodes.md, which is copied next to each test assembly.</summary>

@@ -3,12 +3,14 @@ using Markdig;
 using Markdig.Extensions.Alerts;
 using Markdig.Extensions.EmphasisExtras;
 using Markdig.Extensions.Footnotes;
+using Markdig.Extensions.Mathematics;
 using Markdig.Extensions.Tables;
 using Markdig.Extensions.TaskLists;
 using Markdig.Extensions.Yaml;
 using Markdig.Syntax;
 using Markdig.Syntax.Inlines;
 using Polhem.Markdown.Diagrams;
+using Polhem.Markdown.Formulas;
 using Polhem.Markdown.Highlighting;
 using Polhem.Markdown.Model;
 
@@ -33,20 +35,27 @@ namespace Polhem.Markdown;
 internal sealed partial class MarkdownModelBuilder
 {
     // NOTE: only the extensions whose nodes the viewers render are enabled. `UseAdvancedExtensions` would parse
-    // math, definition lists and others that no viewer draws. Markdig reads raw HTML into HTML blocks and inlines, which
+    // definition lists and others that no viewer draws. Inline math follows GitHub's rules (`GitHubMathExtension`). Markdig reads raw HTML into HTML blocks and inlines, which
     // this builder turns into nodes (see `HtmlComposer`); no HTML ever reaches a viewer as markup.
-    private static readonly MarkdownPipeline s_pipeline = new MarkdownPipelineBuilder()
-        .UsePipeTables()
-        .UseAutoLinks()
-        .UseCjkFriendlyEmphasis()
-        .UseEmphasisExtras(EmphasisExtraOptions.Strikethrough)
-        .UseTaskLists()
-        .UseAlertBlocks()
-        .UseEmojiAndSmiley(enableSmileys: false)
-        .UseYamlFrontMatter()
-        .UseFootnotes()
-        .UsePreciseSourceLocation()
-        .Build();
+    private static readonly MarkdownPipeline s_pipeline = Pipeline();
+
+    private static MarkdownPipeline Pipeline()
+    {
+        var builder = new MarkdownPipelineBuilder()
+            .UsePipeTables()
+            .UseAutoLinks()
+            .UseCjkFriendlyEmphasis()
+            .UseEmphasisExtras(EmphasisExtraOptions.Strikethrough)
+            .UseTaskLists()
+            .UseAlertBlocks()
+            .UseEmojiAndSmiley(enableSmileys: false)
+            .UseYamlFrontMatter()
+            .UseFootnotes()
+            .UseMathematics()
+            .UsePreciseSourceLocation();
+        builder.Extensions.Add(new GitHubMathExtension());
+        return builder.Build();
+    }
 
     private readonly string _markdown;
     private readonly MarkdownOptions _options;
@@ -109,6 +118,9 @@ internal sealed partial class MarkdownModelBuilder
 
     private BlockNode? Block(Block block) => block switch
     {
+        MathBlock math => FormulaBlockOrCode(Range(math), math.Lines.ToString()),
+        ParagraphBlock { Inline: { FirstChild: MathInline { DelimiterCount: 2 } display } inline } paragraph
+            when ReferenceEquals(inline.LastChild, display) => FormulaBlockOrCode(Range(paragraph), display.Content.ToString()),
         HeadingBlock heading => new HeadingNode(Range(heading), heading.Level, Inlines(heading.Inline), _headingIds.GetValueOrDefault(heading, "")),
         ParagraphBlock paragraph => new ParagraphNode(Range(paragraph), Inlines(paragraph.Inline)),
         // NOTE: front matter is metadata for tools, not part of the document, so it is hidden. GitHub shows it as a
@@ -189,6 +201,10 @@ internal sealed partial class MarkdownModelBuilder
     {
         var language = fenced.Info ?? "";
         var code = fenced.Lines.ToString();
+        if (string.Equals(language, "math", StringComparison.OrdinalIgnoreCase))
+        {
+            return FormulaBlockOrCode(Range(fenced), code);
+        }
         if (_options.RenderMermaidDiagrams
             && string.Equals(language, "mermaid", StringComparison.OrdinalIgnoreCase)
             && MermaidDiagram.TryDraw(code, out var drawing))
@@ -306,6 +322,9 @@ internal sealed partial class MarkdownModelBuilder
                 break;
             case CodeInline code:
                 inlines.Add(new CodeSpanNode(Range(code), code.Content));
+                break;
+            case MathInline math:
+                inlines.Add(FormulaOrCode(math));
                 break;
             case EmphasisInline emphasis:
                 inlines.Add(new EmphasisNode(Range(emphasis), Kind(emphasis), Inlines(emphasis)));

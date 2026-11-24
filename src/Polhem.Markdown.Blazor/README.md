@@ -22,7 +22,8 @@ Link the stylesheet in the host page, then use the component:
   from. Any other HTML element's tag is dropped and its content kept, attributes other than those are dropped, and
   scripts, styles and comments are dropped with their content. Text that only looks like a tag (`List<string>`), and a
   tag that does not pair up within its paragraph, show as written.
-- **Safety**: the markup is built with a render tree, never from an HTML string, and only links whose scheme is in `Options.AllowedLinkSchemes` (by default `http`, `https`
+- **Safety**: the markup is built with a render tree, never from an HTML string except a formula's MathML, which is
+  written from the parsed formula with every text encoded. Only links whose scheme is in `Options.AllowedLinkSchemes` (by default `http`, `https`
   and `mailto`) become links. Relative links (`CHANGELOG.md`,
   `../README.md`) stay text unless `Options.BaseUri` is set, such as to the address of the document being shown; they
   then resolve against it by the standard URI rules, and the resolved link must still use an allowed scheme.
@@ -42,6 +43,11 @@ Link the stylesheet in the host page, then use the component:
   name. The copy uses the browser's clipboard, which needs a secure context (HTTPS or localhost). Code in C#, JSON, XML (with HTML, XAML and project files), SQL, shell and PowerShell, JavaScript and TypeScript, Python, YAML, CSS and Razor
   is highlighted by the component itself, with no script, the same way as in the Avalonia viewer; code in any other
   language, or none, stays plain text.
+- **Math** written as on GitHub, `$…$` in a line and `$$…$$` or a ` ```math ` block on its own, renders as MathML,
+  which the browser lays out with no script: fractions, scripts, roots, Greek letters, operators, large operators with
+  limits, `\left … \right` delimiters, matrices and `cases`, `\text` and accents. A formula using anything else shows
+  its LaTeX as code. Dollar signs in prose, such as prices, stay text. Delimiters and large operators grow only with a
+  math font, set by `--pmd-math-font`.
 - **Mermaid diagrams**: a ` ```mermaid ` block with a flowchart or a sequence diagram renders as inline SVG laid out by
   the component, with no script, centered, and scales down when it is wider than the page. Boxes use `--pmd-code-bg`, lifelines
   `--pmd-rule`, and lines and text the text color. A diagram of another type, or one using syntax the viewer does not
@@ -55,6 +61,7 @@ Link the stylesheet in the host page, then use the component:
 | `--pmd-code-bg` | Background of inline code, keys (`<kbd>`), code blocks and table headers | `rgba(128, 128, 128, 0.12)` |
 | `--pmd-rule` | Rules, table borders, the bar beside a quote and the border of a key | `rgba(128, 128, 128, 0.35)` |
 | `--pmd-code-font` | Font of inline code, keys and code blocks | `"Cascadia Mono", Consolas, Menlo, ui-monospace, monospace` |
+| `--pmd-math-font` | Font of math; delimiters and large operators grow only in a font with math tables | `"STIX Two Math", "Cambria Math", "Latin Modern Math", math` |
 | `--pmd-alert-note` | Bar, icon and title of a `> [!NOTE]` alert | `#3b82f6` |
 | `--pmd-alert-tip` | The same for `> [!TIP]` | `#22a35a` |
 | `--pmd-alert-important` | The same for `> [!IMPORTANT]` | `#8b5cf6` |

@@ -36,6 +36,10 @@ Blazor front end show the same text the same way.
   smaller font, as on GitHub. A reference moves to its note and the note's `↩` back to the reference, in the same way.
 - **Code blocks** show their language and a copy button; set `CopyCodeLabel` to translate its tooltip. Code in
   C#, JSON, XML (with HTML, XAML and project files), SQL, shell and PowerShell, JavaScript and TypeScript, Python, YAML, CSS and Razor is highlighted, the same way as in the Blazor viewer; code in any other language, or none, stays plain text.
+- **Math** written as on GitHub, `$…$` in a line and `$$…$$` or a ` ```math ` block on its own, is laid out by the
+  viewer with its own font: fractions, scripts, roots, Greek letters, operators, large operators with limits,
+  `\left … \right` delimiters, matrices and `cases`, `\text` and accents. A formula using anything else shows its LaTeX
+  as code. Dollar signs in prose, such as prices, stay text.
 - **Mermaid diagrams**: a ` ```mermaid ` block with a flowchart or a sequence diagram is drawn by the viewer itself, with
   no script, centered, and scaled down when it is wider than the viewer. Boxes use `CodeBackground`, lifelines `RuleBrush`, and
   lines and text the foreground. A diagram of another type, or one using syntax the viewer does not support, shows as

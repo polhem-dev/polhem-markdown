@@ -66,6 +66,9 @@ public class MarkdownViewer : ComponentBase, IAsyncDisposable
     /// <summary>The diagram shape types the last render drew, for the shape coverage test.</summary>
     internal IReadOnlySet<Type> RenderedShapeTypes { get; private set; } = new HashSet<Type>();
 
+    /// <summary>The formula part types the last render wrote, for the formula coverage test.</summary>
+    internal IReadOnlySet<Type> RenderedFormulaTypes { get; private set; } = new HashSet<Type>();
+
     [Inject]
     private IJSRuntime JS { get; set; } = default!;
 
@@ -112,6 +115,7 @@ public class MarkdownViewer : ComponentBase, IAsyncDisposable
         tree.Document(_document, Class);
         RenderedNodeTypes = tree.RenderedNodeTypes;
         RenderedShapeTypes = tree.RenderedShapeTypes;
+        RenderedFormulaTypes = tree.RenderedFormulaTypes;
     }
 
     internal bool HandlesLinks => OnLinkActivated.HasDelegate;
