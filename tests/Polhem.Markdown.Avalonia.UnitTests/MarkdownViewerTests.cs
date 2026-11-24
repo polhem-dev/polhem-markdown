@@ -310,6 +310,59 @@ public class MarkdownViewerTests(HeadlessSession session)
         Assert.Equal(3, after.Count);
     });
 
+    [Fact(DisplayName = "Inserting a block before others builds only it and keeps the ones after it, moved down")]
+    public Task Update_InsertAtStart_BuildsOnlyNewBlock() => session.RunAsync(() =>
+    {
+        var (_, viewer) = Show("one\n\ntwo\n\nthree");
+        var before = Blocks(viewer).ToList();
+
+        viewer.Markdown = "zero\n\none\n\ntwo\n\nthree";
+
+        var after = Blocks(viewer).ToList();
+        Assert.Equal(1, viewer.LastBuiltBlockCount);
+        Assert.Equal(["zero", "one", "two", "three"], after.Select(block => ((SelectableTextBlock)block).Inlines!.Text));
+        Assert.Equal(before, after.Skip(1));
+    });
+
+    [Fact(DisplayName = "Removing a block from the middle builds nothing and keeps the blocks on both sides")]
+    public Task Update_RemoveFromMiddle_BuildsNothing() => session.RunAsync(() =>
+    {
+        var (_, viewer) = Show("one\n\ntwo\n\nthree\n\nfour");
+        var before = Blocks(viewer).ToList();
+
+        viewer.Markdown = "one\n\nthree\n\nfour";
+
+        Assert.Equal(0, viewer.LastBuiltBlockCount);
+        Assert.Equal([before[0], before[2], before[3]], Blocks(viewer));
+    });
+
+    [Fact(DisplayName = "Replacing blocks in the middle with more or fewer builds only the new ones")]
+    public Task Update_ReplaceMiddle_BuildsOnlyNewBlocks() => session.RunAsync(() =>
+    {
+        var (_, viewer) = Show("one\n\ntwo\n\nthree\n\nfour");
+        var before = Blocks(viewer).ToList();
+
+        viewer.Markdown = "one\n\nA\n\nB\n\nC\n\nfour";
+
+        var after = Blocks(viewer).ToList();
+        Assert.Equal(3, viewer.LastBuiltBlockCount);
+        Assert.Equal(["one", "A", "B", "C", "four"], after.Select(block => ((SelectableTextBlock)block).Inlines!.Text));
+        Assert.Same(before[0], after[0]);
+        Assert.Same(before[3], after[4]);
+    });
+
+    [Fact(DisplayName = "A kept block whose footnote number changed is rebuilt, since its number is part of its key")]
+    public Task Update_FootnoteRenumbered_RebuildsReference() => session.RunAsync(() =>
+    {
+        var (_, viewer) = Show("b[^b]\n\n[^a]: A\n[^b]: B");
+
+        viewer.Markdown = "a[^a]\n\nb[^b]\n\n[^a]: A\n[^b]: B";
+
+        var texts = Blocks(viewer).OfType<SelectableTextBlock>().Select(block => block.Inlines!.Text).ToList();
+        Assert.Contains("a1", texts);
+        Assert.Contains("b2", texts);
+    });
+
     [Fact(DisplayName = "A block that grows while a reply arrives is rebuilt alone")]
     public Task Update_GrowingLastBlock_RebuildsOnlyIt() => session.RunAsync(() =>
     {

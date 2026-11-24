@@ -392,42 +392,43 @@ public partial class MarkdownViewer : Control
             FontFaceWarmUp.LoadHeavierFaces(cjkFamily);
         }
         var renderer = new MarkdownRenderer(this);
-        var built = 0;
+        var keys = document.Blocks.Select(block => BlockKey(markdown.Substring(block.Range.Start, block.Range.Length), block)).ToList();
 
-        for (var index = 0; index < document.Blocks.Count; index++)
+        // NOTE: a block is kept when its own source is unchanged. A link that refers to a reference definition
+        // elsewhere in the text therefore keeps its old target when only that definition changes; replies write
+        // links inline, and assigning Options rebuilds everything when it matters. Heading ids, footnote numbers and
+        // anything else that depends on the rest of the text are part of the key (see `BlockKey`).
+        //
+        // The blocks that match from the start and from the end are kept, and only those between are rebuilt. A reply
+        // that grows changes its last blocks, and an edit changes some in the middle; matching from both ends keeps a
+        // block inserted or removed there from shifting every block after it out of step and rebuilding them all.
+        var head = 0;
+        var tail = 0;
+        if (!fullRebuild)
         {
-            var block = document.Blocks[index];
-            var source = BlockKey(markdown.Substring(block.Range.Start, block.Range.Length), block);
-
-            // NOTE: a block is kept when its own source is unchanged. A link that refers to a reference definition
-            // elsewhere in the text therefore keeps its old target when only that definition changes; replies write
-            // links inline, and assigning Options rebuilds everything when it matters. Heading ids and links to
-            // headings do depend on the rest of the text, so they are part of the key (see `BlockKey`).
-            if (!fullRebuild && index < _sources.Count && string.Equals(_sources[index], source, StringComparison.Ordinal))
+            var shorter = Math.Min(keys.Count, _sources.Count);
+            while (head < shorter && string.Equals(_sources[head], keys[head], StringComparison.Ordinal))
             {
-                continue;
+                head++;
             }
-
-            var control = renderer.Block(block, depth: 0);
-            if (index < _panel.Children.Count)
+            while (tail < shorter - head
+                && string.Equals(_sources[^(tail + 1)], keys[^(tail + 1)], StringComparison.Ordinal))
             {
-                _panel.Children[index] = control;
-                _sources[index] = source;
+                tail++;
             }
-            else
-            {
-                _panel.Children.Add(control);
-                _sources.Add(source);
-            }
-            built++;
         }
 
-        var extra = _panel.Children.Count - document.Blocks.Count;
-        if (extra > 0)
+        var built = keys.Count - head - tail;
+        var controls = new List<Control>(built);
+        for (var index = head; index < head + built; index++)
         {
-            _panel.Children.RemoveRange(document.Blocks.Count, extra);
-            _sources.RemoveRange(document.Blocks.Count, extra);
+            controls.Add(renderer.Block(document.Blocks[index], depth: 0));
         }
+        var replaced = _sources.Count - head - tail;
+        _panel.Children.RemoveRange(head, replaced);
+        _panel.Children.InsertRange(head, controls);
+        _sources.RemoveRange(head, replaced);
+        _sources.InsertRange(head, keys.GetRange(head, built));
 
         KeepRanges(document);
         ForgetImagesNotIn(document);
