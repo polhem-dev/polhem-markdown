@@ -3,6 +3,7 @@ using static Polhem.Markdown.UnitTests.Model.ModelTestHelpers;
 
 namespace Polhem.Markdown.UnitTests.Model;
 
+[Collection(ScalingCollection.Name)]
 public class AnchorLinkTests
 {
     [Theory(DisplayName = "A heading gets the id GitHub gives it")]

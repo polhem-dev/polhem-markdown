@@ -20,6 +20,7 @@ internal static class ModelTestHelpers
         EmphasisNode emphasis => Text(emphasis.Inlines),
         LinkNode link => Text(link.Inlines),
         AnchorLinkNode anchor => Text(anchor.Inlines),
+        ImageNode image => image.AlternativeText,
         FootnoteReferenceNode reference => "[" + reference.Number + "]",
         FootnoteBackLinkNode back => back.Position > 1 ? " \u21A9" + back.Position : " \u21A9",
         LineBreakNode => "\n",
@@ -45,7 +46,7 @@ internal static class ModelTestHelpers
             FootnotesNode footnotes => footnotes.Notes,
             FootnoteNode note => note.Blocks,
             CodeBlockNode or DiagramNode or ThematicBreakNode or TextNode or CodeSpanNode or LineBreakNode
-                or FootnoteReferenceNode or FootnoteBackLinkNode => [],
+                or FootnoteReferenceNode or FootnoteBackLinkNode or ImageNode => [],
             _ => throw new ArgumentOutOfRangeException(nameof(node), node.GetType().Name),
         };
         return children.SelectMany(Walk).Prepend(node);

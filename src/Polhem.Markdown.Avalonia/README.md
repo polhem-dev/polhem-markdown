@@ -9,10 +9,20 @@ Blazor front end show the same text the same way.
 </Window>
 ```
 
-- **Safety**: raw HTML shows as text, images as their alternative text, and only links whose scheme is in
+- **Safety**: raw HTML shows as text, and only links whose scheme is in
   `Options.AllowedLinkSchemes` (by default `http`, `https` and `mailto`) can be clicked. Relative links (`CHANGELOG.md`,
   `../README.md`) stay text unless `Options.BaseUri` is set, such as to the address of the document being shown; they
   then resolve against it by the standard URI rules, and the resolved link must still use an allowed scheme.
+- **Images** whose source uses a scheme in `Options.AllowedImageSchemes` (by default `https`; clear it to show none, or
+  add `file`) load and show at their own size, scaled down to fit; relative sources resolve against `Options.BaseUri`.
+  Any other image shows its alternative text, as one does while it loads and when it cannot be loaded. The viewer
+  fetches `http` and `https` images and reads `file` ones itself, at most 10 MB each, and remembers them, so a reply that
+  is still arriving does not fetch them again; set `ImageLoader` to load them another way, for example with
+  authentication or through a proxy. SVG images are drawn with Svg.Skia, which this package depends on, only from the
+  badge hosts in `TrustedSvgHosts` (by default a few badge services, such as `img.shields.io` and `badgen.net`) and
+  GitHub's workflow badges, without fetching anything they refer to; any other SVG shows its alternative text, because
+  a hostile SVG can exhaust a renderer's processor time and memory. The Blazor viewer shows every allowed SVG, since
+  the browser draws it in its own sandbox.
 - **Links**: a click raises the bubbling `LinkActivated` event. When no handler marks it handled, the viewer asks the
   operating system to open the link. A link to a heading of the same text (`[setup](#setup)`, with the id GitHub gives
   the heading) is not reported: the viewer scrolls the nearest scroll viewer so the heading is at the top.

@@ -69,7 +69,7 @@ Type[] expected =
 [
     typeof(HeadingNode), typeof(ParagraphNode), typeof(ListNode), typeof(ListItemNode), typeof(QuoteNode), typeof(AlertNode),
     typeof(CodeBlockNode), typeof(DiagramNode), typeof(TableNode), typeof(TableRowNode), typeof(TableCellNode), typeof(ThematicBreakNode),
-    typeof(TextNode), typeof(EmphasisNode), typeof(CodeSpanNode), typeof(LinkNode), typeof(AnchorLinkNode), typeof(LineBreakNode),
+    typeof(TextNode), typeof(EmphasisNode), typeof(CodeSpanNode), typeof(LinkNode), typeof(AnchorLinkNode), typeof(ImageNode), typeof(LineBreakNode),
     typeof(FootnotesNode), typeof(FootnoteNode), typeof(FootnoteReferenceNode), typeof(FootnoteBackLinkNode),
 ];
 var missing = expected.Where(type => !found.Contains(type)).Select(type => type.Name).ToList();

@@ -6,6 +6,8 @@ internal static class SampleText
     public const string Markdown = """
         # Order form draft
 
+        [![build passing](https://img.shields.io/badge/build-passing-brightgreen)](https://github.com/polhem-dev/polhem-markdown)
+
         I drafted the **order** form from your document. It has *three* sections and uses `ft_order` as its table.
         See the [Markdig project](https://github.com/xoofx/markdig) for the syntax, or open the
         [order form](polhem:form/order?id=7) directly.
@@ -102,7 +104,7 @@ internal static class SampleText
         ```
 
         Raw HTML such as <b>this</b> and <script>alert(1)</script> shows as text, a [script link](javascript:alert(1))
-        cannot be clicked, and an image shows its alternative text: ![a logo](https://example.com/logo.png).
+        cannot be clicked, and an image the viewer cannot load shows its alternative text: ![a logo](https://example.com/logo.png).
         A line can end with a hard break\
         like this one.
 

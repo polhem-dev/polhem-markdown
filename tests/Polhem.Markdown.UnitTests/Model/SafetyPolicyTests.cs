@@ -78,13 +78,58 @@ public class SafetyPolicyTests
         Assert.DoesNotContain(AllNodes(Parse("<someone@example.com>", options)), node => node is LinkNode);
     }
 
-    [Fact(DisplayName = "An image shows as its alternative text and loads nothing")]
-    public void Build_Image_ShowsAltText()
+    [Fact(DisplayName = "An image from an allowed scheme is an image with its alternative text")]
+    public void Build_Image_IsImage()
     {
-        var document = Parse("![a red *pen*](https://example.com/pen.png)");
+        var image = Assert.IsType<ImageNode>(Assert.Single(Single<ParagraphNode>(Parse("![a red *pen*](https://example.com/pen.png \"Pen\")")).Inlines));
+
+        Assert.Equal(new Uri("https://example.com/pen.png"), image.Source);
+        Assert.Equal("a red pen", image.AlternativeText);
+        Assert.Equal("Pen", image.Title);
+    }
+
+    [Theory(DisplayName = "An image from a scheme that is not allowed shows its alternative text and loads nothing")]
+    [InlineData("http://example.com/pen.png")]
+    [InlineData("javascript:alert(1)")]
+    [InlineData("data:image/png;base64,iVBORw0KGgo=")]
+    [InlineData("file:///etc/passwd")]
+    [InlineData("pen.png")]
+    [InlineData("/etc/passwd")]
+    public void Build_ImageWithRefusedSource_ShowsAltText(string source)
+    {
+        var document = Parse($"![a red pen]({source})");
 
         Assert.Equal("a red pen", Text(Single<ParagraphNode>(document).Inlines));
-        Assert.DoesNotContain(AllNodes(document), node => node is LinkNode);
+        Assert.DoesNotContain(AllNodes(document), node => node is ImageNode or LinkNode);
+    }
+
+    [Fact(DisplayName = "With no image schemes allowed, every image shows its alternative text")]
+    public void Build_NoImageSchemes_ShowsAltText()
+    {
+        var options = new MarkdownOptions();
+        options.AllowedImageSchemes.Clear();
+
+        Assert.DoesNotContain(AllNodes(Parse("![pen](https://example.com/pen.png)", options)), node => node is ImageNode);
+    }
+
+    [Fact(DisplayName = "An image's source resolves against the base, and the image schemes, not the link schemes, decide")]
+    public void Build_RelativeImage_ResolvesAgainstBase()
+    {
+        var options = new MarkdownOptions { BaseUri = new Uri("file:///home/me/repo/README.md") };
+        options.AllowedImageSchemes.Add("file");
+
+        var image = Assert.Single(AllNodes(Parse("![logo](docs/logo.png)", options)).OfType<ImageNode>());
+
+        Assert.Equal(new Uri("file:///home/me/repo/docs/logo.png"), image.Source);
+        Assert.DoesNotContain("file", options.AllowedLinkSchemes);
+    }
+
+    [Fact(DisplayName = "An image inside a link is the link's content")]
+    public void Build_ImageInLink_IsLinkContent()
+    {
+        var link = Assert.IsType<LinkNode>(Assert.Single(Single<ParagraphNode>(Parse("[![badge](https://img.example/b.svg)](https://ci.example/)")).Inlines));
+
+        Assert.IsType<ImageNode>(Assert.Single(link.Inlines));
     }
 
     [Fact(DisplayName = "The text of a footnote goes through the same policy: a script link in it shows as text")]

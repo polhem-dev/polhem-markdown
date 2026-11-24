@@ -3,6 +3,7 @@ using Avalonia.Controls;
 using Avalonia.Controls.Documents;
 using Avalonia.Layout;
 using Avalonia.Media;
+using Polhem.Markdown.Avalonia.Images;
 using Polhem.Markdown.Model;
 
 namespace Polhem.Markdown.Avalonia;
@@ -371,6 +372,11 @@ internal sealed class MarkdownRenderer
                 offset += LineBreakLength;
                 return new LineBreak();
 
+            case ImageNode image:
+                // NOTE: an embedded control takes one character of the text, which keeps link ranges after it in step.
+                offset += EmbeddedControlLength;
+                return new InlineUIContainer(new ImageView(_viewer, image)) { BaselineAlignment = BaselineAlignment.Center };
+
             case FootnoteReferenceNode reference:
                 var number = reference.Number.ToString(System.Globalization.CultureInfo.InvariantCulture);
                 owner.AddAnchorLink(offset, number.Length, reference.NoteId);
@@ -418,6 +424,12 @@ internal sealed class MarkdownRenderer
     /// <see cref="InlineCollection.Text"/>.
     /// </summary>
     internal const int LineBreakLength = 1;
+
+    /// <summary>
+    /// The number of characters an <see cref="InlineUIContainer"/> adds to the text of a text block, as its layout counts
+    /// them. <c>Render_LinkAfterImage_RangeMatchesText</c> checks it.
+    /// </summary>
+    internal const int EmbeddedControlLength = 1;
 
     private const string BackArrow = "\u21A9";
     private const double SuperscriptScale = 0.75;

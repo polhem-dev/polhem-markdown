@@ -10,8 +10,8 @@ namespace Polhem.Markdown.Avalonia;
 
 /// <summary>
 /// Shows a Markdown text. It renders the same model as the Blazor viewer of Polhem.Markdown, so both front ends show a
-/// text the same way, and applies the same safety policy: raw HTML shows as text, images as their alternative text, and
-/// only links whose scheme is in <see cref="Options"/> can be clicked.
+/// text the same way, and applies the same safety policy: raw HTML shows as text, only images and links whose scheme is in
+/// <see cref="Options"/> load or can be clicked, and other images show their alternative text.
 /// </summary>
 /// <remarks>
 /// When <see cref="Markdown"/> changes, only the top-level blocks whose source changed are rebuilt, so a text that grows
@@ -19,7 +19,7 @@ namespace Polhem.Markdown.Avalonia;
 /// <see cref="CodeBackground"/>, <see cref="RuleBrush"/>, the alert brushes (such as <see cref="AlertNoteBrush"/>) and the
 /// code brushes (such as <see cref="CodeKeywordBrush"/>) to match a theme.
 /// </remarks>
-public class MarkdownViewer : Control
+public partial class MarkdownViewer : Control
 {
     /// <summary>Defines the <see cref="Markdown"/> property.</summary>
     public static readonly StyledProperty<string?> MarkdownProperty =
@@ -373,6 +373,7 @@ public class MarkdownViewer : Control
             _sources.RemoveRange(document.Blocks.Count, extra);
         }
 
+        ForgetImagesNotIn(document);
         RenderedNodeTypes = renderer.RenderedNodeTypes;
         RenderedShapeTypes = renderer.RenderedShapeTypes;
         LastBuiltBlockCount = built;
@@ -380,7 +381,7 @@ public class MarkdownViewer : Control
 
     /// <summary>
     /// The source of a top-level block, followed by what inside it depends on the rest of the text: heading ids, resolved
-    /// links to headings, and footnote numbers and ids. A heading or a footnote definition that arrives later turns
+    /// links to headings, footnote numbers and ids, and image sources. A heading or a footnote definition that arrives later turns
     /// earlier text into a link, a heading added above another of the same name changes that one's id, and a reference
     /// added earlier renumbers the notes, all without the block's own source changing.
     /// </summary>
@@ -394,6 +395,8 @@ public class MarkdownViewer : Control
                 FootnoteReferenceNode reference => "^" + reference.Id + ">" + reference.NoteId + "=" + reference.Number,
                 FootnoteNode note => "[" + note.Id + "=" + note.Number,
                 FootnoteBackLinkNode back => "<" + back.ReferenceId + "=" + back.Position,
+                // An image written by reference (`![a][r]`) takes its source from a definition elsewhere in the text.
+                ImageNode image => "!" + image.Source.AbsoluteUri,
                 _ => null,
             })
             .OfType<string>()

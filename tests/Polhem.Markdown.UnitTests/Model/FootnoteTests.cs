@@ -3,6 +3,7 @@ using static Polhem.Markdown.UnitTests.Model.ModelTestHelpers;
 
 namespace Polhem.Markdown.UnitTests.Model;
 
+[Collection(ScalingCollection.Name)]
 public class FootnoteTests
 {
     [Fact(DisplayName = "Notes are numbered by first reference, whatever their labels, and show last")]

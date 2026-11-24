@@ -262,3 +262,10 @@
 .pmd .pmd-tk-constant { color: var(--pmd-code-constant, #d97706); }
 .pmd .pmd-tk-tag { color: var(--pmd-code-tag, #e5484d); }
 .pmd .pmd-tk-property { color: var(--pmd-code-property, #3b82f6); }
+
+/* Images: scaled down to the viewer's width, never up, and kept in the line of text they appear in. */
+.pmd .pmd-img {
+  max-width: 100%;
+  height: auto;
+  vertical-align: middle;
+}

@@ -4,6 +4,7 @@ using static Polhem.Markdown.UnitTests.Model.ModelTestHelpers;
 
 namespace Polhem.Markdown.UnitTests.Highlighting;
 
+[Collection(ScalingCollection.Name)]
 public class CodeHighlighterTests
 {
     private static readonly string[] s_languages =

@@ -23,6 +23,19 @@ public sealed class MarkdownOptions
     };
 
     /// <summary>
+    /// Gets the URI schemes an image may be loaded from, compared without regard to case. The default is <c>https</c>.
+    /// </summary>
+    /// <remarks>
+    /// An image whose source, written or resolved against <see cref="BaseUri"/>, uses any other scheme shows its
+    /// alternative text, as every image does when the set is empty. Loading an image tells its server that the text was
+    /// viewed; clear the set to show no remote images at all, or add <c>file</c> for images next to a local document.
+    /// </remarks>
+    public ISet<string> AllowedImageSchemes { get; } = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+    {
+        "https",
+    };
+
+    /// <summary>
     /// Gets or sets whether <c>mermaid</c> code blocks are drawn as diagrams. The default is <see langword="true"/>.
     /// </summary>
     /// <remarks>
