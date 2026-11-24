@@ -65,6 +65,24 @@ public class HtmlTests(HeadlessSession session)
         Assert.False(Assert.IsType<Expander>(Assert.Single(Blocks(viewer))).IsExpanded);
     });
 
+    [Fact(DisplayName = "A section whose place among sections of its summary changes takes the choice made for its new place")]
+    public Task Render_DetailsRenumbered_FollowsItsKey() => session.RunAsync(() =>
+    {
+        const string Second = "\n\n<details><summary>X</summary>\n\ntwo\n\n</details>";
+        var (_, viewer) = Show("<details><summary>X</summary>\n\none\n\n</details>" + Second);
+
+        viewer.Markdown = "<details><summary>Y</summary>\n\none\n\n</details>" + Second;
+        Dispatcher.UIThread.RunJobs();
+        Assert.IsType<Expander>(Blocks(viewer).Last()).IsExpanded = true;
+
+        viewer.Markdown += "\n\n<details><summary>X</summary>\n\nthree\n\n</details>";
+        Dispatcher.UIThread.RunJobs();
+
+        var expanders = Blocks(viewer).Cast<Expander>().ToList();
+        Assert.True(expanders[1].IsExpanded);
+        Assert.False(expanders[2].IsExpanded);
+    });
+
     [Fact(DisplayName = "Superscript and subscript sit above and below the line, smaller; a key uses the code font")]
     public Task Render_SupSubKbd_AreStyled() => session.RunAsync(() =>
     {

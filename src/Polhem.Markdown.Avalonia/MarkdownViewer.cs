@@ -352,7 +352,7 @@ public partial class MarkdownViewer : Control
         for (var index = 0; index < document.Blocks.Count; index++)
         {
             var block = document.Blocks[index];
-            var source = BlockKey(markdown.Substring(block.Range.Start, block.Range.Length), block, IsDarkTheme);
+            var source = BlockKey(markdown.Substring(block.Range.Start, block.Range.Length), block);
 
             // NOTE: a block is kept when its own source is unchanged. A link that refers to a reference definition
             // elsewhere in the text therefore keeps its old target when only that definition changes; replies write
@@ -398,7 +398,7 @@ public partial class MarkdownViewer : Control
     /// earlier text into a link, a heading added above another of the same name changes that one's id, and a reference
     /// added earlier renumbers the notes, all without the block's own source changing.
     /// </summary>
-    private static string BlockKey(string source, BlockNode block, bool dark)
+    private string BlockKey(string source, BlockNode block)
     {
         var anchors = NodeTree.SelfAndDescendants(block)
             .Select(node => node switch
@@ -410,7 +410,9 @@ public partial class MarkdownViewer : Control
                 FootnoteBackLinkNode back => "<" + back.ReferenceId + "=" + back.Position,
                 // An image written by reference (`![a][r]`) takes its source from a definition elsewhere in the text.
                 // A picture shows the source for the viewer's theme.
-                ImageNode image => "!" + image.SourceFor(dark).AbsoluteUri,
+                ImageNode image => "!" + image.SourceFor(IsDarkTheme).AbsoluteUri,
+                // A section's key depends on the sections before it with the same summary; its control holds the key.
+                DetailsNode details => "?" + DetailsKey(details),
                 _ => null,
             })
             .OfType<string>()

@@ -39,6 +39,7 @@ public class HtmlTests : BunitContext
 
         Assert.Equal("120", image.GetAttribute("width"));
         Assert.Equal("40", image.GetAttribute("height"));
+        Assert.Equal("max-height:40px", image.GetAttribute("style"));
     }
 
     [Fact(DisplayName = "A picture with a source for each theme is written as a picture the browser picks from")]

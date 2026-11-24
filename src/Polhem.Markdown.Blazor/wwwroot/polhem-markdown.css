@@ -289,8 +289,8 @@
 .pmd .pmd-tk-property { color: var(--pmd-code-property, #3b82f6); }
 
 /* Images: scaled down to the viewer's width, never up, and kept in the line of text they appear in. With a width, the
-   height follows the image's proportions, so a narrow viewer shrinks both; a height written alone is kept, and the image
-   fits inside it without being distorted. */
+   height follows the image's proportions, so a narrow viewer shrinks both, and a height written too is its maximum (an
+   inline style); a height written alone is kept. The image fits inside without being distorted. */
 .pmd .pmd-img {
   max-width: 100%;
   vertical-align: middle;

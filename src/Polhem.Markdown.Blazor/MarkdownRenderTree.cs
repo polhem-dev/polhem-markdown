@@ -391,6 +391,13 @@ internal sealed partial class MarkdownRenderTree
         if (image.Height is { } height)
         {
             _builder.AddAttribute(9, "height", height);
+
+            // NOTE: with a width the stylesheet lets the height follow the image's proportions, so a narrow viewer
+            // shrinks both; the height still bounds it, and the image fits inside both as in the Avalonia viewer.
+            if (image.Width is not null)
+            {
+                _builder.AddAttribute(10, "style", "max-height:" + height.ToString(CultureInfo.InvariantCulture) + "px");
+            }
         }
         _builder.CloseElement();
     }
