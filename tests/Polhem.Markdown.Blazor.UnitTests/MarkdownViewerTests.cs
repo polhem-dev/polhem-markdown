@@ -13,6 +13,26 @@ public class MarkdownViewerTests : BunitContext
             .Add(viewer => viewer.Markdown, markdown)
             .Add(viewer => viewer.Options, options));
 
+    [Theory(DisplayName = "Text nested as deep as the parser allows, or that it nests thousands deep, renders without failing")]
+    [InlineData("unmatched brackets before a link")]
+    [InlineData("emphasis in emphasis")]
+    [InlineData("quotes in quotes")]
+    [InlineData("lists in lists")]
+    public void Render_DeepNesting_Renders(string what)
+    {
+        var markdown = what switch
+        {
+            "unmatched brackets before a link" => new string('[', 10_000) + "](u)",
+            "emphasis in emphasis" => new string('*', 20_000) + "a" + new string('*', 20_000),
+            "quotes in quotes" => string.Concat(Enumerable.Repeat("> ", 120)) + "a",
+            _ => string.Concat(Enumerable.Range(0, 60).Select(level => new string(' ', level * 2) + "- a\n")),
+        };
+
+        var viewer = Show(markdown);
+
+        Assert.Contains("a", viewer.Markup, StringComparison.Ordinal);
+    }
+
     [Fact(DisplayName = "The viewer draws every node type of the model, so the front ends cannot drift apart")]
     public void Render_AllNodesSample_DrawsEveryNodeType()
     {

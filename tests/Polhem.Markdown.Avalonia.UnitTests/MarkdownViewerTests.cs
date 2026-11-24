@@ -57,6 +57,26 @@ public class MarkdownViewerTests(HeadlessSession session)
         Assert.IsType<CodeBlockView>(Assert.Single(Blocks(viewer)));
     });
 
+    [Theory(DisplayName = "Text nested as deep as the parser allows, or that it nests thousands deep, shows without failing")]
+    [InlineData("unmatched brackets before a link")]
+    [InlineData("emphasis in emphasis")]
+    [InlineData("quotes in quotes")]
+    [InlineData("lists in lists")]
+    public Task Render_DeepNesting_Shows(string what) => session.RunAsync(() =>
+    {
+        var markdown = what switch
+        {
+            "unmatched brackets before a link" => new string('[', 10_000) + "](u)",
+            "emphasis in emphasis" => new string('*', 20_000) + "a" + new string('*', 20_000),
+            "quotes in quotes" => string.Concat(Enumerable.Repeat("> ", 120)) + "a",
+            _ => string.Concat(Enumerable.Range(0, 60).Select(level => new string(' ', level * 2) + "- a\n")),
+        };
+
+        var (_, viewer) = Show(markdown);
+
+        Assert.NotEmpty(Blocks(viewer));
+    });
+
     [Fact(DisplayName = "No text, or null, shows nothing")]
     public Task Render_NullMarkdown_ShowsNothing() => session.RunAsync(() =>
     {
