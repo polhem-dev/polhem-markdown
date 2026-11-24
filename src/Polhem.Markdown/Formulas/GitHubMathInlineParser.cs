@@ -76,23 +76,38 @@ internal sealed class GitHubMathInlineParser : MathInlineParser
         return tableStart;
     }
 
-    /// <summary>The start of the line above the first delimiter row after the first line, or <see cref="int.MaxValue"/>.</summary>
+    /// <summary>
+    /// The start of the line above the first delimiter row after the first line, or <see cref="int.MaxValue"/>. Markdig
+    /// keeps each line's own line break, which may be <c>\r\n</c>, <c>\n</c> or <c>\r</c>.
+    /// </summary>
     private static int FindTableStart(string paragraph)
     {
         var previousStart = 0;
-        var lineStart = paragraph.IndexOf('\n', StringComparison.Ordinal) + 1;
-        while (lineStart > 0 && lineStart <= paragraph.Length)
+        var lineStart = NextLine(paragraph, 0);
+        while (lineStart < paragraph.Length)
         {
-            var lineEnd = paragraph.IndexOf('\n', lineStart);
-            var line = paragraph.AsSpan(lineStart, (lineEnd < 0 ? paragraph.Length : lineEnd) - lineStart);
+            var lineEnd = paragraph.AsSpan(lineStart).IndexOfAny('\r', '\n');
+            var line = lineEnd < 0 ? paragraph.AsSpan(lineStart) : paragraph.AsSpan(lineStart, lineEnd);
             if (line.Contains('-') && !line.ContainsAnyExcept(s_delimiterRow))
             {
                 return previousStart;
             }
             previousStart = lineStart;
-            lineStart = lineEnd + 1;
+            lineStart = NextLine(paragraph, lineStart);
         }
         return int.MaxValue;
+    }
+
+    /// <summary>The start of the line after the one starting at <paramref name="start"/>, or the text's length.</summary>
+    private static int NextLine(string text, int start)
+    {
+        var end = text.AsSpan(start).IndexOfAny('\r', '\n');
+        if (end < 0)
+        {
+            return text.Length;
+        }
+        end += start;
+        return end + (text[end] == '\r' && end + 1 < text.Length && text[end + 1] == '\n' ? 2 : 1);
     }
 
     private sealed record TableCheck(string Text, int TableStart);

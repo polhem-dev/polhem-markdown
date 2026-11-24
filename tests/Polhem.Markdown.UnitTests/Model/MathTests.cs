@@ -27,6 +27,8 @@ public class MathTests
     [InlineData("| $x | y$ |\n|---|---|")]
     [InlineData("Prices:\n| Item | Price ($) | Tax ($) |\n|---|---|---|\n| pen | 2 | 1 |")]
     [InlineData("> Prices:\n> | Item | Price ($) | Tax ($) |\n> |---|---|---|")]
+    [InlineData("| a | b |\r|---|---|\r| $x | y$ | 2 |")]
+    [InlineData("| a | b |\r\n|---|---|\r\n| $x | y$ | 2 |")]
     public void Build_DollarsInProse_StayText(string markdown)
     {
         var document = Parse(markdown);
