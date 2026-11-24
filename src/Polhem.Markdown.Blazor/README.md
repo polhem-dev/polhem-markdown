@@ -15,8 +15,14 @@ Link the stylesheet in the host page, then use the component:
 <MarkdownViewer Markdown="@reply" OnLinkActivated="OpenLink" />
 ```
 
-- **Safety**: the markup is built with a render tree, never from an HTML string. Raw HTML shows as text, and only
-  links whose scheme is in `Options.AllowedLinkSchemes` (by default `http`, `https`
+- **Raw HTML** is never added as markup. The elements README files use become part of the text: `<img>` (with `width`
+  and `height`), `<a href>`, `<br>`, `<b>`, `<strong>`, `<i>`, `<em>`, `<code>`, `<sup>`, `<sub>`, `<kbd>`, `<p>` and
+  `<div>` with `align="center"` or `"right"` (classes `pmd-align-center` and `pmd-align-right`), `<details>` with
+  `<summary>`, and `<picture>` with sources for `(prefers-color-scheme: dark)` and `light`, which the browser picks
+  from. Any other HTML element's tag is dropped and its content kept, attributes other than those are dropped, and
+  scripts, styles and comments are dropped with their content. Text that only looks like a tag (`List<string>`), and a
+  tag that does not pair up within its paragraph, show as written.
+- **Safety**: the markup is built with a render tree, never from an HTML string, and only links whose scheme is in `Options.AllowedLinkSchemes` (by default `http`, `https`
   and `mailto`) become links. Relative links (`CHANGELOG.md`,
   `../README.md`) stay text unless `Options.BaseUri` is set, such as to the address of the document being shown; they
   then resolve against it by the standard URI rules, and the resolved link must still use an allowed scheme.
@@ -46,9 +52,9 @@ Link the stylesheet in the host page, then use the component:
 | Variable | Sets | Default |
 |----------|------|---------|
 | `--pmd-link` | Link color | `#3b82f6` |
-| `--pmd-code-bg` | Background of inline code, code blocks and table headers | `rgba(128, 128, 128, 0.12)` |
-| `--pmd-rule` | Rules, table borders and the bar beside a quote | `rgba(128, 128, 128, 0.35)` |
-| `--pmd-code-font` | Font of inline code and code blocks | `"Cascadia Mono", Consolas, Menlo, ui-monospace, monospace` |
+| `--pmd-code-bg` | Background of inline code, keys (`<kbd>`), code blocks and table headers | `rgba(128, 128, 128, 0.12)` |
+| `--pmd-rule` | Rules, table borders, the bar beside a quote and the border of a key | `rgba(128, 128, 128, 0.35)` |
+| `--pmd-code-font` | Font of inline code, keys and code blocks | `"Cascadia Mono", Consolas, Menlo, ui-monospace, monospace` |
 | `--pmd-alert-note` | Bar, icon and title of a `> [!NOTE]` alert | `#3b82f6` |
 | `--pmd-alert-tip` | The same for `> [!TIP]` | `#22a35a` |
 | `--pmd-alert-important` | The same for `> [!IMPORTANT]` | `#8b5cf6` |

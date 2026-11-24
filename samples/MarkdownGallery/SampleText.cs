@@ -103,7 +103,20 @@ internal static class SampleText
             "South" : 58
         ```
 
-        Raw HTML such as <b>this</b> and <script>alert(1)</script> shows as text, a [script link](javascript:alert(1))
+        <div align="center">
+
+        The HTML README files use works: <b>bold</b>, x<sup>2</sup>, H<sub>2</sub>O, <kbd>Ctrl</kbd> + <kbd>C</kbd>.
+
+        </div>
+
+        <details>
+        <summary>Click to open</summary>
+
+        A section the reader opens, with **Markdown** inside.
+
+        </details>
+
+        Any other HTML is dropped: <span onclick="alert(1)">this text</span> stays and <script>alert(1)</script> goes, a [script link](javascript:alert(1))
         cannot be clicked, and an image the viewer cannot load shows its alternative text: ![a logo](https://example.com/logo.png).
         A line can end with a hard break\
         like this one.

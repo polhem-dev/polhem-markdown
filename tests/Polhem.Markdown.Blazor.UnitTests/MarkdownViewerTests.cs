@@ -189,16 +189,14 @@ public class MarkdownViewerTests : BunitContext
         Assert.Equal(["1", "2", "3", ""], viewer.FindAll("tbody td").Select(cell => cell.TextContent));
     }
 
-    [Theory(DisplayName = "Raw HTML is encoded and shown as text, never added as markup")]
-    [InlineData("<script>alert(1)</script>")]
-    [InlineData("<img src=x onerror=alert(1)>")]
-    [InlineData("a <b>bold</b> word")]
-    public void Render_RawHtml_IsEncoded(string markdown)
+    [Theory(DisplayName = "Raw HTML is never added as markup: only the allowed elements are written, without their other attributes")]
+    [InlineData("<script>alert(1)</script>", "<div class=\"pmd\"></div>")]
+    [InlineData("<img src=x onerror=alert(1)>", "<div class=\"pmd\"></div>")]
+    [InlineData("a <b onclick=\"alert(1)\">bold</b> <span style=\"color:red\">word</span>", "<div class=\"pmd\"><p>a <strong>bold</strong> word</p></div>")]
+    [InlineData("a &lt;b&gt;text&lt;/b&gt;", "<div class=\"pmd\"><p>a &lt;b&gt;text&lt;/b&gt;</p></div>")]
+    public void Render_RawHtml_IsNeverMarkup(string markdown, string html)
     {
-        var viewer = Show(markdown);
-
-        Assert.Equal(markdown, viewer.Find("p").TextContent);
-        Assert.Empty(viewer.FindAll("p *"));
+        Show(markdown).MarkupMatches(html);
     }
 
     [Fact(DisplayName = "A link with a refused scheme renders no anchor")]

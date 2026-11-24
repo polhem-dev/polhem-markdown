@@ -5,7 +5,7 @@ using Avalonia.Controls;
 using Avalonia.Controls.Documents;
 using Avalonia.Threading;
 using Polhem.Markdown.Avalonia.Images;
-using SkiaSharp;
+using static Polhem.Markdown.Avalonia.UnitTests.TestImages;
 using static Polhem.Markdown.Avalonia.UnitTests.ViewerHost;
 
 namespace Polhem.Markdown.Avalonia.UnitTests;
@@ -14,31 +14,6 @@ namespace Polhem.Markdown.Avalonia.UnitTests;
 public class ImageTests(HeadlessSession session)
 {
     private const string Pen = "https://example.com/pen.png";
-
-    /// <summary>A PNG of the given size, as an image server would send it.</summary>
-    private static byte[] Png(int width, int height)
-    {
-        using var bitmap = new SKBitmap(width, height);
-        bitmap.Erase(SKColors.OrangeRed);
-        using var data = bitmap.Encode(SKEncodedImageFormat.Png, 100);
-        return data.ToArray();
-    }
-
-    /// <summary>
-    /// A loader that serves <paramref name="bytes"/> and records each call. The viewer loads several images at once, so
-    /// the calls are recorded under a lock.
-    /// </summary>
-    private static Func<Uri, CancellationToken, Task<Stream?>> Serve(byte[] bytes, List<Uri>? calls = null) => (source, _) =>
-    {
-        if (calls is not null)
-        {
-            lock (calls)
-            {
-                calls.Add(source);
-            }
-        }
-        return Task.FromResult<Stream?>(new MemoryStream(bytes));
-    };
 
     /// <summary>
     /// Waits for the viewer's one image to load and for its view to show it. The view is awaited itself: it continues on

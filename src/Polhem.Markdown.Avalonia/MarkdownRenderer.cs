@@ -43,6 +43,8 @@ internal sealed class MarkdownRenderer
             DiagramNode diagram => Diagram(diagram),
             QuoteNode quote => Quote(quote, depth),
             AlertNode alert => Alert(alert, depth),
+            AlignedBlockNode aligned => Aligned(aligned, depth),
+            DetailsNode details => Details(details, depth),
             TableNode table => Table(table),
             ThematicBreakNode => Rule(),
             FootnotesNode footnotes => Footnotes(footnotes, depth),
@@ -209,6 +211,55 @@ internal sealed class MarkdownRenderer
         return border;
     }
 
+    /// <summary>
+    /// Blocks centered or right-aligned: the lines of text, and the images in them, align inside their block; any other
+    /// block keeps its own width and moves across.
+    /// </summary>
+    private StackPanel Aligned(AlignedBlockNode aligned, int depth)
+    {
+        var panel = Blocks(aligned.Blocks, depth, spacing: 8);
+        foreach (var child in panel.Children)
+        {
+            if (child is TextBlock text)
+            {
+                text.TextAlignment = aligned.Alignment == BlockAlignment.Right ? TextAlignment.Right : TextAlignment.Center;
+            }
+            else
+            {
+                child.HorizontalAlignment = aligned.Alignment == BlockAlignment.Right ? HorizontalAlignment.Right : HorizontalAlignment.Center;
+            }
+        }
+        return panel;
+    }
+
+    /// <summary>
+    /// A section the reader opens and closes. The summary does not take the pointer, so a click anywhere on it toggles
+    /// the section, as in a browser; a link in a summary therefore does not open. The viewer remembers what the reader
+    /// did, so a section that is rebuilt while its text arrives stays as the reader left it.
+    /// </summary>
+    private Expander Details(DetailsNode details, int depth)
+    {
+        var summary = Text(details.Summary);
+        summary.IsHitTestVisible = false;
+        var key = _viewer.DetailsKey(details);
+        var expander = new Expander
+        {
+            Header = summary,
+            Content = Blocks(details.Blocks, depth, spacing: 8),
+            IsExpanded = _viewer.IsDetailsOpen(key, details.IsOpen),
+            HorizontalAlignment = HorizontalAlignment.Stretch,
+            HorizontalContentAlignment = HorizontalAlignment.Stretch,
+        };
+        expander.PropertyChanged += (_, change) =>
+        {
+            if (change.Property == Expander.IsExpandedProperty)
+            {
+                _viewer.RememberDetails(key, expander.IsExpanded);
+            }
+        };
+        return expander;
+    }
+
     /// <summary>The marker before a list item: a check box for a task, otherwise its number or a bullet.</summary>
     private static Control Marker(ListNode list, ListItemNode item, int index, int depth)
     {
@@ -344,12 +395,7 @@ internal sealed class MarkdownRenderer
                 return run;
 
             case EmphasisNode emphasis:
-                var span = emphasis.Kind switch
-                {
-                    EmphasisKind.Bold => new Bold(),
-                    EmphasisKind.Strikethrough => new Span { TextDecorations = TextDecorations.Strikethrough },
-                    _ => (Span)new Italic(),
-                };
+                var span = Emphasis(emphasis.Kind);
                 foreach (var child in emphasis.Inlines)
                 {
                     span.Inlines.Add(Inline(child, owner, ref offset));
@@ -404,6 +450,30 @@ internal sealed class MarkdownRenderer
 
             default:
                 return null;
+        }
+    }
+
+    private Span Emphasis(EmphasisKind kind)
+    {
+        switch (kind)
+        {
+            case EmphasisKind.Bold:
+                return new Bold();
+            case EmphasisKind.Strikethrough:
+                return new Span { TextDecorations = TextDecorations.Strikethrough };
+            case EmphasisKind.Superscript or EmphasisKind.Subscript:
+                return new Span
+                {
+                    BaselineAlignment = kind == EmphasisKind.Superscript ? BaselineAlignment.Superscript : BaselineAlignment.Subscript,
+                    FontSize = _viewer.GetValue(TextElement.FontSizeProperty) * SuperscriptScale,
+                };
+            case EmphasisKind.Keyboard:
+                var key = new Span();
+                key.Bind(TextElement.FontFamilyProperty, _viewer.GetObservable(MarkdownViewer.CodeFontFamilyProperty));
+                key.Bind(TextElement.BackgroundProperty, _viewer.GetObservable(MarkdownViewer.CodeBackgroundProperty));
+                return key;
+            default:
+                return new Italic();
         }
     }
 

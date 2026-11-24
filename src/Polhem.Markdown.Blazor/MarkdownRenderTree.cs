@@ -72,6 +72,15 @@ internal sealed partial class MarkdownRenderTree
             case AlertNode alert:
                 Alert(alert);
                 break;
+            case AlignedBlockNode aligned:
+                _builder.OpenElement(0, "div");
+                _builder.AddAttribute(1, ClassAttribute, aligned.Alignment == BlockAlignment.Right ? "pmd-align-right" : "pmd-align-center");
+                Blocks(2, aligned.Blocks);
+                _builder.CloseElement();
+                break;
+            case DetailsNode details:
+                Details(details);
+                break;
             case TableNode table:
                 Table(table);
                 break;
@@ -257,6 +266,9 @@ internal sealed partial class MarkdownRenderTree
                 {
                     EmphasisKind.Bold => "strong",
                     EmphasisKind.Strikethrough => "del",
+                    EmphasisKind.Superscript => "sup",
+                    EmphasisKind.Subscript => "sub",
+                    EmphasisKind.Keyboard => "kbd",
                     _ => "em",
                 }, emphasis.Inlines);
                 break;
@@ -306,10 +318,60 @@ internal sealed partial class MarkdownRenderTree
     }
 
     /// <summary>
-    /// Writes an image. The browser loads it lazily, sends no referrer, and in an <c>img</c> an SVG's scripts do not run.
-    /// A broken image shows its alternative text.
+    /// Writes a section the reader opens and closes. The browser keeps it open or closed as the reader leaves it; a new
+    /// render writes <c>open</c> only when the text changes it.
+    /// </summary>
+    private void Details(DetailsNode details)
+    {
+        _builder.OpenElement(0, "details");
+        _builder.AddAttribute(1, ClassAttribute, "pmd-details");
+        _builder.AddAttribute(2, "open", details.IsOpen);
+        _builder.OpenElement(3, "summary");
+        Inlines(4, details.Summary);
+        _builder.CloseElement();
+        Blocks(5, details.Blocks);
+        _builder.CloseElement();
+    }
+
+    /// <summary>
+    /// Writes an image, inside a <c>picture</c> when it has a source for a dark or a light theme, which the browser picks
+    /// by the reader's color scheme.
     /// </summary>
     private void Image(ImageNode image)
+    {
+        if (image.DarkSource is null && image.LightSource is null)
+        {
+            Img(image);
+            return;
+        }
+        _builder.OpenElement(10, "picture");
+        ThemeSource(11, "(prefers-color-scheme: dark)", image.DarkSource);
+        ThemeSource(12, "(prefers-color-scheme: light)", image.LightSource);
+        _builder.OpenRegion(13);
+        Img(image);
+        _builder.CloseRegion();
+        _builder.CloseElement();
+    }
+
+    private void ThemeSource(int sequence, string media, Uri? source)
+    {
+        if (source is null)
+        {
+            return;
+        }
+        _builder.OpenRegion(sequence);
+        _builder.OpenElement(0, "source");
+        _builder.AddAttribute(1, "media", media);
+        _builder.AddAttribute(2, "srcset", source.AbsoluteUri);
+        _builder.CloseElement();
+        _builder.CloseRegion();
+    }
+
+    /// <summary>
+    /// Writes an <c>img</c>. The browser loads it lazily, sends no referrer, and in an <c>img</c> an SVG's scripts do not
+    /// run. A broken image shows its alternative text.
+    /// </summary>
+    private void Img(ImageNode image)
     {
         _builder.OpenElement(0, "img");
         _builder.AddAttribute(1, ClassAttribute, "pmd-img");
@@ -322,6 +384,21 @@ internal sealed partial class MarkdownRenderTree
         _builder.AddAttribute(5, "loading", "lazy");
         _builder.AddAttribute(6, "decoding", "async");
         _builder.AddAttribute(7, "referrerpolicy", "no-referrer");
+        if (image.Width is { } width)
+        {
+            _builder.AddAttribute(8, "width", width);
+        }
+        if (image.Height is { } height)
+        {
+            _builder.AddAttribute(9, "height", height);
+
+            // NOTE: with a width the stylesheet lets the height follow the image's proportions, so a narrow viewer
+            // shrinks both; the height still bounds it, and the image fits inside both as in the Avalonia viewer.
+            if (image.Width is not null)
+            {
+                _builder.AddAttribute(10, "style", "max-height:" + height.ToString(CultureInfo.InvariantCulture) + "px");
+            }
+        }
         _builder.CloseElement();
     }
 

@@ -40,6 +40,8 @@ internal static class NodeTree
         ListItemNode item => item.Blocks,
         QuoteNode quote => quote.Blocks,
         AlertNode alert => alert.Blocks,
+        AlignedBlockNode aligned => aligned.Blocks,
+        DetailsNode details => [.. details.Summary, .. details.Blocks],
         TableNode table => [.. table.HeaderRows, .. table.Rows],
         TableRowNode row => row.Cells,
         TableCellNode cell => cell.Inlines,

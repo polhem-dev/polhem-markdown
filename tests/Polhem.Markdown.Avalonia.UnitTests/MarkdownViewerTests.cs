@@ -317,11 +317,11 @@ public class MarkdownViewerTests(HeadlessSession session)
         Assert.Same(brush, link.Foreground);
     });
 
-    [Fact(DisplayName = "Raw HTML is shown as text")]
-    public Task Render_RawHtml_ShowsAsText() => session.RunAsync(() =>
+    [Fact(DisplayName = "A script in raw HTML is dropped with its content")]
+    public Task Render_Script_IsDropped() => session.RunAsync(() =>
     {
-        var (_, viewer) = Show("<script>alert(1)</script>");
+        var (_, viewer) = Show("a <script>alert(1)</script>b\n\n<script>\nalert(2)\n</script>");
 
-        Assert.Equal("<script>alert(1)</script>", Assert.IsType<MarkdownTextBlock>(Assert.Single(Blocks(viewer))).Inlines!.Text);
+        Assert.Equal("a b", Assert.IsType<MarkdownTextBlock>(Assert.Single(Blocks(viewer))).Inlines!.Text);
     });
 }
