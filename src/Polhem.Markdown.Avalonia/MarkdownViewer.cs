@@ -119,6 +119,7 @@ public partial class MarkdownViewer : Control
     {
         LogicalChildren.Add(_panel);
         VisualChildren.Add(_panel);
+        AddHandler(PointerPressedEvent, OnPointerPressedForSource, RoutingStrategies.Tunnel);
     }
 
     /// <summary>Gets or sets the Markdown text to show.</summary>
@@ -428,6 +429,7 @@ public partial class MarkdownViewer : Control
             _sources.RemoveRange(document.Blocks.Count, extra);
         }
 
+        KeepRanges(document);
         ForgetImagesNotIn(document);
         _hasThemedImages = document.Blocks.SelectMany(NodeTree.SelfAndDescendants)
             .Any(node => node is ImageNode { DarkSource: not null } or ImageNode { LightSource: not null });

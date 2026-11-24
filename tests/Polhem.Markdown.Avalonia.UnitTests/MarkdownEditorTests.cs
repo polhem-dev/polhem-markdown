@@ -141,6 +141,7 @@ public class MarkdownEditorTests(HeadlessSession session)
 
         Assert.Equal(ColorOf(editor.CodeKeywordBrush), ColorOf(ElementAt(editor, "```cs\n".Length).TextRunProperties.ForegroundBrush));
         Assert.Equal(ColorOf(editor.CodeStringBrush), ColorOf(ElementAt(editor, "```cs\nvar x = ".Length).TextRunProperties.ForegroundBrush));
+        Assert.NotEqual(ColorOf(editor.CodeBrush), ColorOf(ElementAt(editor, "```cs\nvar ".Length).TextRunProperties.ForegroundBrush));
     });
 
     [Fact(DisplayName = "Until the next scan the colours move with an edit")]
@@ -197,6 +198,19 @@ public class MarkdownEditorTests(HeadlessSession session)
         editor.HeadingBrush = brush;
 
         Assert.Equal(ColorOf(brush), ColorOf(ElementAt(editor, 3).TextRunProperties.ForegroundBrush));
+    });
+
+    [Fact(DisplayName = "Focus given to the editor goes on to the text inside")]
+    public Task Focus_GoesToText() => session.RunAsync(() =>
+    {
+        var editor = Show("text");
+
+        // NOTE: Focus() returns false: the editor passes focus on at once, so it is not the focused element itself.
+        editor.Focus();
+        Dispatcher.UIThread.RunJobs();
+
+        Assert.True(editor.TextEditor.TextArea.IsFocused);
+        Assert.True(editor.IsKeyboardFocusWithin);
     });
 
     [Fact(DisplayName = "Links in the source cannot be opened from the editor")]

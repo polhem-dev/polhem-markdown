@@ -15,8 +15,14 @@ internal enum MarkdownSyntaxKind : byte
     /// <summary>The text of a heading.</summary>
     Heading,
 
-    /// <summary>Inline code, or the code of a block that is not highlighted.</summary>
+    /// <summary>Inline code.</summary>
     Code,
+
+    /// <summary>
+    /// The code of a fenced or indented block, or of front matter, that no highlighted token covers. Its tokens have the
+    /// code kinds below.
+    /// </summary>
+    CodeBlock,
 
     /// <summary>The text of a link or an image, or a footnote reference.</summary>
     Link,

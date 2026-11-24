@@ -98,7 +98,7 @@ internal sealed class MarkdownSyntaxScanner
                 Inlines(paragraph.Inline);
                 break;
             case YamlFrontMatterBlock front:
-                Fenced(front, front.Lines, "yaml", MarkdownSyntaxKind.Code);
+                Fenced(front, front.Lines, "yaml", MarkdownSyntaxKind.CodeBlock);
                 break;
             // A math block is a kind of fenced code block, so it comes first.
             case MathBlock math:
@@ -108,7 +108,7 @@ internal sealed class MarkdownSyntaxScanner
                 FencedCode(fenced);
                 break;
             case CodeBlock code:
-                Lines(code.Lines, "", MarkdownSyntaxKind.Code);
+                Lines(code.Lines, "", MarkdownSyntaxKind.CodeBlock);
                 break;
             case HtmlBlock html:
                 Lines(html.Lines, "html", MarkdownSyntaxKind.Html);
@@ -214,7 +214,7 @@ internal sealed class MarkdownSyntaxScanner
     private void FencedCode(FencedCodeBlock fenced)
     {
         var language = fenced.Info ?? "";
-        var kind = string.Equals(language, "math", StringComparison.OrdinalIgnoreCase) ? MarkdownSyntaxKind.Math : MarkdownSyntaxKind.Code;
+        var kind = string.Equals(language, "math", StringComparison.OrdinalIgnoreCase) ? MarkdownSyntaxKind.Math : MarkdownSyntaxKind.CodeBlock;
         Fenced(fenced, fenced.Lines, language, kind);
     }
 

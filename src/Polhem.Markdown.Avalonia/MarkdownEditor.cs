@@ -1,6 +1,7 @@
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Data;
+using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Media;
 using Avalonia.Threading;
@@ -84,6 +85,9 @@ public partial class MarkdownEditor : Control
         _editor.TextArea.TextView.LineTransformers.Add(_colorizer);
         _editor.Document.Changed += OnDocumentChanged;
         _editor.TextArea.AddHandler(KeyDownEvent, OnTextAreaKeyDown, RoutingStrategies.Tunnel);
+        _editor.TemplateApplied += OnEditorTemplateApplied;
+        _editor.TextArea.TextView.ScrollOffsetChanged += (_, _) => UpdateFirstVisibleSourceOffset();
+        _editor.TextArea.TextView.VisualLinesChanged += (_, _) => UpdateFirstVisibleSourceOffset();
         _scanTimer = new DispatcherTimer(s_scanDelay, DispatcherPriority.Background, (_, _) =>
         {
             _scanTimer!.Stop();
@@ -92,6 +96,9 @@ public partial class MarkdownEditor : Control
 
         LogicalChildren.Add(_editor);
         VisualChildren.Add(_editor);
+
+        // Focus given to the editor, such as by Focus() or Tab navigation, goes on to the text inside.
+        Focusable = true;
     }
 
     /// <summary>Gets or sets the Markdown text. It follows every edit, and binds two-way by default.</summary>
@@ -183,6 +190,13 @@ public partial class MarkdownEditor : Control
         {
             _editor.TextArea.TextView.Redraw();
         }
+    }
+
+    /// <inheritdoc/>
+    protected override void OnGotFocus(FocusChangedEventArgs e)
+    {
+        base.OnGotFocus(e);
+        _editor.TextArea.Focus();
     }
 
     /// <inheritdoc/>

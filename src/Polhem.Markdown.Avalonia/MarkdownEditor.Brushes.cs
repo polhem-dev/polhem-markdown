@@ -54,7 +54,7 @@ public partial class MarkdownEditor
     public static readonly StyledProperty<IBrush?> SelectionBrushProperty =
         AvaloniaProperty.Register<MarkdownEditor, IBrush?>(nameof(SelectionBrush));
 
-    /// <summary>Gets or sets the brush of inline code, and code in a block the highlighter does not colour.</summary>
+    /// <summary>Gets or sets the brush of inline code. The code of a block keeps the text's colour, with its tokens coloured by the code brushes.</summary>
     public IBrush CodeBrush
     {
         get => GetValue(CodeBrushProperty);

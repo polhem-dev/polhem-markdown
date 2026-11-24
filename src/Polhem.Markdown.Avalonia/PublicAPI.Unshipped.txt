@@ -102,3 +102,14 @@ static readonly Polhem.Markdown.Avalonia.MarkdownEditor.ShowLineNumbersProperty 
 static readonly Polhem.Markdown.Avalonia.MarkdownEditor.UrlBrushProperty -> Avalonia.StyledProperty<Avalonia.Media.IBrush!>!
 static readonly Polhem.Markdown.Avalonia.MarkdownEditor.WordWrapProperty -> Avalonia.StyledProperty<bool>!
 Polhem.Markdown.Avalonia.MarkdownEditor.ApplyFormat(Polhem.Markdown.MarkdownFormat format) -> void
+Polhem.Markdown.Avalonia.MarkdownEditor.FirstVisibleSourceOffset.get -> int
+Polhem.Markdown.Avalonia.MarkdownEditor.ScrollToSourceOffset(int sourceOffset) -> void
+Polhem.Markdown.Avalonia.MarkdownSourceRequestedEventArgs
+Polhem.Markdown.Avalonia.MarkdownSourceRequestedEventArgs.MarkdownSourceRequestedEventArgs(int sourceOffset) -> void
+Polhem.Markdown.Avalonia.MarkdownSourceRequestedEventArgs.SourceOffset.get -> int
+Polhem.Markdown.Avalonia.MarkdownViewer.GetSourceOffset(double verticalOffset) -> int?
+Polhem.Markdown.Avalonia.MarkdownViewer.GetVerticalOffset(int sourceOffset) -> double?
+Polhem.Markdown.Avalonia.MarkdownViewer.SourceRequested -> System.EventHandler<Polhem.Markdown.Avalonia.MarkdownSourceRequestedEventArgs!>?
+static readonly Polhem.Markdown.Avalonia.MarkdownEditor.FirstVisibleSourceOffsetProperty -> Avalonia.DirectProperty<Polhem.Markdown.Avalonia.MarkdownEditor!, int>!
+static readonly Polhem.Markdown.Avalonia.MarkdownViewer.SourceRequestedEvent -> Avalonia.Interactivity.RoutedEvent<Polhem.Markdown.Avalonia.MarkdownSourceRequestedEventArgs!>!
+override Polhem.Markdown.Avalonia.MarkdownEditor.OnGotFocus(Avalonia.Input.FocusChangedEventArgs! e) -> void
