@@ -1,4 +1,5 @@
 using Polhem.Markdown;
+using Polhem.Markdown.Editing;
 using Polhem.Markdown.Model;
 
 // Parses a text with every kind of node the model has and checks that each one came out.
@@ -25,7 +26,7 @@ const string Markdown = """
     > An alert.
 
     ```csharp
-    var x = 1;
+    var x = 1; // one
     ```
 
     ```mermaid
@@ -102,6 +103,15 @@ if (diagrams.Count != 2 || diagrams.Any(diagram => diagram.Drawing.Shapes.Count 
 if (document.Blocks.OfType<CodeBlockNode>().First(block => block.Language == "csharp").Tokens.Count == 0)
 {
     await Console.Error.WriteLineAsync("Expected the C# code block to be highlighted.");
+    return 1;
+}
+
+// The editor's syntax colouring reads the same text: every kind of span it colours must come out.
+var kinds = MarkdownSyntaxScanner.Scan(Markdown).Select(span => span.Kind).ToHashSet();
+var missingKinds = Enum.GetValues<MarkdownSyntaxKind>().Where(kind => kind != MarkdownSyntaxKind.None && !kinds.Contains(kind)).ToList();
+if (missingKinds.Count > 0)
+{
+    await Console.Error.WriteLineAsync("Missing syntax kinds: " + string.Join(", ", missingKinds));
     return 1;
 }
 
