@@ -20,8 +20,8 @@ Link the stylesheet in the host page, then use the component:
   `<div>` with `align="center"` or `"right"` (classes `pmd-align-center` and `pmd-align-right`), `<details>` with
   `<summary>`, and `<picture>` with sources for `(prefers-color-scheme: dark)` and `light`, which the browser picks
   from. Any other HTML element's tag is dropped and its content kept, attributes other than those are dropped, and
-  scripts, styles and comments are dropped with their content. Text that only looks like a tag (`List<string>`), and an
-  element whose end tag is missing from its paragraph, show as written.
+  scripts, styles and comments are dropped with their content. Text that only looks like a tag (`List<string>`), and a
+  tag that does not pair up within its paragraph, show as written.
 - **Safety**: the markup is built with a render tree, never from an HTML string, and only links whose scheme is in `Options.AllowedLinkSchemes` (by default `http`, `https`
   and `mailto`) become links. Relative links (`CHANGELOG.md`,
   `../README.md`) stay text unless `Options.BaseUri` is set, such as to the address of the document being shown; they

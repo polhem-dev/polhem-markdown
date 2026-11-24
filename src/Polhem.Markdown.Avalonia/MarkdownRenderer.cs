@@ -241,7 +241,7 @@ internal sealed class MarkdownRenderer
     {
         var summary = Text(details.Summary);
         summary.IsHitTestVisible = false;
-        var key = MarkdownViewer.DetailsKey(details);
+        var key = _viewer.DetailsKey(details);
         var expander = new Expander
         {
             Header = summary,

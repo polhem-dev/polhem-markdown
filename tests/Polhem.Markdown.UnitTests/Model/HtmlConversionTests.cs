@@ -33,7 +33,7 @@ public class HtmlConversionTests
         Assert.Equal(EmphasisKind.Italic, Assert.IsType<EmphasisNode>(Assert.Single(sup.Inlines)).Kind);
     }
 
-    [Fact(DisplayName = "An element without an end tag in its paragraph shows as written, and an end tag without a start is dropped")]
+    [Fact(DisplayName = "An element without an end tag in its paragraph shows as written, and so does an end tag without a start")]
     public void Build_UnbalancedTags_ShowAsWritten()
     {
         var document = Parse("a <b>bold\n\nplain</b> text");
@@ -41,7 +41,15 @@ public class HtmlConversionTests
         var first = Assert.IsType<ParagraphNode>(document.Blocks[0]);
         Assert.Equal("a <b>bold", Text(first.Inlines));
         Assert.DoesNotContain(first.Inlines, inline => inline is EmphasisNode);
-        Assert.Equal("plain text", Text(Assert.IsType<ParagraphNode>(document.Blocks[1]).Inlines));
+        Assert.Equal("plain</b> text", Text(Assert.IsType<ParagraphNode>(document.Blocks[1]).Inlines));
+    }
+
+    [Theory(DisplayName = "A pair of tags split across Markdown emphasis, or past the nesting limit, shows whole")]
+    [InlineData("**a <b>b** c</b>", "a <b>b c</b>")]
+    [InlineData("<b><b><b><b><b><b><b><b><b><b><b><b><b><b><b><b><b><b>x</b></b></b></b></b></b></b></b></b></b></b></b></b></b></b></b></b></b>", "<b><b>x</b></b>")]
+    public void Build_SplitOrDeepPair_ShowsWhole(string markdown, string text)
+    {
+        Assert.Equal(text, Text(Single<ParagraphNode>(Parse(markdown)).Inlines));
     }
 
     [Theory(DisplayName = "A tag whose name is no HTML element, such as a type argument in prose, shows as written")]

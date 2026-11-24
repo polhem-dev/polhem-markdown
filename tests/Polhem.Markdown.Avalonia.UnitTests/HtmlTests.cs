@@ -46,7 +46,7 @@ public class HtmlTests(HeadlessSession session)
         Assert.Equal("Details", Assert.IsType<MarkdownTextBlock>(expanders[1].Header).Inlines!.Text);
     });
 
-    [Fact(DisplayName = "A section the reader opened stays open while its text arrives, and a new text starts as written")]
+    [Fact(DisplayName = "A section the reader opened stays open while its text arrives and text is added above it, and one with another summary starts as written")]
     public Task Render_DetailsOpened_StaysOpenWhileStreaming() => session.RunAsync(() =>
     {
         var (_, viewer) = Show("<details><summary>Thinking</summary>\n\nStep one");
@@ -56,9 +56,13 @@ public class HtmlTests(HeadlessSession session)
         Dispatcher.UIThread.RunJobs();
         Assert.True(Assert.IsType<Expander>(Assert.Single(Blocks(viewer))).IsExpanded);
 
-        viewer.Markdown = "Other text\n\n<details><summary>Thinking</summary>\n\nStep";
+        viewer.Markdown = "Text above\n\n<details><summary>Thinking</summary>\n\nStep one and two";
         Dispatcher.UIThread.RunJobs();
-        Assert.False(Assert.IsType<Expander>(Blocks(viewer).Last()).IsExpanded);
+        Assert.True(Assert.IsType<Expander>(Blocks(viewer).Last()).IsExpanded);
+
+        viewer.Markdown = "<details><summary>Answer</summary>\n\nStep";
+        Dispatcher.UIThread.RunJobs();
+        Assert.False(Assert.IsType<Expander>(Assert.Single(Blocks(viewer))).IsExpanded);
     });
 
     [Fact(DisplayName = "Superscript and subscript sit above and below the line, smaller; a key uses the code font")]

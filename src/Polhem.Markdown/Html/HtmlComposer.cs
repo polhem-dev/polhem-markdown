@@ -179,8 +179,15 @@ internal sealed class HtmlComposer
             // An inline end tag does not reach out of a block element, as text cannot be bold outside its paragraph.
             if (HtmlElements.IsBlock(frame.Name) && !HtmlElements.IsBlock(tag.Name))
             {
-                return;
+                break;
             }
+        }
+
+        // NOTE: in a paragraph an end tag that closes nothing shows as written, like a start tag that is never closed,
+        // so a tag the text names, or one past the nesting limit, shows whole rather than as half a pair.
+        if (!_blocks && HtmlElements.IsInline(tag.Name))
+        {
+            Top.Children.Add(new TextNode(new SourceRange(tag.Start, tag.Length), tag.Text));
         }
     }
 

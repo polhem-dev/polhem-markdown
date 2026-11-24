@@ -288,14 +288,16 @@
 .pmd .pmd-tk-tag { color: var(--pmd-code-tag, #e5484d); }
 .pmd .pmd-tk-property { color: var(--pmd-code-property, #3b82f6); }
 
-/* Images: scaled down to the viewer's width, never up, and kept in the line of text they appear in. A height written in
-   HTML is kept, and the image fits inside the size it asks for without being distorted, as in the Avalonia viewer. */
+/* Images: scaled down to the viewer's width, never up, and kept in the line of text they appear in. With a width, the
+   height follows the image's proportions, so a narrow viewer shrinks both; a height written alone is kept, and the image
+   fits inside it without being distorted. */
 .pmd .pmd-img {
   max-width: 100%;
   vertical-align: middle;
   object-fit: contain;
 }
 
-.pmd .pmd-img:not([height]) {
+.pmd .pmd-img:not([height]),
+.pmd .pmd-img[width] {
   height: auto;
 }

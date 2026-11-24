@@ -345,6 +345,7 @@ public partial class MarkdownViewer : Control
     {
         var markdown = Markdown ?? "";
         var document = MarkdownModelBuilder.Build(markdown, Options ?? new MarkdownOptions());
+        AssignDetailsKeys(document);
         var renderer = new MarkdownRenderer(this);
         var built = 0;
 
@@ -384,7 +385,6 @@ public partial class MarkdownViewer : Control
         }
 
         ForgetImagesNotIn(document);
-        ForgetDetailsNotIn(document);
         _hasThemedImages = document.Blocks.SelectMany(NodeTree.SelfAndDescendants)
             .Any(node => node is ImageNode { DarkSource: not null } or ImageNode { LightSource: not null });
         RenderedNodeTypes = renderer.RenderedNodeTypes;
