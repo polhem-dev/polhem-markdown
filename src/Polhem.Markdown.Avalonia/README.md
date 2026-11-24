@@ -48,6 +48,12 @@ Blazor front end show the same text the same way.
   (`AlertNoteBrush`, `AlertTipBrush`, `AlertImportantBrush`, `AlertWarningBrush`, `AlertCautionBrush`) and the code
   brushes (`CodeKeywordBrush`, `CodeStringBrush`, `CodeCommentBrush`, `CodeConstantBrush`, `CodeTagBrush`,
   `CodePropertyBrush`) to match a theme; they apply without rebuilding the view.
+- **Chinese, Japanese and Korean text**: Avalonia can lose the weight of bold CJK text that is drawn in a fallback
+  font, so a bold word shows plain, or the plain text after it shows bold
+  ([AvaloniaUI/Avalonia#18199](https://github.com/AvaloniaUI/Avalonia/issues/18199)). Set `CjkFontFamily` to the CJK
+  fonts your application uses, such as `PingFang TC, Microsoft JhengHei UI, Noto Sans CJK TC`; the viewer then draws CJK
+  characters in the first one installed and other characters in the viewer's font. It is not set by default, because the
+  right fonts depend on the language.
 - **Updates**: when `Markdown` changes, only the top-level blocks whose source changed are rebuilt, so a reply that
   grows as it arrives does not flicker.
 

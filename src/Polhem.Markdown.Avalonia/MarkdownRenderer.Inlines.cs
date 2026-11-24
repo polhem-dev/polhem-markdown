@@ -37,7 +37,7 @@ internal sealed partial class MarkdownRenderer
         {
             case TextNode text:
                 offset += text.Text.Length;
-                return new Run(text.Text);
+                return TextInline(text.Text);
 
             case CodeSpanNode code:
                 offset += code.Code.Length;
@@ -108,6 +108,40 @@ internal sealed partial class MarkdownRenderer
             default:
                 return null;
         }
+    }
+
+    /// <summary>
+    /// Builds a run of text, split so that CJK characters are drawn in <see cref="MarkdownViewer.CjkFontFamily"/> when it
+    /// is set.
+    /// </summary>
+    /// <remarks>
+    /// NOTE: drawing CJK text in a font that has its glyphs keeps it out of Avalonia's font fallback, which carries the
+    /// weight and style of earlier text in the line over to later text. See <see cref="MarkdownViewer.CjkFontFamily"/>.
+    /// </remarks>
+    private Inline TextInline(string text)
+    {
+        if (_viewer.CjkFontFamily is not { } cjkFamily)
+        {
+            return new Run(text);
+        }
+
+        var stretches = CjkText.Split(text);
+        if (stretches.Count == 1)
+        {
+            return stretches[0].IsCjk ? new Run(text) { FontFamily = cjkFamily } : new Run(text);
+        }
+
+        var span = new Span();
+        foreach (var (start, length, isCjk) in stretches)
+        {
+            var run = new Run(text.Substring(start, length));
+            if (isCjk)
+            {
+                run.FontFamily = cjkFamily;
+            }
+            span.Inlines.Add(run);
+        }
+        return span;
     }
 
     private Span Emphasis(EmphasisKind kind)
