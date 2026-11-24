@@ -4,10 +4,23 @@
 <div class="gallery @(_dark ? "dark" : "")">
     <div class="bar">
         <label><input type="checkbox" @bind="_dark" /> Dark</label>
+        <label><input type="checkbox" @bind="_edit" /> Edit</label>
         <button type="button" @onclick="Replay">Replay</button>
         <span class="status">@_status</span>
     </div>
-    <MarkdownViewer Markdown="@_markdown" Options="_options" OnLinkActivated="OnLinkActivated" />
+    @if (_edit)
+    {
+        <div class="split">
+            <MarkdownEditor @bind-Markdown="_markdown" aria-label="Markdown source" />
+            <div class="preview">
+                <MarkdownViewer Markdown="@_markdown" Options="_options" OnLinkActivated="OnLinkActivated" />
+            </div>
+        </div>
+    }
+    else
+    {
+        <MarkdownViewer Markdown="@_markdown" Options="_options" OnLinkActivated="OnLinkActivated" />
+    }
 </div>
 
 @code {
@@ -17,6 +30,7 @@
     private string _markdown = MarkdownGallery.SampleText.Markdown;
     private string? _status;
     private bool _dark;
+    private bool _edit;
     private CancellationTokenSource? _replay;
 
     private static MarkdownOptions CreateOptions()

@@ -1,7 +1,7 @@
 /*
-  Styles of Polhem.Markdown.Blazor's MarkdownViewer. Everything is scoped under .pmd. The font and the text color come
-  from the surrounding page; these variables set the rest, with defaults that read on light and dark pages and match
-  the Avalonia viewer:
+  Styles of Polhem.Markdown.Blazor's MarkdownViewer and MarkdownEditor. The viewer's are scoped under .pmd, the editor's
+  under .pmd-editor. The font and the text color come from the surrounding page; these variables set the rest, with
+  defaults that read on light and dark pages and match the Avalonia viewer and editor:
 
     --pmd-link       link color, and the fill of a checked task box
     --pmd-code-bg    background of inline code, keys (<kbd>), code blocks and table headers
@@ -12,7 +12,16 @@
                      bar, icon and title of each kind of alert (> [!NOTE] and so on)
     --pmd-code-keyword, --pmd-code-string, --pmd-code-comment, --pmd-code-constant, --pmd-code-tag,
     --pmd-code-property
-                     colors of the kinds of token in a highlighted code block
+                     colors of the kinds of token in a highlighted code block, in the viewer and the editor
+
+  The editor also uses --pmd-code-font for its text, --pmd-link for the text of links, and:
+
+    --pmd-heading      headings
+    --pmd-marker       syntax such as heading and emphasis markers, list bullets, fences, and raw HTML
+    --pmd-inline-code  inline code
+    --pmd-url          link destinations and bare URLs
+    --pmd-math         formulas
+    --pmd-selection    the background of selected text, which must let the text show through
 */
 
 .pmd {
@@ -326,13 +335,14 @@
   text-decoration: none;
 }
 
-/* Highlighted code: each kind of token in its own color, read on light and dark pages. */
-.pmd .pmd-tk-keyword { color: var(--pmd-code-keyword, #8b5cf6); }
-.pmd .pmd-tk-string { color: var(--pmd-code-string, #22a35a); }
-.pmd .pmd-tk-comment { color: var(--pmd-code-comment, #8a8f98); }
-.pmd .pmd-tk-constant { color: var(--pmd-code-constant, #d97706); }
-.pmd .pmd-tk-tag { color: var(--pmd-code-tag, #e5484d); }
-.pmd .pmd-tk-property { color: var(--pmd-code-property, #3b82f6); }
+/* Highlighted code: each kind of token in its own color, read on light and dark pages. The editor colors the code of
+   fenced blocks with the same classes. */
+:is(.pmd, .pmd-editor) .pmd-tk-keyword { color: var(--pmd-code-keyword, #8b5cf6); }
+:is(.pmd, .pmd-editor) .pmd-tk-string { color: var(--pmd-code-string, #22a35a); }
+:is(.pmd, .pmd-editor) .pmd-tk-comment { color: var(--pmd-code-comment, #8a8f98); }
+:is(.pmd, .pmd-editor) .pmd-tk-constant { color: var(--pmd-code-constant, #d97706); }
+:is(.pmd, .pmd-editor) .pmd-tk-tag { color: var(--pmd-code-tag, #e5484d); }
+:is(.pmd, .pmd-editor) .pmd-tk-property { color: var(--pmd-code-property, #3b82f6); }
 
 /* Images: scaled down to the viewer's width, never up, and kept in the line of text they appear in. With a width, the
    height follows the image's proportions, so a narrow viewer shrinks both, and a height written too is its maximum (an
@@ -347,3 +357,86 @@
 .pmd .pmd-img[width] {
   height: auto;
 }
+
+/*
+  The editor: a textarea over a layer that draws the same text in color. The two must lay the text out identically, so
+  they share every property that moves a character: font, size, line height, padding, wrapping and tab size. The
+  textarea's text is transparent once the script has drawn the layer; before that, and when the editor is rendered
+  statically, the textarea shows the text itself.
+
+  Bold and italic need a font whose bold and italic letters are as wide as the regular ones, as monospaced fonts are;
+  otherwise the layer drifts from the textarea. Keep --pmd-code-font monospaced.
+*/
+.pmd-editor {
+  position: relative;
+  min-height: 8em;
+  font-family: var(--pmd-code-font, "Cascadia Mono", Consolas, Menlo, ui-monospace, monospace);
+  font-size: 0.9em;
+  line-height: 1.5;
+}
+
+.pmd-editor > .pmd-editor-layer,
+.pmd-editor > .pmd-editor-input {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  border: 0;
+  padding: 8px 12px;
+  box-sizing: border-box;
+  font: inherit;
+  letter-spacing: normal;
+  word-spacing: normal;
+  text-indent: 0;
+  tab-size: 4;
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+  word-break: normal;
+}
+
+.pmd-editor.pmd-editor-nowrap > .pmd-editor-layer,
+.pmd-editor.pmd-editor-nowrap > .pmd-editor-input {
+  white-space: pre;
+  overflow-wrap: normal;
+}
+
+.pmd-editor > .pmd-editor-layer {
+  overflow: hidden;
+  pointer-events: none;
+  color: inherit;
+  background: none;
+  visibility: hidden;
+}
+
+.pmd-editor > .pmd-editor-input {
+  width: 100%;
+  height: 100%;
+  resize: none;
+  outline: none;
+  overflow: auto;
+  color: inherit;
+  caret-color: currentColor;
+  background: transparent;
+}
+
+.pmd-editor.pmd-editor-ready > .pmd-editor-layer {
+  visibility: visible;
+}
+
+.pmd-editor.pmd-editor-ready > .pmd-editor-input {
+  color: transparent;
+}
+
+.pmd-editor > .pmd-editor-input::selection {
+  color: transparent;
+  background: var(--pmd-selection, rgba(59, 130, 246, 0.3));
+}
+
+.pmd-editor .pmd-sx-marker { color: var(--pmd-marker, #8a8f98); }
+.pmd-editor .pmd-sx-heading { color: var(--pmd-heading, #8b5cf6); font-weight: bold; }
+.pmd-editor .pmd-sx-code { color: var(--pmd-inline-code, #e5484d); }
+.pmd-editor .pmd-sx-link { color: var(--pmd-link, #3b82f6); }
+.pmd-editor .pmd-sx-url { color: var(--pmd-url, #22a35a); }
+.pmd-editor .pmd-sx-math { color: var(--pmd-math, #d97706); }
+.pmd-editor .pmd-sx-bold { font-weight: bold; }
+.pmd-editor .pmd-sx-italic { font-style: italic; }
+.pmd-editor .pmd-sx-strike { text-decoration: line-through; }
