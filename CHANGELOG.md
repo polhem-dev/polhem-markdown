@@ -9,9 +9,12 @@ and versions follow [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-11-24
+
+Details: [docs/en/changelogs/0.2.1.md](docs/en/changelogs/0.2.1.md)
+
 - `Polhem.Markdown.Avalonia` no longer exports the `CompiledAvaloniaXaml.!XamlLoader` and
-  `CompiledAvaloniaXaml.!AvaloniaResources` types that 0.2.0 exported: the editor's theme is built in code instead of
-  XAML (#48).
+  `CompiledAvaloniaXaml.!AvaloniaResources` types that 0.2.0 exported.
 
 ## [0.2.0] - 2026-11-24
 
@@ -41,6 +44,7 @@ Details: [docs/en/changelogs/0.2.0.md](docs/en/changelogs/0.2.0.md)
 - `Polhem.Markdown.Blazor` adds `MarkdownViewer`, a component that renders a Markdown text as semantic HTML, with
   `OnLinkActivated` for links, code blocks with a copy button, and a stylesheet set through `--pmd-*` CSS variables.
 
-[Unreleased]: https://github.com/polhem-dev/polhem-markdown/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/polhem-dev/polhem-markdown/compare/v0.2.1...HEAD
+[0.2.1]: https://github.com/polhem-dev/polhem-markdown/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/polhem-dev/polhem-markdown/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/polhem-dev/polhem-markdown/releases/tag/v0.1.0

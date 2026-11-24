@@ -9,8 +9,12 @@ Polhem.Markdown 各套件值得注意的變更，每個版本只列幾項重點�
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-11-24
+
+詳細內容：[docs/zh-TW/changelogs/0.2.1.md](docs/zh-TW/changelogs/0.2.1.md)
+
 - `Polhem.Markdown.Avalonia` 不再匯出 0.2.0 起多出的 `CompiledAvaloniaXaml.!XamlLoader` 與
-  `CompiledAvaloniaXaml.!AvaloniaResources` 型別：編輯器的主題改由程式碼建立，不再使用 XAML（#48）。
+  `CompiledAvaloniaXaml.!AvaloniaResources` 型別。
 
 ## [0.2.0] - 2026-11-24
 
@@ -38,6 +42,7 @@ Polhem.Markdown 各套件值得注意的變更，每個版本只列幾項重點�
 - `Polhem.Markdown.Blazor` 新增 `MarkdownViewer` 元件，把 Markdown 文字呈現為語意化 HTML：連結以 `OnLinkActivated`
   交給宿主、程式碼區塊附複製鈕，樣式以 `--pmd-*` CSS 變數設定。
 
-[Unreleased]: https://github.com/polhem-dev/polhem-markdown/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/polhem-dev/polhem-markdown/compare/v0.2.1...HEAD
+[0.2.1]: https://github.com/polhem-dev/polhem-markdown/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/polhem-dev/polhem-markdown/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/polhem-dev/polhem-markdown/releases/tag/v0.1.0
