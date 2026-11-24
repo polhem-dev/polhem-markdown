@@ -118,7 +118,7 @@ public class MarkdownSyntaxScannerTests
     public void Scan_FencedCode()
     {
         Assert.Equal(
-            ["Marker:```cs\n", "CodeKeyword:var", "Code: s = ", "CodeString:\"x\"", "Code:; ", "CodeComment:// c", "Marker:\n```"],
+            ["Marker:```cs\n", "CodeKeyword:var", "CodeBlock: s = ", "CodeString:\"x\"", "CodeBlock:; ", "CodeComment:// c", "Marker:\n```"],
             Spans("```cs\nvar s = \"x\"; // c\n```"));
     }
 
@@ -126,10 +126,10 @@ public class MarkdownSyntaxScannerTests
     public void Scan_FencedCodeInContainers()
     {
         Assert.Equal(
-            ["Marker:-", "Marker:```js\n  ", "CodeKeyword:let", "Code: a = ", "CodeConstant:1", "Code:;", "Marker:\n  ```"],
+            ["Marker:-", "Marker:```js\n  ", "CodeKeyword:let", "CodeBlock: a = ", "CodeConstant:1", "CodeBlock:;", "Marker:\n  ```"],
             Spans("- item\n  ```js\n  let a = 1;\n  ```"));
         Assert.Equal(
-            ["Marker:>", "Marker:```cs\n> ", "CodeKeyword:int", "Code: x;", "Marker:\n> ```"],
+            ["Marker:>", "Marker:```cs\n> ", "CodeKeyword:int", "CodeBlock: x;", "Marker:\n> ```"],
             Spans("> ```cs\n> int x;\n> ```"));
     }
 
@@ -141,16 +141,16 @@ public class MarkdownSyntaxScannerTests
             Spans("> ```cs\n> /* a\n> b */\n> ```"));
     }
 
-    [Fact(DisplayName = "Indented code is code, without its indentation")]
+    [Fact(DisplayName = "Indented code is block code, without its indentation")]
     public void Scan_IndentedCode()
     {
-        Assert.Equal(["Code:indented"], Spans("    indented\n"));
+        Assert.Equal(["CodeBlock:indented"], Spans("    indented\n"));
     }
 
-    [Fact(DisplayName = "Code in a language the highlighter does not know, and math, are code and math throughout")]
+    [Fact(DisplayName = "Code in a language the highlighter does not know, and math, are block code and math throughout")]
     public void Scan_PlainCodeAndMathBlock()
     {
-        Assert.Equal(["Marker:```text\n", "Code:var x", "Marker:\n```"], Spans("```text\nvar x\n```"));
+        Assert.Equal(["Marker:```text\n", "CodeBlock:var x", "Marker:\n```"], Spans("```text\nvar x\n```"));
         Assert.Equal(["Marker:$$\n", "Math:x^2", "Marker:\n$$"], Spans("$$\nx^2\n$$"));
         Assert.Equal(["Marker:```math\n", "Math:x^2", "Marker:\n```"], Spans("```math\nx^2\n```"));
     }
@@ -158,7 +158,7 @@ public class MarkdownSyntaxScannerTests
     [Fact(DisplayName = "YAML front matter is highlighted as YAML")]
     public void Scan_FrontMatter()
     {
-        Assert.Equal(["Marker:---\n", "CodeProperty:title", "Code:: x", "Marker:\n---"], Spans("---\ntitle: x\n---\n\ntext"));
+        Assert.Equal(["Marker:---\n", "CodeProperty:title", "CodeBlock:: x", "Marker:\n---"], Spans("---\ntitle: x\n---\n\ntext"));
     }
 
     [Fact(DisplayName = "Raw HTML, in a block or inline, is highlighted as HTML")]
@@ -181,7 +181,7 @@ public class MarkdownSyntaxScannerTests
     {
         Assert.Equal(
             ["Marker:#", "Heading: Head", "Marker+Bold:**", "None+Bold:b", "Marker+Bold:**", "Marker:```cs\r\n", "CodeKeyword:int",
-             "Code: x;", "Marker:\r\n```"],
+             "CodeBlock: x;", "Marker:\r\n```"],
             Spans("# Head\r\n\r\n**b**\r\n```cs\r\nint x;\r\n```\r\n"));
     }
 

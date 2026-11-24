@@ -10,7 +10,8 @@ namespace MarkdownGallery;
 
 /// <summary>
 /// The sample text in a viewer, with a theme switch, a replay that types the text in chunks as a streamed reply
-/// arrives, and a status line showing the last link to the host's own scheme.
+/// arrives, an edit switch that puts an editor beside the viewer, and a status line showing the last link to the host's
+/// own scheme.
 /// </summary>
 public sealed class GalleryView : UserControl
 {
@@ -34,15 +35,42 @@ public sealed class GalleryView : UserControl
         var replay = new Button { Content = "Replay", VerticalAlignment = VerticalAlignment.Center };
         replay.Click += (_, _) => Replay();
 
+        var edit = new ToggleSwitch { OnContent = "Edit", OffContent = "Edit", VerticalAlignment = VerticalAlignment.Center };
+
         var bar = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 12, Margin = new Thickness(16, 8) };
         bar.Children.Add(dark);
+        bar.Children.Add(edit);
         bar.Children.Add(replay);
         bar.Children.Add(_status);
+
+        var viewerScroll = new ScrollViewer { Content = new Border { Padding = new Thickness(16, 8, 16, 24), Child = _viewer } };
+        var editor = new MarkdownEditor { Markdown = SampleText.Markdown, IsVisible = false, Margin = new Thickness(8, 0, 0, 0) };
+        _ = new SourceSync(editor, _viewer, viewerScroll);
+
+        // The editor sits beside the viewer, or above it on a narrow screen such as a phone's.
+        var panes = new Grid();
+        panes.Children.Add(editor);
+        panes.Children.Add(viewerScroll);
+        void Arrange()
+        {
+            var wide = panes.Bounds.Width >= 700;
+            panes.ColumnDefinitions = ColumnDefinitions.Parse(editor.IsVisible && wide ? "*,*" : "*");
+            panes.RowDefinitions = RowDefinitions.Parse(editor.IsVisible && !wide ? "*,*" : "*");
+            Grid.SetColumn(viewerScroll, editor.IsVisible && wide ? 1 : 0);
+            Grid.SetRow(viewerScroll, editor.IsVisible && !wide ? 1 : 0);
+        }
+        panes.SizeChanged += (_, _) => Arrange();
+        edit.IsCheckedChanged += (_, _) =>
+        {
+            editor.IsVisible = edit.IsChecked == true;
+            replay.IsEnabled = !editor.IsVisible;
+            Arrange();
+        };
 
         var layout = new DockPanel();
         DockPanel.SetDock(bar, Dock.Top);
         layout.Children.Add(bar);
-        layout.Children.Add(new ScrollViewer { Content = new Border { Padding = new Thickness(16, 8, 16, 24), Child = _viewer } });
+        layout.Children.Add(panes);
         Content = layout;
     }
 
