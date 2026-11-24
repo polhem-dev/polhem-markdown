@@ -333,9 +333,12 @@ public class MarkdownEditor : ComponentBase, IAsyncDisposable
     protected virtual async ValueTask DisposeAsyncCore()
     {
         _disposed = true;
-        _scan?.Cancel();
-        _scan?.Dispose();
-        _scan = null;
+        if (_scan is not null)
+        {
+            await _scan.CancelAsync();
+            _scan.Dispose();
+            _scan = null;
+        }
         var module = _module;
         _module = null;
         if (module is not null)

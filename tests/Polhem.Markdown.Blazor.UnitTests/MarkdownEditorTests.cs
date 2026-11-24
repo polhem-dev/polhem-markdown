@@ -1,5 +1,7 @@
 using Bunit;
 using Microsoft.AspNetCore.Components;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.JSInterop;
 using Polhem.Markdown.Editing;
 
 namespace Polhem.Markdown.Blazor.UnitTests;
@@ -229,4 +231,85 @@ public class MarkdownEditorTests : BunitContext
 
         _module.VerifyInvoke("dispose");
     }
+
+    [Fact(DisplayName = "Focus goes to the module, which moves it to the textarea")]
+    public async Task Focus_CallsModule()
+    {
+        var editor = Edit("a");
+
+        await editor.InvokeAsync(() => editor.Instance.FocusAsync());
+
+        _module.VerifyInvoke("focus");
+    }
+
+    [Fact(DisplayName = "The script's calls reach the editor through the bridge")]
+    public async Task Bridge_ForwardsEdits()
+    {
+        var editor = Edit("a");
+        var bridge = new MarkdownEditorBridge(editor.Instance);
+
+        await editor.InvokeAsync(() => bridge.ApplyEdit(1, 1, 0, "b", more: false));
+
+        Assert.Equal("ab", editor.Instance.Text);
+    }
+
+    public static TheoryData<Exception> ScriptFailures() =>
+        [new JSException("The editor left the page."), new JSDisconnectedException("The circuit is gone."), new TaskCanceledException()];
+
+    [Theory(DisplayName = "A module that cannot load leaves a textarea that edits without colors, and the methods do nothing")]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Import_Fails_EditorStillWorks(bool disconnected)
+    {
+        using var context = new BunitContext();
+        context.Services.AddSingleton<IJSRuntime>(new FailingImportRuntime(disconnected));
+        context.SetRendererInfo(new RendererInfo("Server", isInteractive: true));
+
+        var editor = context.Render<MarkdownEditor>(parameters => parameters.Add(component => component.Markdown, "a"));
+        await editor.InvokeAsync(() => editor.Instance.FocusAsync());
+
+        Assert.False(editor.Find("textarea").HasAttribute("readonly"));
+        Assert.False(await editor.InvokeAsync(() => editor.Instance.UndoAsync()));
+        Assert.False(await editor.InvokeAsync(() => editor.Instance.RedoAsync()));
+        await editor.Instance.DisposeAsync();
+    }
+
+    /// <summary>A script runtime whose module import fails, as when the file cannot be loaded or the circuit is gone.</summary>
+    private sealed class FailingImportRuntime(bool disconnected) : IJSRuntime
+    {
+        public ValueTask<TValue> InvokeAsync<TValue>(string identifier, object?[]? args) =>
+            InvokeAsync<TValue>(identifier, CancellationToken.None, args);
+
+        public ValueTask<TValue> InvokeAsync<TValue>(string identifier, CancellationToken cancellationToken, object?[]? args) =>
+            throw (disconnected ? new JSDisconnectedException("The circuit is gone.") : new JSException("The module could not load."));
+    }
+
+    [Theory(DisplayName = "A script call that fails while the host sets a text does not end the circuit")]
+    [MemberData(nameof(ScriptFailures))]
+    public void SetText_ScriptFails_IsIgnored(Exception failure)
+    {
+        _module.SetupVoid("setText", _ => true).SetException(failure);
+        var editor = Edit("old");
+
+        editor.Render(parameters => parameters.Add(component => component.Markdown, "new"));
+
+        Assert.Equal("new", editor.Instance.Text);
+    }
+
+    [Theory(DisplayName = "A script call that fails while the editor is disposed is ignored")]
+    [MemberData(nameof(ScriptFailures))]
+    public async Task Dispose_ScriptFails_IsIgnored(Exception failure)
+    {
+        _module.SetupVoid("dispose", _ => true).SetException(failure);
+        var editor = Edit("a");
+
+        await editor.Instance.DisposeAsync();
+        await editor.Instance.DisposeAsync();
+
+        _module.VerifyInvoke("dispose");
+    }
+
+    [Fact(DisplayName = "A kind of syntax the editor does not know has no class")]
+    public void KindClass_UnknownKind_Throws() =>
+        Assert.Throws<ArgumentOutOfRangeException>(() => SyntaxSpanPatch.KindClass((MarkdownSyntaxKind)200));
 }

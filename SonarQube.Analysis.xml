@@ -11,6 +11,10 @@
   <!-- The Visual Studio XML reports that "dotnet test -collect "Code Coverage;Format=xml"" writes. -->
   <Property Name="sonar.cs.vscoveragexml.reportsPaths">TestResults/sonar/**/*.xml</Property>
 
+  <!-- The LCOV report of the script modules, which Node's test runner writes in the "Test the scripts with coverage"
+       step. -->
+  <Property Name="sonar.javascript.lcov.reportPaths">TestResults/js/lcov.info</Property>
+
   <!-- Tests and samples are analyzed but not measured for coverage. -->
   <Property Name="sonar.coverage.exclusions">tests/**,samples/**</Property>
 </SonarQubeAnalysisProperties>

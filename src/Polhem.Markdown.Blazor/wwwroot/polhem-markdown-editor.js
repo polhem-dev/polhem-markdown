@@ -116,10 +116,11 @@ function selection(textarea) {
 
 function difference(before, after) {
   const max = Math.min(before.length, after.length);
+  // Compared by code point, so an edit next to an emoji does not start between the two halves of its surrogate pair.
   let head = 0;
-  while (head < max && before.charCodeAt(head) === after.charCodeAt(head)) head++;
+  while (head < max && before.codePointAt(head) === after.codePointAt(head)) head++;
   let tail = 0;
-  while (tail < max - head && before.charCodeAt(before.length - 1 - tail) === after.charCodeAt(after.length - 1 - tail)) tail++;
+  while (tail < max - head && before.codePointAt(before.length - 1 - tail) === after.codePointAt(after.length - 1 - tail)) tail++;
   return { start: head, removed: before.slice(head, before.length - tail), inserted: after.slice(head, after.length - tail) };
 }
 
