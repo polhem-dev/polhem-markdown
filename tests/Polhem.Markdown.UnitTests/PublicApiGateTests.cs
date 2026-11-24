@@ -25,6 +25,21 @@ public class PublicApiGateTests
         Assert.Empty(offenders);
     }
 
+    // NOTE: Compiled Avalonia XAML adds public types in the CompiledAvaloniaXaml namespace to the assembly that holds it,
+    // and consumers that compare exported type names across their dependencies trip over them
+    // (polhem-dev/polhem-markdown#48). The packages therefore hold no XAML.
+    [Theory(DisplayName = "Every type a package exports is in that package's namespace")]
+    [MemberData(nameof(Packages.Names), MemberType = typeof(Packages))]
+    public void ExportedTypes_EachPackage_AreInItsNamespace(string package)
+    {
+        var offenders = Assembly.Load(package).GetExportedTypes()
+            .Where(type => type.Namespace is not { } ns || (ns != package && !ns.StartsWith(package + ".", StringComparison.Ordinal)))
+            .Select(type => type.FullName)
+            .ToList();
+
+        Assert.Empty(offenders);
+    }
+
     private static IEnumerable<(string Name, IEnumerable<Type> Types)> SurfaceOf(Type type)
     {
         yield return (type.FullName!, Enumerable.Repeat(type.BaseType, 1).OfType<Type>().Concat(type.GetInterfaces()));

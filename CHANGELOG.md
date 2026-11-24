@@ -9,6 +9,10 @@ and versions follow [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+- `Polhem.Markdown.Avalonia` no longer exports the `CompiledAvaloniaXaml.!XamlLoader` and
+  `CompiledAvaloniaXaml.!AvaloniaResources` types that 0.2.0 exported: the editor's theme is built in code instead of
+  XAML (#48).
+
 ## [0.2.0] - 2026-11-24
 
 Details: [docs/en/changelogs/0.2.0.md](docs/en/changelogs/0.2.0.md)

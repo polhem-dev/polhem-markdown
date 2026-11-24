@@ -9,6 +9,9 @@ Polhem.Markdown 各套件值得注意的變更，每個版本只列幾項重點�
 
 ## [Unreleased]
 
+- `Polhem.Markdown.Avalonia` 不再匯出 0.2.0 起多出的 `CompiledAvaloniaXaml.!XamlLoader` 與
+  `CompiledAvaloniaXaml.!AvaloniaResources` 型別：編輯器的主題改由程式碼建立，不再使用 XAML（#48）。
+
 ## [0.2.0] - 2026-11-24
 
 詳細內容：[docs/zh-TW/changelogs/0.2.0.md](docs/zh-TW/changelogs/0.2.0.md)
