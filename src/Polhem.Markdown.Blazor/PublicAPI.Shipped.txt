@@ -7,6 +7,7 @@ Polhem.Markdown.Blazor.MarkdownViewer.Class.get -> string?
 Polhem.Markdown.Blazor.MarkdownViewer.Class.set -> void
 Polhem.Markdown.Blazor.MarkdownViewer.CopyCodeLabel.get -> string!
 Polhem.Markdown.Blazor.MarkdownViewer.CopyCodeLabel.set -> void
+Polhem.Markdown.Blazor.MarkdownViewer.DisposeAsync() -> System.Threading.Tasks.ValueTask
 Polhem.Markdown.Blazor.MarkdownViewer.Markdown.get -> string?
 Polhem.Markdown.Blazor.MarkdownViewer.Markdown.set -> void
 Polhem.Markdown.Blazor.MarkdownViewer.MarkdownViewer() -> void
@@ -16,3 +17,4 @@ Polhem.Markdown.Blazor.MarkdownViewer.Options.get -> Polhem.Markdown.MarkdownOpt
 Polhem.Markdown.Blazor.MarkdownViewer.Options.set -> void
 override Polhem.Markdown.Blazor.MarkdownViewer.BuildRenderTree(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder! builder) -> void
 override Polhem.Markdown.Blazor.MarkdownViewer.OnParametersSet() -> void
+virtual Polhem.Markdown.Blazor.MarkdownViewer.DisposeAsyncCore() -> System.Threading.Tasks.ValueTask
