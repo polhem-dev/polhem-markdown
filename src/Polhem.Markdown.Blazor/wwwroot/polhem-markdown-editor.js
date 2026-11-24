@@ -1,7 +1,8 @@
 // The browser side of Polhem.Markdown.Blazor's MarkdownEditor, which loads it. A native textarea takes the input; its
 // text is transparent, and this module draws the same text with colors on the layer behind it, from the spans the
 // component's scan found. The textarea belongs to the user: the module reads each edit from it and sends the change to
-// the component, and only writes to it for an undo, a redo, or a text the host sets.
+// the component, and only writes to it for a command (a format, continuing a list, indenting), an undo, a redo, or a
+// text the host sets.
 
 const editors = new WeakMap();
 const isMac = /Mac|iPhone|iPad/.test(navigator.platform);
@@ -17,12 +18,22 @@ const historyLimit = 500;
 // Native input that joins the step before it when typed in a row.
 const typing = { insertText: 1, deleteContentBackward: 1, deleteContentForward: 1, deleteWordBackward: 1, deleteWordForward: 1 };
 
+// Native input held back while a command waits for its answer, and typed after it.
+const replayable = { insertText: 1, insertLineBreak: 1, insertParagraph: 1, deleteContentBackward: 1, deleteContentForward: 1, insertFromPaste: 1 };
+
+// The format shortcuts, with Ctrl, or Command on a Mac. The names are those of MarkdownFormat.
+const shortcuts = { b: "Bold", i: "Italic", k: "Link", e: "InlineCode" };
+
+// The start of a line that is a list item, up to the caret: a bullet or a number, then a space.
+const listItem = /^\s*(?:[-*+]|\d+[.)])\s/;
+
 export function init(root, component, text, kindClasses) {
   const textarea = root.querySelector("textarea"), layer = root.querySelector("pre");
   const editor = {
     root, textarea, layer, component, kindClasses,
     local: text, version: 0, pending: [], unsent: [], base: [], spans: [], lines: [],
     composing: false, compositionStart: null, selectionBefore: [0, 0], undo: [], redo: [],
+    busy: false, replaying: false, queue: [], generation: 0,
   };
   const on = (type, handler) => textarea.addEventListener(type, handler);
   on("input", e => onInput(editor, e));
@@ -72,6 +83,8 @@ export function setText(root, text) {
   if (!editor || editor.local === text) return;
   editor.textarea.value = text;
   editor.local = text;
+  editor.generation++;
+  editor.queue.length = 0;
   editor.pending.length = 0;
   editor.unsent.length = 0;
   editor.spans = [];
@@ -88,6 +101,12 @@ export function undo(root) {
 export function redo(root) {
   const editor = editors.get(root);
   return !!editor && history(editor, "redo");
+}
+
+// Applies a format to the selection, as its shortcut does. `format` is a name of MarkdownFormat.
+export function command(root, format) {
+  const editor = editors.get(root);
+  if (editor) act(editor, { command: "format", argument: format });
 }
 
 // Takes the spans of a scan of the text as it was after edit `version`, as a patch on those sent before (the format is
@@ -183,12 +202,16 @@ function shift(spans, edit) {
   spans.length = write;
 }
 
-// Makes an edit from code (an undo or a redo), which the browser's own undo never sees.
-function apply(editor, start, end, text) {
+// Makes an edit from code (a command, a replayed key, an undo or a redo), which the browser's own undo never sees. With
+// a `kind`, the edit is recorded as a step to undo; with a `selection`, that is what is selected after it.
+function apply(editor, start, end, text, kind = null, selection = null) {
+  const textarea = editor.textarea, before = [textarea.selectionStart, textarea.selectionEnd];
   const edit = { start, removed: editor.local.slice(start, end), inserted: text };
-  editor.textarea.setRangeText(text, start, end, "end");
+  textarea.setRangeText(text, start, end, "end");
   commit(editor, edit);
   send(editor);
+  if (selection) textarea.setSelectionRange(selection[0], selection[1]);
+  if (kind) record(editor, edit, kind, before, [textarea.selectionStart, textarea.selectionEnd]);
 }
 
 function record(editor, edit, kind, selectionBefore, selectionAfter) {
@@ -217,6 +240,10 @@ function record(editor, edit, kind, selectionBefore, selectionAfter) {
 function history(editor, which) {
   const textarea = editor.textarea;
   if (textarea.readOnly || editor.composing) return false;
+  if (editor.busy) {
+    editor.queue.push({ history: which });
+    return true;
+  }
   const step = (which === "undo" ? editor.undo : editor.redo).pop();
   if (!step) return false;
   const edit = step.edit;
@@ -242,18 +269,110 @@ function onBeforeInput(editor, e) {
     }
     return;
   }
+  if (editor.busy && !editor.replaying && e.cancelable && !e.isComposing && replayable[e.inputType]) {
+    // NOTE: typing on while a command waits would put the keys before the command's edit on a slow connection, so
+    // they are held back and replayed after it.
+    e.preventDefault();
+    const data = e.inputType === "insertFromPaste" ? e.dataTransfer?.getData("text/plain") : e.data;
+    editor.queue.push({ input: e.inputType, data });
+    return;
+  }
   if (!editor.composing) editor.selectionBefore = selection(editor.textarea);
+}
+
+// What a key does in the editor, or null for what the browser does with it.
+function keyAction(e) {
+  const command = isMac ? e.metaKey : e.ctrlKey, key = e.key.toLowerCase();
+  if (command && key === "z") return { history: e.shiftKey ? "redo" : "undo" };
+  if (!isMac && e.ctrlKey && !e.shiftKey && key === "y") return { history: "redo" };
+  if (command && !e.shiftKey && shortcuts[key]) return { command: "format", argument: shortcuts[key] };
+  if (e.ctrlKey || e.metaKey) return null;
+  if (e.key === "Enter" && !e.shiftKey) return { key: "Enter" };
+  if (e.key === "Tab") return { key: "Tab", outdent: e.shiftKey };
+  return null;
+}
+
+// Whether the caret is on a list item, past its marker, with nothing selected across lines.
+function onListItem(editor) {
+  const { selectionStart: start, selectionEnd: end } = editor.textarea, text = editor.local;
+  const lineStart = text.lastIndexOf("\n", start - 1) + 1;
+  return !text.slice(start, end).includes("\n") && listItem.test(text.slice(lineStart, start));
 }
 
 function onKeyDown(editor, e) {
   if (e.isComposing || editor.composing || e.altKey) return;
-  const command = isMac ? e.metaKey : e.ctrlKey, key = e.key.toLowerCase();
-  let which = null;
-  if (command && key === "z") which = e.shiftKey ? "redo" : "undo";
-  else if (!isMac && e.ctrlKey && !e.shiftKey && key === "y") which = "redo";
-  if (which) {
+  const action = keyAction(e);
+  if (!action) return;
+  if (action.history) {
     e.preventDefault();
-    history(editor, which);
+    history(editor, action.history);
+  } else if (editor.textarea.readOnly) {
+    // A read-only editor takes no command; Enter and Tab do what they do anywhere.
+  } else if (editor.busy) {
+    e.preventDefault();
+    editor.queue.push(action);
+  } else if (action.command || onListItem(editor)) {
+    // NOTE: Tab is taken only on a list item. Elsewhere it moves the focus on, so a keyboard user can leave the editor.
+    e.preventDefault();
+    act(editor, action);
+  }
+}
+
+// Carries out a key or a command: Enter and Tab become commands on a list item, and type as usual elsewhere.
+function act(editor, action) {
+  if (editor.textarea.readOnly) return;
+  if (editor.busy) {
+    editor.queue.push(action);
+    return;
+  }
+  const { selectionStart: start, selectionEnd: end } = editor.textarea;
+  if (action.command) run(editor, action.command, action.argument, null);
+  else if (action.key === "Enter") onListItem(editor) ? run(editor, "continueList", null, "\n") : apply(editor, start, end, "\n", "other");
+  else if (action.key === "Tab" && onListItem(editor)) run(editor, action.outdent ? "outdent" : "indent", null, null);
+}
+
+// Asks the component for the edit of a command and applies it as one step to undo; `fallback` is typed when there is
+// no edit. Until the answer comes, what the user types is queued.
+function run(editor, command, argument, fallback) {
+  const textarea = editor.textarea, start = textarea.selectionStart, length = textarea.selectionEnd - start;
+  const version = editor.version, generation = editor.generation;
+  editor.busy = true;
+  const done = answer => {
+    editor.busy = false;
+    editor.replaying = true;
+    try {
+      // An answer for a text the host has since replaced is dropped, with the keys queued for it.
+      if (generation === editor.generation && version === editor.version) {
+        if (answer) {
+          const [at, removed, text, selectionStart, selectionLength] = answer;
+          apply(editor, at, at + removed, text, "command", [selectionStart, selectionStart + selectionLength]);
+        } else if (fallback) {
+          apply(editor, textarea.selectionStart, textarea.selectionEnd, fallback, "other");
+        }
+      }
+      replay(editor);
+    } finally {
+      editor.replaying = false;
+    }
+  };
+  editor.component.invokeMethodAsync("Command", command, version, start, length, argument).then(done, () => done(null));
+}
+
+function replay(editor) {
+  while (editor.queue.length && !editor.busy) {
+    const item = editor.queue.shift(), { selectionStart: start, selectionEnd: end } = editor.textarea;
+    if (item.history) history(editor, item.history);
+    else if (item.command || item.key) act(editor, item);
+    else if (item.input === "deleteContentBackward") {
+      if (start < end) apply(editor, start, end, "", "typing");
+      else if (start > 0) apply(editor, start - 1, start, "", "typing");
+    } else if (item.input === "deleteContentForward") {
+      apply(editor, start, start < end ? end : Math.min(end + 1, editor.local.length), "", "typing");
+    } else if (item.input === "insertLineBreak" || item.input === "insertParagraph") {
+      apply(editor, start, end, "\n", "other");
+    } else if (item.data) {
+      apply(editor, start, end, item.data, item.input === "insertFromPaste" ? "other" : "typing");
+    }
   }
 }
 

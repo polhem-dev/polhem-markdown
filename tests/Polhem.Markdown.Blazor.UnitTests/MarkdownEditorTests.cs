@@ -313,4 +313,74 @@ public class MarkdownEditorTests : BunitContext
     [Fact(DisplayName = "A kind of syntax the editor does not know has no class")]
     public void KindClass_UnknownKind_Throws() =>
         Assert.Throws<ArgumentOutOfRangeException>(() => SyntaxSpanPatch.KindClass((MarkdownSyntaxKind)200));
+
+    [Fact(DisplayName = "Applying a format asks the module, which applies it to the selection as a shortcut does")]
+    public async Task ApplyFormat_CallsModule()
+    {
+        var editor = Edit("a");
+
+        await editor.InvokeAsync(() => editor.Instance.ApplyFormatAsync(MarkdownFormat.Heading2));
+
+        var command = Assert.Single(_module.Invocations["command"]);
+        Assert.Equal("Heading2", command.Arguments[1]);
+    }
+
+    [Fact(DisplayName = "A format the module asks for comes back as the formatter's edit")]
+    public void Command_Format_ReturnsEdit()
+    {
+        var editor = Edit("a word");
+        var bridge = new MarkdownEditorBridge(editor.Instance);
+
+        var edit = bridge.Command("format", 0, 2, 4, "Bold");
+
+        Assert.Equal([2, 4, "**word**", 4, 4], edit);
+    }
+
+    [Fact(DisplayName = "Continuing a list and moving an item in and out come back as the formatter's edits")]
+    public void Command_ListCommands_ReturnEdits()
+    {
+        var editor = Edit("- a\n- b");
+        var bridge = new MarkdownEditorBridge(editor.Instance);
+
+        Assert.Equal([3, 0, "\n- ", 6, 0], bridge.Command("continueList", 0, 3, 0, null));
+        Assert.Equal([4, 0, "  ", 9, 0], bridge.Command("indent", 0, 7, 0, null));
+        Assert.Null(bridge.Command("outdent", 0, 7, 0, null));
+    }
+
+    [Theory(DisplayName = "A command for an older text, or one the editor does not know, does nothing")]
+    [InlineData("format", 1, "Bold")]
+    [InlineData("format", 0, "NoSuchFormat")]
+    [InlineData("format", 0, "99")]
+    [InlineData("format", 0, null)]
+    [InlineData("delete", 0, null)]
+    public void Command_StaleOrUnknown_ReturnsNull(string command, int version, string? argument)
+    {
+        var editor = Edit("text");
+
+        Assert.Null(editor.Instance.Command(command, version, 0, 4, argument));
+    }
+
+    [Fact(DisplayName = "A command after an edit is worked out on the text with the edit")]
+    public async Task Command_AfterEdit_UsesNewText()
+    {
+        var editor = Edit("a");
+        await editor.InvokeAsync(() => editor.Instance.ApplyEditAsync(1, 1, 0, "b", more: false));
+
+        Assert.Null(editor.Instance.Command("format", 0, 0, 2, "Bold"));
+        Assert.Equal([0, 2, "**ab**", 2, 2], editor.Instance.Command("format", 1, 0, 2, "Bold"));
+    }
+
+    [Theory(DisplayName = "A selection outside the text is kept within it")]
+    [InlineData(-5, 3)]
+    [InlineData(2, 50)]
+    [InlineData(10, -2)]
+    public void Command_SelectionOutsideText_IsClamped(int start, int length)
+    {
+        var editor = Edit("ab");
+
+        var edit = editor.Instance.Command("format", 0, start, length, "Italic");
+
+        Assert.NotNull(edit);
+        Assert.InRange((int)edit[0]!, 0, 2);
+    }
 }

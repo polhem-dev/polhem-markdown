@@ -117,21 +117,42 @@ export class FakeRoot {
   }
 }
 
-// The component's side: records the edits it is sent.
+// The component's side: records what it is sent, and answers commands with `answer`, which a test sets. The answer is
+// held until the test calls `release`, as a slow connection would hold it.
 export class FakeComponent {
   constructor() {
     this.calls = [];
+    this.answer = () => null;
+    this.held = [];
   }
 
   invokeMethodAsync(method, ...args) {
     this.calls.push({ method, args });
-    return Promise.resolve();
+    if (method !== "Command") return Promise.resolve();
+    return new Promise((resolve, reject) => this.held.push({ args, resolve, reject }));
+  }
+
+  // Answers the commands asked so far; `fail` makes their calls fail instead.
+  async release(fail = false) {
+    while (this.held.length) {
+      const { args, resolve, reject } = this.held.shift();
+      fail ? reject(new Error("The circuit is gone.")) : resolve(this.answer(...args));
+      await new Promise(done => setTimeout(done, 0));
+    }
+  }
+
+  get edits() {
+    return this.calls.filter(call => call.method === "ApplyEdit");
+  }
+
+  get commands() {
+    return this.calls.filter(call => call.method === "Command").map(call => call.args);
   }
 
   // The text the component would hold after the edits sent so far.
   textFrom(initial) {
     let text = initial;
-    for (const { args: [, start, removed, inserted] } of this.calls) text = text.slice(0, start) + inserted + text.slice(start + removed);
+    for (const { args: [, start, removed, inserted] } of this.edits) text = text.slice(0, start) + inserted + text.slice(start + removed);
     return text;
   }
 }

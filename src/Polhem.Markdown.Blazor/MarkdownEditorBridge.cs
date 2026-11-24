@@ -12,4 +12,10 @@ internal sealed class MarkdownEditorBridge(MarkdownEditor editor)
     [JSInvokable]
     public Task ApplyEdit(int version, int start, int removed, string text, bool more) =>
         editor.ApplyEditAsync(version, start, removed, text, more);
+
+    /// <summary>Works out the edit of a command; see <see cref="MarkdownEditor.Command"/>.</summary>
+    /// <remarks>The edit is an array rather than an object, so trimming cannot remove what serializes it.</remarks>
+    [JSInvokable]
+    public object?[]? Command(string command, int version, int start, int length, string? argument) =>
+        editor.Command(command, version, start, length, argument);
 }
