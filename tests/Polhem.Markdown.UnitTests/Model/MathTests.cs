@@ -55,6 +55,23 @@ public class MathTests
         Scaling.AssertLinear(Text, markdown => Parse(markdown), 100, 20_000, "formulas with bars over a long second line");
     }
 
+    [Theory(DisplayName = "Math with a bar outside a table is math, even with a table elsewhere or after it")]
+    [InlineData("The norm $|x|$ is small.\n\n| a | b |\n|---|---|\n| 1 | 2 |")]
+    [InlineData("intro $x|y$ here\nh1 | h2\n--|--\nc|d")]
+    public void Build_BarredMathBesideTable_IsMath(string markdown)
+    {
+        Assert.Single(AllNodes(Parse(markdown)).OfType<MathNode>());
+    }
+
+    [Fact(DisplayName = "Paragraphs of one and of several lines with barred math, alternating, take time in proportion to the text")]
+    [Trait("Category", Scaling.Category)]
+    public void Build_AlternatingParagraphs_IsLinear()
+    {
+        static string Text(int count) => string.Concat(Enumerable.Repeat("p $|x|$\n\nq $|y|$\nr\n\n", count));
+
+        Scaling.AssertLinear(Text, markdown => Parse(markdown), 100, 20_000, "one-line and two-line paragraphs with barred math");
+    }
+
     [Fact(DisplayName = "Outside a table, math may hold a vertical bar")]
     public void Build_AbsoluteValue_IsMath()
     {

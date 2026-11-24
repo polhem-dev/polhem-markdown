@@ -36,36 +36,46 @@ internal sealed class GitHubMathInlineParser : MathInlineParser
         {
             return true;
         }
-        return text.AsSpan(start, end - start).Contains('|') && processor.Block is ParagraphBlock && IsTable(text);
+        return text.AsSpan(start, end - start).Contains('|')
+            && processor.Block is ParagraphBlock paragraph
+            && start >= TableStart(text, paragraph);
     }
 
     /// <summary>The last paragraph checked, so a paragraph with many formulas is scanned once.</summary>
     private TableCheck? _lastCheck;
 
     /// <summary>
-    /// Whether the paragraph's text, which the inline parsers read, holds a pipe table: one of its lines is a delimiter
-    /// row such as <c>|---|:--:|</c>. A table may follow lines of text in the same paragraph.
+    /// Where the pipe table in a paragraph begins, at its header line, or <see cref="int.MaxValue"/> when the paragraph
+    /// holds none. A table is a delimiter row such as <c>|---|:--:|</c> and the line above it, and it may follow lines of
+    /// text in the same paragraph, which are not part of it.
     /// </summary>
     /// <remarks>
-    /// NOTE: the answer is kept for the paragraph's text, since each formula with a bar asks again; scanning every time
-    /// would cost the length of the paragraph per formula. Parsers run on several threads at once share this one, so the
-    /// check is kept in one immutable object; a race only scans again.
+    /// NOTE: the inline parsers read a paragraph of several lines from a string of its own, but a paragraph of one line
+    /// from the whole document. One line is never a table, so it is told apart by its text being longer than the
+    /// paragraph's own source; the document is never scanned. The answer for a paragraph is kept, since each formula
+    /// with a bar asks again, which would otherwise cost the paragraph's length per formula. Parsers on several threads
+    /// share this one, so the answer is kept in one immutable object; a race only scans again.
     /// </remarks>
-    private bool IsTable(string paragraph)
+    private int TableStart(string text, ParagraphBlock paragraph)
     {
-        var last = Volatile.Read(ref _lastCheck);
-        if (last is not null && ReferenceEquals(last.Text, paragraph))
+        if (text.Length > paragraph.Span.Length)
         {
-            return last.IsTable;
+            return int.MaxValue;
         }
-        var isTable = HasDelimiterRow(paragraph);
-        Volatile.Write(ref _lastCheck, new TableCheck(paragraph, isTable));
-        return isTable;
+        var last = Volatile.Read(ref _lastCheck);
+        if (last is not null && ReferenceEquals(last.Text, text))
+        {
+            return last.TableStart;
+        }
+        var tableStart = FindTableStart(text);
+        Volatile.Write(ref _lastCheck, new TableCheck(text, tableStart));
+        return tableStart;
     }
 
-    /// <summary>Whether a line after the first consists of dashes, colons, bars and spaces, with a dash: a delimiter row.</summary>
-    private static bool HasDelimiterRow(string paragraph)
+    /// <summary>The start of the line above the first delimiter row after the first line, or <see cref="int.MaxValue"/>.</summary>
+    private static int FindTableStart(string paragraph)
     {
+        var previousStart = 0;
         var lineStart = paragraph.IndexOf('\n', StringComparison.Ordinal) + 1;
         while (lineStart > 0 && lineStart <= paragraph.Length)
         {
@@ -73,12 +83,13 @@ internal sealed class GitHubMathInlineParser : MathInlineParser
             var line = paragraph.AsSpan(lineStart, (lineEnd < 0 ? paragraph.Length : lineEnd) - lineStart);
             if (line.Contains('-') && !line.ContainsAnyExcept("-:| \t\r"))
             {
-                return true;
+                return previousStart;
             }
+            previousStart = lineStart;
             lineStart = lineEnd + 1;
         }
-        return false;
+        return int.MaxValue;
     }
 
-    private sealed record TableCheck(string Text, bool IsTable);
+    private sealed record TableCheck(string Text, int TableStart);
 }
