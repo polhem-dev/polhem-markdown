@@ -44,6 +44,18 @@ public class HtmlConversionTests
         Assert.Equal("plain text", Text(Assert.IsType<ParagraphNode>(document.Blocks[1]).Inlines));
     }
 
+    [Theory(DisplayName = "A tag whose name is no HTML element, such as a type argument in prose, shows as written")]
+    [InlineData("Use List<string> or Task<T> here.", "Use List<string> or Task<T> here.")]
+    [InlineData("A Vec<T> and a HashMap<K, V>.", "A Vec<T> and a HashMap<K, V>.")]
+    [InlineData("<Foo>\n\nnext", "<Foo>")]
+    [InlineData("a <span>b</span> c", "a b c")]
+    public void Build_TagThatIsNoElement_ShowsAsWritten(string markdown, string text)
+    {
+        var paragraph = Assert.IsType<ParagraphNode>(Parse(markdown).Blocks[0]);
+
+        Assert.Equal(text, Text(paragraph.Inlines));
+    }
+
     [Theory(DisplayName = "Prose that names a tag keeps the rest of its paragraph as written")]
     [InlineData("Set the page name with <title> and *style* it.", "Set the page name with <title> and style it.")]
     [InlineData("Put it in a <script> tag and **call** it.", "Put it in a <script> tag and call it.")]

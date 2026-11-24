@@ -47,6 +47,10 @@ internal sealed class HtmlComposer
             }
             return;
         }
+        if (token.Kind != HtmlTokenKind.Text && !HtmlElements.IsElement(token.Name))
+        {
+            token = token with { Kind = HtmlTokenKind.Text };
+        }
         switch (token.Kind)
         {
             case HtmlTokenKind.Text:

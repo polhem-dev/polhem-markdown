@@ -20,6 +20,8 @@ public class HtmlScalingTests
     {
         string Html(int count) => prefix + string.Concat(Enumerable.Repeat(unit, count));
 
-        Scaling.AssertLinear(Html, markdown => Parse(markdown), 500, 40_000, what);
+        // NOTE: some of these inputs take under a millisecond at 40 000 repetitions, so the size may grow far enough for
+        // one run to take long enough to time.
+        Scaling.AssertLinear(Html, markdown => Parse(markdown), 500, 1_000_000, what);
     }
 }

@@ -12,8 +12,9 @@ Blazor front end show the same text the same way.
 - **Raw HTML** is never passed on. The elements README files use become part of the text: `<img>` (with `width` and
   `height`), `<a href>`, `<br>`, `<b>`, `<strong>`, `<i>`, `<em>`, `<code>`, `<sup>`, `<sub>`, `<kbd>`, `<p>` and
   `<div>` with `align="center"` or `"right"`, `<details>` with `<summary>` (an expander), and `<picture>` with sources
-  for `(prefers-color-scheme: dark)` and `light`, of which the viewer shows the one for its theme. Any other tag is
-  dropped and its content kept; scripts, styles and comments are dropped with their content.
+  for `(prefers-color-scheme: dark)` and `light`, of which the viewer shows the one for its theme. Any other HTML
+  element's tag is dropped and its content kept; scripts, styles and comments are dropped with their content. Text that
+  only looks like a tag (`List<string>`), and an element whose end tag is missing from its paragraph, show as written.
 - **Safety**: only links whose scheme is in
   `Options.AllowedLinkSchemes` (by default `http`, `https` and `mailto`) can be clicked. Relative links (`CHANGELOG.md`,
   `../README.md`) stay text unless `Options.BaseUri` is set, such as to the address of the document being shown; they
