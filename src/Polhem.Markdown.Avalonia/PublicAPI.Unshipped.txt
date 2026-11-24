@@ -38,3 +38,66 @@ Polhem.Markdown.Avalonia.MarkdownViewer.TrustedSvgHosts.get -> System.Collection
 Polhem.Markdown.Avalonia.MarkdownViewer.CjkFontFamily.get -> Avalonia.Media.FontFamily?
 Polhem.Markdown.Avalonia.MarkdownViewer.CjkFontFamily.set -> void
 static readonly Polhem.Markdown.Avalonia.MarkdownViewer.CjkFontFamilyProperty -> Avalonia.StyledProperty<Avalonia.Media.FontFamily?>!
+Polhem.Markdown.Avalonia.MarkdownEditor
+Polhem.Markdown.Avalonia.MarkdownEditor.CaretOffset.get -> int
+Polhem.Markdown.Avalonia.MarkdownEditor.CaretOffset.set -> void
+Polhem.Markdown.Avalonia.MarkdownEditor.CodeBrush.get -> Avalonia.Media.IBrush!
+Polhem.Markdown.Avalonia.MarkdownEditor.CodeBrush.set -> void
+Polhem.Markdown.Avalonia.MarkdownEditor.CodeCommentBrush.get -> Avalonia.Media.IBrush!
+Polhem.Markdown.Avalonia.MarkdownEditor.CodeCommentBrush.set -> void
+Polhem.Markdown.Avalonia.MarkdownEditor.CodeConstantBrush.get -> Avalonia.Media.IBrush!
+Polhem.Markdown.Avalonia.MarkdownEditor.CodeConstantBrush.set -> void
+Polhem.Markdown.Avalonia.MarkdownEditor.CodeFontFamily.get -> Avalonia.Media.FontFamily!
+Polhem.Markdown.Avalonia.MarkdownEditor.CodeFontFamily.set -> void
+Polhem.Markdown.Avalonia.MarkdownEditor.CodeKeywordBrush.get -> Avalonia.Media.IBrush!
+Polhem.Markdown.Avalonia.MarkdownEditor.CodeKeywordBrush.set -> void
+Polhem.Markdown.Avalonia.MarkdownEditor.CodePropertyBrush.get -> Avalonia.Media.IBrush!
+Polhem.Markdown.Avalonia.MarkdownEditor.CodePropertyBrush.set -> void
+Polhem.Markdown.Avalonia.MarkdownEditor.CodeStringBrush.get -> Avalonia.Media.IBrush!
+Polhem.Markdown.Avalonia.MarkdownEditor.CodeStringBrush.set -> void
+Polhem.Markdown.Avalonia.MarkdownEditor.CodeTagBrush.get -> Avalonia.Media.IBrush!
+Polhem.Markdown.Avalonia.MarkdownEditor.CodeTagBrush.set -> void
+Polhem.Markdown.Avalonia.MarkdownEditor.HeadingBrush.get -> Avalonia.Media.IBrush!
+Polhem.Markdown.Avalonia.MarkdownEditor.HeadingBrush.set -> void
+Polhem.Markdown.Avalonia.MarkdownEditor.IsReadOnly.get -> bool
+Polhem.Markdown.Avalonia.MarkdownEditor.IsReadOnly.set -> void
+Polhem.Markdown.Avalonia.MarkdownEditor.LinkForeground.get -> Avalonia.Media.IBrush!
+Polhem.Markdown.Avalonia.MarkdownEditor.LinkForeground.set -> void
+Polhem.Markdown.Avalonia.MarkdownEditor.Markdown.get -> string?
+Polhem.Markdown.Avalonia.MarkdownEditor.Markdown.set -> void
+Polhem.Markdown.Avalonia.MarkdownEditor.MarkdownEditor() -> void
+Polhem.Markdown.Avalonia.MarkdownEditor.MarkerBrush.get -> Avalonia.Media.IBrush!
+Polhem.Markdown.Avalonia.MarkdownEditor.MarkerBrush.set -> void
+Polhem.Markdown.Avalonia.MarkdownEditor.MathBrush.get -> Avalonia.Media.IBrush!
+Polhem.Markdown.Avalonia.MarkdownEditor.MathBrush.set -> void
+Polhem.Markdown.Avalonia.MarkdownEditor.Redo() -> bool
+Polhem.Markdown.Avalonia.MarkdownEditor.SelectionBrush.get -> Avalonia.Media.IBrush?
+Polhem.Markdown.Avalonia.MarkdownEditor.SelectionBrush.set -> void
+Polhem.Markdown.Avalonia.MarkdownEditor.ShowLineNumbers.get -> bool
+Polhem.Markdown.Avalonia.MarkdownEditor.ShowLineNumbers.set -> void
+Polhem.Markdown.Avalonia.MarkdownEditor.Undo() -> bool
+Polhem.Markdown.Avalonia.MarkdownEditor.UrlBrush.get -> Avalonia.Media.IBrush!
+Polhem.Markdown.Avalonia.MarkdownEditor.UrlBrush.set -> void
+Polhem.Markdown.Avalonia.MarkdownEditor.WordWrap.get -> bool
+Polhem.Markdown.Avalonia.MarkdownEditor.WordWrap.set -> void
+override Polhem.Markdown.Avalonia.MarkdownEditor.ArrangeOverride(Avalonia.Size finalSize) -> Avalonia.Size
+override Polhem.Markdown.Avalonia.MarkdownEditor.MeasureOverride(Avalonia.Size availableSize) -> Avalonia.Size
+override Polhem.Markdown.Avalonia.MarkdownEditor.OnPropertyChanged(Avalonia.AvaloniaPropertyChangedEventArgs! change) -> void
+static readonly Polhem.Markdown.Avalonia.MarkdownEditor.CodeBrushProperty -> Avalonia.StyledProperty<Avalonia.Media.IBrush!>!
+static readonly Polhem.Markdown.Avalonia.MarkdownEditor.CodeCommentBrushProperty -> Avalonia.StyledProperty<Avalonia.Media.IBrush!>!
+static readonly Polhem.Markdown.Avalonia.MarkdownEditor.CodeConstantBrushProperty -> Avalonia.StyledProperty<Avalonia.Media.IBrush!>!
+static readonly Polhem.Markdown.Avalonia.MarkdownEditor.CodeFontFamilyProperty -> Avalonia.StyledProperty<Avalonia.Media.FontFamily!>!
+static readonly Polhem.Markdown.Avalonia.MarkdownEditor.CodeKeywordBrushProperty -> Avalonia.StyledProperty<Avalonia.Media.IBrush!>!
+static readonly Polhem.Markdown.Avalonia.MarkdownEditor.CodePropertyBrushProperty -> Avalonia.StyledProperty<Avalonia.Media.IBrush!>!
+static readonly Polhem.Markdown.Avalonia.MarkdownEditor.CodeStringBrushProperty -> Avalonia.StyledProperty<Avalonia.Media.IBrush!>!
+static readonly Polhem.Markdown.Avalonia.MarkdownEditor.CodeTagBrushProperty -> Avalonia.StyledProperty<Avalonia.Media.IBrush!>!
+static readonly Polhem.Markdown.Avalonia.MarkdownEditor.HeadingBrushProperty -> Avalonia.StyledProperty<Avalonia.Media.IBrush!>!
+static readonly Polhem.Markdown.Avalonia.MarkdownEditor.IsReadOnlyProperty -> Avalonia.StyledProperty<bool>!
+static readonly Polhem.Markdown.Avalonia.MarkdownEditor.LinkForegroundProperty -> Avalonia.StyledProperty<Avalonia.Media.IBrush!>!
+static readonly Polhem.Markdown.Avalonia.MarkdownEditor.MarkdownProperty -> Avalonia.StyledProperty<string?>!
+static readonly Polhem.Markdown.Avalonia.MarkdownEditor.MarkerBrushProperty -> Avalonia.StyledProperty<Avalonia.Media.IBrush!>!
+static readonly Polhem.Markdown.Avalonia.MarkdownEditor.MathBrushProperty -> Avalonia.StyledProperty<Avalonia.Media.IBrush!>!
+static readonly Polhem.Markdown.Avalonia.MarkdownEditor.SelectionBrushProperty -> Avalonia.StyledProperty<Avalonia.Media.IBrush?>!
+static readonly Polhem.Markdown.Avalonia.MarkdownEditor.ShowLineNumbersProperty -> Avalonia.StyledProperty<bool>!
+static readonly Polhem.Markdown.Avalonia.MarkdownEditor.UrlBrushProperty -> Avalonia.StyledProperty<Avalonia.Media.IBrush!>!
+static readonly Polhem.Markdown.Avalonia.MarkdownEditor.WordWrapProperty -> Avalonia.StyledProperty<bool>!

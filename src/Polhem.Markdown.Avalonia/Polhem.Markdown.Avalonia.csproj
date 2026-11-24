@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <Description>A Markdown viewer control for Avalonia, rendering the same model as Polhem.Markdown.Blazor so both front ends show a text the same way.</Description>
+    <Description>A Markdown viewer and a Markdown source editor for Avalonia. The viewer renders the same model as Polhem.Markdown.Blazor so both front ends show a text the same way; the editor colours the source as the viewer reads it.</Description>
   </PropertyGroup>
 
   <ItemGroup>
@@ -9,6 +9,9 @@
     <PackageReference Include="Avalonia" Version="12.0.0" />
     <!-- Draws SVG images. 5.1.1 is the last version on SkiaSharp 3, which Avalonia 12 uses; later ones need SkiaSharp 4. -->
     <PackageReference Include="Svg.Skia" Version="5.1.1" />
+    <!-- The editor's engine, its core only: AvaloniaEdit.TextMate would bring a native library. 12.0.0 needs Avalonia 12.0.0,
+         the same minimum as the viewer. -->
+    <PackageReference Include="Avalonia.AvaloniaEdit" Version="12.0.0" />
   </ItemGroup>
 
   <ItemGroup>

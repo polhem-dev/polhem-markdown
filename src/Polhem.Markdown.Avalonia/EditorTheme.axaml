@@ -1,0 +1,27 @@
+<!--
+  The look of the editor's AvaloniaEdit parts, whatever theme the host uses. AvaloniaEdit's own Fluent and Simple themes
+  map a few resources to resources of Avalonia's Fluent and Simple themes, and a host on another theme (Semi, Material)
+  lacks them; its Simple theme fails with KeyNotFoundException there. This dictionary takes AvaloniaEdit's templates and
+  gives those resources values of its own, so the editor needs nothing from the host.
+-->
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    x:Class="Polhem.Markdown.Avalonia.EditorTheme">
+  <x:Double x:Key="SearchPanelFontSize">13</x:Double>
+  <FontFamily x:Key="SearchPanelFontFamily">$Default</FontFamily>
+  <ResourceDictionary.ThemeDictionaries>
+    <ResourceDictionary x:Key="Default">
+      <SolidColorBrush x:Key="SearchPanelBackgroundBrush" Color="#F3F4F6" />
+      <SolidColorBrush x:Key="SearchPanelBorderBrush" Color="#D1D5DB" />
+      <SolidColorBrush x:Key="TextAreaSelectionBrush" Color="#663B82F6" />
+    </ResourceDictionary>
+    <ResourceDictionary x:Key="Dark">
+      <SolidColorBrush x:Key="SearchPanelBackgroundBrush" Color="#2B2D31" />
+      <SolidColorBrush x:Key="SearchPanelBorderBrush" Color="#4B5563" />
+      <SolidColorBrush x:Key="TextAreaSelectionBrush" Color="#663B82F6" />
+    </ResourceDictionary>
+  </ResourceDictionary.ThemeDictionaries>
+  <ResourceDictionary.MergedDictionaries>
+    <ResourceInclude Source="avares://AvaloniaEdit/Themes/Base.xaml" />
+  </ResourceDictionary.MergedDictionaries>
+</ResourceDictionary>
