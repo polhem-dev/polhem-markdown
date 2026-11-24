@@ -176,7 +176,9 @@ jobs:
           node-version: 24
 
       # The coverage of the script modules under src/, as an LCOV report that SonarQube.Analysis.xml points to. Node does
-      # not create the folder of a report, so the step does.
+      # not create the folder of a report, so the step does. Node writes the paths of the files relative to the
+      # repository, while the scanner resolves them against the folder of each project it analyzes, so the paths are
+      # made absolute.
       - name: Test the scripts with coverage
         if: steps.token.outputs.enabled == 'true'
         run: |
@@ -185,6 +187,8 @@ jobs:
             --test-reporter=spec --test-reporter-destination=stdout \
             --test-reporter=lcov --test-reporter-destination=TestResults/js/lcov.info \
             tests/js/*.test.mjs
+          sed -i "s|^SF:|SF:$GITHUB_WORKSPACE/|" TestResults/js/lcov.info
+          grep '^SF:' TestResults/js/lcov.info
 
       - name: SonarScanner end
         if: steps.token.outputs.enabled == 'true'
