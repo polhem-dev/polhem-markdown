@@ -22,6 +22,45 @@ The packages are published on [nuget.org](https://www.nuget.org/packages?q=Polhe
 are in the [CHANGELOG](CHANGELOG.md). They are at 0.x: a minor version may still change the API, and the CHANGELOG says
 when it does.
 
+## What the viewers show
+
+![The same reply in the Blazor viewer and the Avalonia viewer](docs/images/viewer-hero.png)
+
+Both viewers render the same model, so a reply looks alike in a browser and in a desktop or mobile app. The picture
+shows the start of the sample text in each.
+
+- **GitHub Flavored Markdown**: headings, emphasis, ~~strikethrough~~, lists and task lists, quotes, tables with
+  column alignment, footnotes, emoji shortcodes such as `:wave:`, and GitHub alerts (`> [!NOTE]`, `> [!TIP]`,
+  `> [!IMPORTANT]`, `> [!WARNING]`, `> [!CAUTION]`). YAML front matter is hidden, and a link to a heading of the same
+  text scrolls to it.
+- **Code blocks** show their language and a copy button, and code in common languages such as C#, JSON, SQL, XML,
+  JavaScript and Python is highlighted. Light and dark themes are both supported:
+
+  ![A table and highlighted code on a dark theme](docs/images/viewer-code-dark.png)
+
+- **Mermaid diagrams**: flowcharts and sequence diagrams are drawn by the viewer itself, with no script. A diagram of
+  another type shows as code.
+
+  ![A flowchart with Chinese labels and a sequence diagram](docs/images/viewer-diagrams.png)
+
+- **Math** written as on GitHub, `$…$` in a line and `$$…$$` or a ` ```math ` block on its own, also without a script.
+  Dollar signs in prose, such as prices, stay text.
+
+  ![Inline math, fractions, sums, cases and a matrix](docs/images/viewer-math.png)
+
+- **The HTML README files use**, such as `<div align="center">`, `<details>`, `<sup>`, `<kbd>` and `<img>`, becomes
+  part of the text; any other HTML is dropped, and scripts with their content.
+
+  ![Centered text, a details section, a dropped script and a footnote](docs/images/viewer-html.png)
+
+- **Safety**: only links with an allowed scheme (by default `http`, `https` and `mailto`) can be clicked, and only
+  images from an allowed scheme (by default `https`) load. A host can add a scheme of its own and decide what such a
+  link does.
+- **Streaming**: the text can be set again as a reply arrives; the gallery's replay shows it.
+
+Each viewer's README lists what it supports in detail, and how to set its colors:
+[Avalonia](src/Polhem.Markdown.Avalonia/README.md), [Blazor](src/Polhem.Markdown.Blazor/README.md).
+
 ## Samples
 
 `samples/MarkdownGallery` shows every kind of node on a Semi theme, light or dark, with a replay that types the text in
