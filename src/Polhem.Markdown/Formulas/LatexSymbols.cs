@@ -42,7 +42,7 @@ internal static class LatexSymbols
             "sin=sin cos=cos tan=tan cot=cot sec=sec csc=csc arcsin=arcsin arccos=arccos arctan=arctan sinh=sinh " +
             "cosh=cosh tanh=tanh coth=coth log=log ln=ln lg=lg exp=exp det=det dim=dim ker=ker arg=arg deg=deg " +
             "gcd=gcd hom=hom Pr=Pr");
-        Add(FormulaSymbolKind.LimitName, "lim=lim limsup=lim sup liminf=lim inf max=max min=min sup=sup inf=inf");
+        Add(FormulaSymbolKind.LimitName, "lim=lim limsup=lim\u2009sup liminf=lim\u2009inf max=max min=min sup=sup inf=inf");
         Add(FormulaSymbolKind.LargeOperator, "sum=∑ prod=∏ coprod=∐ bigcup=⋃ bigcap=⋂ bigoplus=⨁ bigotimes=⨂ bigvee=⋁ bigwedge=⋀");
         Add(FormulaSymbolKind.Integral, "int=∫ iint=∬ iiint=∭ oint=∮");
         Add(FormulaSymbolKind.Operator,

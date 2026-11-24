@@ -7,13 +7,13 @@ namespace Polhem.Markdown.UnitTests.Model;
 /// <summary>Math written as on GitHub: <c>$…$</c>, <c>$$…$$</c> and <c>math</c> code blocks.</summary>
 public class MathTests
 {
-    private static FormulaItem Formula(string latex)
+    private static IFormulaItem Formula(string latex)
     {
         Assert.True(LatexParser.TryParse(latex, out var formula), latex);
         return formula;
     }
 
-    private static T Only<T>(FormulaItem formula) where T : FormulaItem =>
+    private static T Only<T>(IFormulaItem formula) where T : IFormulaItem =>
         Assert.IsType<T>(Assert.Single(Assert.IsType<FormulaRow>(formula).Items));
 
     [Theory(DisplayName = "Dollar signs in prose, such as prices, stay text")]

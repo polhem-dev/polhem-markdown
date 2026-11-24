@@ -22,8 +22,8 @@ internal static class ModelNodeTypes
         .ToHashSet();
 
     /// <summary>The part types a formula is made of.</summary>
-    public static IReadOnlySet<Type> Formulas { get; } = typeof(FormulaItem).Assembly.GetTypes()
-        .Where(type => type.IsSubclassOf(typeof(FormulaItem)) && !type.IsAbstract)
+    public static IReadOnlySet<Type> Formulas { get; } = typeof(IFormulaItem).Assembly.GetTypes()
+        .Where(type => typeof(IFormulaItem).IsAssignableFrom(type) && !type.IsInterface && !type.IsAbstract)
         .ToHashSet();
 
     /// <summary>The contents of AllNodes.md, which is copied next to each test assembly.</summary>

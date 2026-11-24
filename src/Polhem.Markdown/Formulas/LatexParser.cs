@@ -29,7 +29,7 @@ internal sealed class LatexParser
     }
 
     /// <summary>Parses <paramref name="latex"/>, or returns <see langword="false"/> when it uses anything outside the subset.</summary>
-    public static bool TryParse(string latex, out FormulaItem formula)
+    public static bool TryParse(string latex, out IFormulaItem formula)
     {
         ArgumentNullException.ThrowIfNull(latex);
         formula = null!;
@@ -58,21 +58,17 @@ internal sealed class LatexParser
 
     private FormulaRow Row(char stop, bool inMatrix, bool inLeft)
     {
-        var items = new List<FormulaItem>();
+        var items = new List<IFormulaItem>();
         while (true)
         {
             SkipSpace();
             if (AtEnd)
             {
-                if (stop != NoStop)
-                {
-                    throw Unsupported();
-                }
-                break;
+                return stop == NoStop ? new FormulaRow(items) : throw Unsupported();
             }
-            if (Current == stop || (inMatrix && (Current == '&' || Peek("\\\\") || PeekCommand("end"))) || (inLeft && PeekCommand("right")))
+            if (EndsRow(stop, inMatrix, inLeft))
             {
-                break;
+                return new FormulaRow(items);
             }
             if (Current == '}' || Current == '&' || Peek("\\\\") || PeekCommand("right") || PeekCommand("end"))
             {
@@ -80,56 +76,62 @@ internal sealed class LatexParser
             }
             items.Add(Current is '^' or '_' or '\'' ? Scripts(new FormulaRow([])) : Scripts(Base()));
         }
-        return new FormulaRow(items);
     }
 
-    private FormulaItem Scripts(FormulaItem baseItem)
+    /// <summary>Whether what comes next ends the row being read: its closing character, a cell or row break, or <c>\right</c>.</summary>
+    private bool EndsRow(char stop, bool inMatrix, bool inLeft) =>
+        Current == stop
+        || (inMatrix && (Current == '&' || Peek("\\\\") || PeekCommand("end")))
+        || (inLeft && PeekCommand("right"));
+
+    private IFormulaItem Scripts(IFormulaItem baseItem)
     {
-        FormulaItem? subscript = null;
-        FormulaItem? superscript = null;
+        IFormulaItem? subscript = null;
+        IFormulaItem? superscript = null;
         var primes = 0;
-        while (true)
+        while (ReadScript(ref subscript, ref superscript, ref primes))
         {
-            SkipSpace();
-            if (AtEnd)
-            {
-                break;
-            }
-            if (Current == '^' && superscript is null)
-            {
-                _position++;
-                superscript = Argument();
-            }
-            else if (Current == '_' && subscript is null)
-            {
-                _position++;
-                subscript = Argument();
-            }
-            else if (Current == '\'' && superscript is null)
-            {
-                _position++;
-                primes++;
-            }
-            else if (Current is '^' or '_')
-            {
-                // A second superscript or subscript on one base is an error in LaTeX too.
-                throw Unsupported();
-            }
-            else
-            {
-                break;
-            }
         }
         if (primes > 0)
         {
-            var prime = new FormulaSymbol(new string('′', primes), FormulaSymbolKind.Operator);
+            var prime = new FormulaSymbol(new string('\u2032', primes), FormulaSymbolKind.Operator);
             superscript = superscript is null ? prime : new FormulaRow([prime, superscript]);
         }
         return subscript is null && superscript is null ? baseItem : new FormulaScripts(baseItem, subscript, superscript);
     }
 
+    /// <summary>Reads one subscript, superscript or prime after a base; returns whether there was one.</summary>
+    private bool ReadScript(ref IFormulaItem? subscript, ref IFormulaItem? superscript, ref int primes)
+    {
+        SkipSpace();
+        if (AtEnd)
+        {
+            return false;
+        }
+        switch (Current)
+        {
+            case '^' when superscript is null:
+                _position++;
+                superscript = Argument();
+                return true;
+            case '_' when subscript is null:
+                _position++;
+                subscript = Argument();
+                return true;
+            case '\'' when superscript is null:
+                _position++;
+                primes++;
+                return true;
+            case '^' or '_':
+                // A second superscript or subscript on one base is an error in LaTeX too.
+                throw Unsupported();
+            default:
+                return false;
+        }
+    }
+
     /// <summary>The argument of a command or a script: a group, or a single symbol.</summary>
-    private FormulaItem Argument()
+    private IFormulaItem Argument()
     {
         SkipSpace();
         if (AtEnd)
@@ -144,7 +146,7 @@ internal sealed class LatexParser
         return Base();
     }
 
-    private FormulaItem Base()
+    private IFormulaItem Base()
     {
         if (++_depth > MaxDepth)
         {
@@ -211,7 +213,7 @@ internal sealed class LatexParser
         return row;
     }
 
-    private FormulaItem Command()
+    private IFormulaItem Command()
     {
         _position++;
         if (AtEnd)
@@ -269,7 +271,7 @@ internal sealed class LatexParser
     private FormulaRoot Root()
     {
         SkipSpace();
-        FormulaItem? index = null;
+        IFormulaItem? index = null;
         if (!AtEnd && Current == '[')
         {
             _position++;
@@ -315,7 +317,7 @@ internal sealed class LatexParser
         };
     }
 
-    private FormulaItem Environment()
+    private IFormulaItem Environment()
     {
         var name = RawGroup();
         var (open, close, alignLeft) = name switch
@@ -334,8 +336,8 @@ internal sealed class LatexParser
         {
             throw Unsupported();
         }
-        var rows = new List<IReadOnlyList<FormulaItem>>();
-        var cells = new List<FormulaItem>();
+        var rows = new List<IReadOnlyList<IFormulaItem>>();
+        var cells = new List<IFormulaItem>();
         while (true)
         {
             cells.Add(Row(NoStop, inMatrix: true, inLeft: false));
@@ -411,21 +413,25 @@ internal sealed class LatexParser
             return text;
         }
         var result = new System.Text.StringBuilder(text.Length);
-        for (var index = 0; index < text.Length; index++)
+        var index = 0;
+        while (index < text.Length)
         {
             var c = text[index];
             if (c == '\\' && index + 1 < text.Length && text[index + 1] is '{' or '}' or '%' or '$' or '&' or '#' or '_' or ' ')
             {
-                result.Append(text[++index]);
+                result.Append(text[index + 1]);
+                index += 2;
+                continue;
             }
-            else if (c == '\\')
+            if (c == '\\')
             {
                 throw Unsupported();
             }
-            else if (c is not ('{' or '}'))
+            if (c is not ('{' or '}'))
             {
                 result.Append(c);
             }
+            index++;
         }
         return result.ToString();
     }

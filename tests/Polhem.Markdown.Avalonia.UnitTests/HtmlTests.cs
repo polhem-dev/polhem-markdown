@@ -112,7 +112,7 @@ public class HtmlTests(HeadlessSession session)
     });
 
     [Fact(DisplayName = "A picture loads the source for the viewer's theme, and the other one when the theme changes")]
-    public Task Render_Picture_FollowsTheme() => session.RunAsync(() =>
+    public Task Render_Picture_FollowsTheme() => session.RunAsync(async () =>
     {
         var calls = new List<Uri>();
         var (window, viewer) = Show(Picture, images: Serve(Png(10, 10), calls));
@@ -123,7 +123,10 @@ public class HtmlTests(HeadlessSession session)
         window.RequestedThemeVariant = ThemeVariant.Dark;
         Dispatcher.UIThread.RunJobs();
 
-        Assert.Equal(new Uri("https://example.com/dark.png"), Descendants<ImageView>(viewer).Single().Source);
+        // NOTE: the image loads on a background thread, so the loader is called only once the new view's load has run.
+        var view = Descendants<ImageView>(viewer).Single();
+        Assert.Equal(new Uri("https://example.com/dark.png"), view.Source);
+        await view.Shown.ConfigureAwait(ConfigureAwaitOptions.ContinueOnCapturedContext);
         lock (calls)
         {
             Assert.Contains(new Uri("https://example.com/dark.png"), calls);

@@ -16,7 +16,9 @@ namespace Polhem.Markdown.Blazor;
 /// </remarks>
 internal static class MathMlWriter
 {
-    public static string Write(FormulaItem formula, string source, bool display, ISet<Type> written)
+    private const string CloseOperator = "</mo>";
+
+    public static string Write(IFormulaItem formula, string source, bool display, ISet<Type> written)
     {
         var markup = new StringBuilder();
         markup.Append(display ? "<math display=\"block\">" : "<math>").Append("<semantics>");
@@ -26,7 +28,7 @@ internal static class MathMlWriter
         return markup.ToString();
     }
 
-    private static void Part(StringBuilder markup, FormulaItem item, ISet<Type> written)
+    private static void Part(StringBuilder markup, IFormulaItem item, ISet<Type> written)
     {
         switch (item)
         {
@@ -55,10 +57,10 @@ internal static class MathMlWriter
                 Part(markup, root.Radicand, written);
                 markup.Append("</msqrt>");
                 break;
-            case FormulaRoot root:
+            case FormulaRoot { Index: { } index } root:
                 markup.Append("<mroot>");
                 Part(markup, root.Radicand, written);
-                Part(markup, root.Index!, written);
+                Part(markup, index, written);
                 markup.Append("</mroot>");
                 break;
             case FormulaFenced fenced:
@@ -96,14 +98,14 @@ internal static class MathMlWriter
             FormulaSymbolKind.Name => ("<mi mathvariant=\"normal\">", "</mi>"),
             FormulaSymbolKind.Number => ("<mn>", "</mn>"),
             FormulaSymbolKind.Text => ("<mtext>", "</mtext>"),
-            FormulaSymbolKind.LimitName => ("<mo movablelimits=\"true\">", "</mo>"),
-            FormulaSymbolKind.LargeOperator => ("<mo largeop=\"true\" movablelimits=\"true\">", "</mo>"),
-            FormulaSymbolKind.Integral => ("<mo largeop=\"true\">", "</mo>"),
+            FormulaSymbolKind.LimitName => ("<mo movablelimits=\"true\">", CloseOperator),
+            FormulaSymbolKind.LargeOperator => ("<mo largeop=\"true\" movablelimits=\"true\">", CloseOperator),
+            FormulaSymbolKind.Integral => ("<mo largeop=\"true\">", CloseOperator),
             // NOTE: MathML stretches a bracket written as an operator to its row; only `\left … \right` and the
             // delimiters of a matrix grow, as in LaTeX, so a bracket written on its own keeps its size.
             _ when symbol.Text is "(" or ")" or "[" or "]" or "{" or "}" or "|" or "\u2016" or "\u27E8" or "\u27E9" or "\u230A"
-                or "\u230B" or "\u2308" or "\u2309" => ("<mo stretchy=\"false\">", "</mo>"),
-            _ => ("<mo>", "</mo>"),
+                or "\u230B" or "\u2308" or "\u2309" => ("<mo stretchy=\"false\">", CloseOperator),
+            _ => ("<mo>", CloseOperator),
         };
 
         // HTML would collapse a space at the end of text, which `\text{if }` means to keep.
@@ -141,7 +143,7 @@ internal static class MathMlWriter
     {
         if (delimiter.Length > 0)
         {
-            markup.Append("<mo fence=\"true\" stretchy=\"true\">").Append(WebUtility.HtmlEncode(delimiter)).Append("</mo>");
+            markup.Append("<mo fence=\"true\" stretchy=\"true\">").Append(WebUtility.HtmlEncode(delimiter)).Append(CloseOperator);
         }
     }
 

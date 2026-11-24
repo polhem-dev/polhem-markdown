@@ -12,7 +12,7 @@ namespace Polhem.Markdown.Avalonia.Formulas;
 /// </summary>
 internal sealed class FormulaView : Control
 {
-    private readonly FormulaItem _formula;
+    private readonly IFormulaItem _formula;
     private readonly bool _display;
     private readonly ISet<Type> _laidOut;
     private readonly MarkdownTextBlock? _line;
@@ -23,7 +23,7 @@ internal sealed class FormulaView : Control
     /// <param name="display">Whether it is shown on its own rather than in a line.</param>
     /// <param name="laidOut">Collects the formula part types laid out, for the coverage test.</param>
     /// <param name="line">The text a formula in a line belongs to, which makes room for its depth.</param>
-    public FormulaView(FormulaItem formula, bool display, ISet<Type> laidOut, MarkdownTextBlock? line)
+    public FormulaView(IFormulaItem formula, bool display, ISet<Type> laidOut, MarkdownTextBlock? line)
     {
         _formula = formula;
         _display = display;
@@ -68,7 +68,7 @@ internal sealed class FormulaView : Control
             {
                 case FormulaTextPiece text:
                     text.Text.SetForegroundBrush(brush);
-                    if (text.ScaleX == 1 && text.ScaleY == 1)
+                    if (!text.IsScaled)
                     {
                         context.DrawText(text.Text, new Point(text.Origin.X, text.Origin.Y - text.Text.Baseline));
                     }

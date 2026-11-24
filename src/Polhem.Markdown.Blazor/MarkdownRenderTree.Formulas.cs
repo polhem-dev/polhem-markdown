@@ -14,7 +14,7 @@ internal sealed partial class MarkdownRenderTree
     /// Writes a formula as MathML, which the browser lays out itself with no script (see <see cref="MathMlWriter"/>). Its
     /// LaTeX source goes along as an annotation, which is not shown.
     /// </summary>
-    private void Formula(FormulaItem formula, string source, bool display) =>
+    private void Formula(IFormulaItem formula, string source, bool display) =>
         _builder.AddMarkupContent(0, MathMlWriter.Write(formula, source, display, _renderedFormulas));
 
     private void MathBlock(MathBlockNode math)

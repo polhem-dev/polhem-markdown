@@ -30,7 +30,7 @@ internal sealed class FormulaLayout
     }
 
     /// <summary>Lays out <paramref name="formula"/>, in display style when it is shown on its own.</summary>
-    public FormulaBox Layout(FormulaItem formula, bool display) => Box(formula, level: 0, display);
+    public FormulaBox Layout(IFormulaItem formula, bool display) => Box(formula, level: 0, display);
 
     private double Size(int level) => _fontSize * Math.Max(SmallestScale, Math.Pow(ScriptScale, level));
 
@@ -39,7 +39,7 @@ internal sealed class FormulaLayout
 
     private double Rule(int level) => Math.Max(1, Size(level) * 0.06);
 
-    private FormulaBox Box(FormulaItem item, int level, bool display)
+    private FormulaBox Box(IFormulaItem item, int level, bool display)
     {
         var box = item switch
         {
@@ -64,7 +64,7 @@ internal sealed class FormulaLayout
 
     private FormulaBox Row(FormulaRow row, int level, bool display)
     {
-        var pieces = new List<FormulaPiece>();
+        var pieces = new List<IFormulaPiece>();
         double x = 0, ascent = 0, descent = 0;
         foreach (var child in row.Items)
         {
@@ -140,29 +140,13 @@ internal sealed class FormulaLayout
 
         if (display && scripts.Base is FormulaSymbol { Kind: FormulaSymbolKind.LargeOperator or FormulaSymbolKind.LimitName })
         {
-            // Limits go below and above, centered on the operator.
-            var width = new[] { baseBox.Width, sub?.Width ?? 0, sup?.Width ?? 0 }.Max();
-            var gap = size * 0.15;
-            var pieces = new List<FormulaPiece>(baseBox.PiecesAt((width - baseBox.Width) / 2, 0));
-            var ascent = baseBox.Ascent;
-            var descent = baseBox.Descent;
-            if (sup is not null)
-            {
-                pieces.AddRange(sup.PiecesAt((width - sup.Width) / 2, -(ascent + gap + sup.Descent)));
-                ascent += gap + sup.Height;
-            }
-            if (sub is not null)
-            {
-                pieces.AddRange(sub.PiecesAt((width - sub.Width) / 2, descent + gap + sub.Ascent));
-                descent += gap + sub.Height;
-            }
-            return new FormulaBox(width, ascent, descent, pieces);
+            return Limits(baseBox, sub, sup, size);
         }
 
         // An italic letter leans into its superscript, so the scripts start a little further right.
         var italic = scripts.Base is FormulaSymbol { Kind: FormulaSymbolKind.Identifier };
         var x = baseBox.Width + size * (italic ? 0.1 : 0.05);
-        var all = new List<FormulaPiece>(baseBox.Pieces);
+        var all = new List<IFormulaPiece>(baseBox.Pieces);
         double boxAscent = baseBox.Ascent, boxDescent = baseBox.Descent, right = baseBox.Width;
         var supShift = sup is null ? 0 : Math.Max(size * 0.4, baseBox.Ascent - sup.Ascent * 0.4);
         var subShift = sub is null ? 0 : Math.Max(size * 0.2, baseBox.Descent + sub.Ascent * 0.4);
@@ -192,6 +176,27 @@ internal sealed class FormulaLayout
         return new FormulaBox(right + size * 0.05, boxAscent, boxDescent, all);
     }
 
+    /// <summary>Limits below and above a large operator or a name such as <c>lim</c>, centered on it.</summary>
+    private static FormulaBox Limits(FormulaBox baseBox, FormulaBox? sub, FormulaBox? sup, double size)
+    {
+        var width = new[] { baseBox.Width, sub?.Width ?? 0, sup?.Width ?? 0 }.Max();
+        var gap = size * 0.15;
+        var pieces = new List<IFormulaPiece>(baseBox.PiecesAt((width - baseBox.Width) / 2, 0));
+        var ascent = baseBox.Ascent;
+        var descent = baseBox.Descent;
+        if (sup is not null)
+        {
+            pieces.AddRange(sup.PiecesAt((width - sup.Width) / 2, -(ascent + gap + sup.Descent)));
+            ascent += gap + sup.Height;
+        }
+        if (sub is not null)
+        {
+            pieces.AddRange(sub.PiecesAt((width - sub.Width) / 2, descent + gap + sub.Ascent));
+            descent += gap + sub.Height;
+        }
+        return new FormulaBox(width, ascent, descent, pieces);
+    }
+
     private FormulaBox Fraction(FormulaFraction fraction, int level, bool display)
     {
         // In a formula on its own the parts keep their size; in a line they are smaller, as TeX sets them.
@@ -207,7 +212,7 @@ internal sealed class FormulaLayout
 
         var numeratorBaseline = -(axis + rule / 2 + gap + numerator.Descent);
         var denominatorBaseline = -axis + rule / 2 + gap + denominator.Ascent;
-        var pieces = new List<FormulaPiece>();
+        var pieces = new List<IFormulaPiece>();
         pieces.AddRange(numerator.PiecesAt((width - numerator.Width) / 2, numeratorBaseline));
         pieces.AddRange(denominator.PiecesAt((width - denominator.Width) / 2, denominatorBaseline));
         if (fraction.HasLine)
@@ -230,7 +235,7 @@ internal sealed class FormulaLayout
         var index = root.Index is { } written ? Box(written, level + 2, display: false) : null;
         var indent = index is null ? 0 : Math.Max(0, index.Width - signWidth * 0.45);
 
-        var pieces = new List<FormulaPiece>();
+        var pieces = new List<IFormulaPiece>();
         if (index is not null)
         {
             pieces.AddRange(index.PiecesAt(indent + signWidth * 0.45 - index.Width, -(top * 0.45) - index.Descent));
@@ -258,7 +263,7 @@ internal sealed class FormulaLayout
 
         // A delimiter covers the content symmetrically about the axis.
         var half = Math.Max(Math.Max(content.Ascent - axis, content.Descent + axis), Size(level) * 0.5);
-        var pieces = new List<FormulaPiece>();
+        var pieces = new List<IFormulaPiece>();
         var x = 0.0;
         var open = Delimiter(fenced.Open, level, half);
         if (open is not null)
@@ -308,7 +313,7 @@ internal sealed class FormulaLayout
         var rowGap = size * 0.35;
         var columnGap = size * (matrix.AlignLeft ? 1.0 : 0.8);
 
-        var pieces = new List<FormulaPiece>();
+        var pieces = new List<IFormulaPiece>();
         var y = 0.0;
         foreach (var row in cells)
         {
@@ -337,7 +342,7 @@ internal sealed class FormulaLayout
         var baseBox = Box(accent.Base, level, display);
         var size = Size(level);
         var gap = size * 0.08;
-        var pieces = new List<FormulaPiece>(baseBox.Pieces);
+        var pieces = new List<IFormulaPiece>(baseBox.Pieces);
         if (accent.Mark == "‾")
         {
             // An overline is a rule over the whole base.
@@ -354,7 +359,7 @@ internal sealed class FormulaLayout
 
         // The mark's ink bottom sits a little above the base's ink top, both centered.
         var baseline = -(baseBox.Ascent + gap - bottom * size);
-        var placed = new List<FormulaPiece>(baseBox.PiecesAt((width - baseBox.Width) / 2, 0))
+        var placed = new List<IFormulaPiece>(baseBox.PiecesAt((width - baseBox.Width) / 2, 0))
         {
             new FormulaTextPiece(new Point((width - markWidth * scaleX) / 2, baseline), accent.Mark, mark, scaleX, 1),
         };
