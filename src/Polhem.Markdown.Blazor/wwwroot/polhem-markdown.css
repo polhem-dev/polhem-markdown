@@ -4,9 +4,9 @@
   the Avalonia viewer:
 
     --pmd-link       link color
-    --pmd-code-bg    background of inline code, code blocks and table headers
-    --pmd-rule       rules, table borders and the bar beside a quote
-    --pmd-code-font  font of inline code and code blocks
+    --pmd-code-bg    background of inline code, keys (<kbd>), code blocks and table headers
+    --pmd-rule       rules, table borders, the bar beside a quote and the border of a key
+    --pmd-code-font  font of inline code, keys and code blocks
     --pmd-alert-note, --pmd-alert-tip, --pmd-alert-important, --pmd-alert-warning, --pmd-alert-caution
                      bar, icon and title of each kind of alert (> [!NOTE] and so on)
     --pmd-code-keyword, --pmd-code-string, --pmd-code-comment, --pmd-code-constant, --pmd-code-tag,
@@ -19,13 +19,38 @@
 }
 
 /* Blocks carry no margins of their own; space between siblings comes from the rule after this one. */
-.pmd :where(p, h1, h2, h3, h4, h5, h6, ul, ol, li, blockquote, pre, table, hr, .pmd-code, .pmd-table, .pmd-diagram) {
+.pmd :where(p, h1, h2, h3, h4, h5, h6, ul, ol, li, blockquote, pre, table, hr, .pmd-code, .pmd-table, .pmd-diagram,
+  .pmd-align-center, .pmd-align-right, .pmd-details) {
   margin: 0;
 }
 
-.pmd :where(p, h1, h2, h3, h4, h5, h6, ul, ol, blockquote, hr, .pmd-code, .pmd-table, .pmd-diagram)
-  + :where(p, h1, h2, h3, h4, h5, h6, ul, ol, blockquote, hr, .pmd-code, .pmd-table, .pmd-diagram) {
+.pmd :where(p, h1, h2, h3, h4, h5, h6, ul, ol, blockquote, hr, .pmd-code, .pmd-table, .pmd-diagram, .pmd-align-center,
+  .pmd-align-right, .pmd-details, summary)
+  + :where(p, h1, h2, h3, h4, h5, h6, ul, ol, blockquote, hr, .pmd-code, .pmd-table, .pmd-diagram, .pmd-align-center,
+  .pmd-align-right, .pmd-details) {
   margin-top: 8px;
+}
+
+/* Blocks centered or right-aligned by <div align> or <p align>, as README files center their logos and badges. */
+.pmd .pmd-align-center {
+  text-align: center;
+}
+
+.pmd .pmd-align-right {
+  text-align: right;
+}
+
+.pmd .pmd-details > summary {
+  cursor: pointer;
+}
+
+.pmd kbd {
+  font-family: var(--pmd-code-font, "Cascadia Mono", Consolas, Menlo, ui-monospace, monospace);
+  font-size: 0.85em;
+  background: var(--pmd-code-bg, rgba(128, 128, 128, 0.12));
+  border: 1px solid var(--pmd-rule, rgba(128, 128, 128, 0.35));
+  border-radius: 3px;
+  padding: 0 0.3em;
 }
 
 .pmd :where(h1, h2, h3, h4, h5, h6) {

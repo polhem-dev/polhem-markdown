@@ -9,17 +9,33 @@ namespace Polhem.Markdown.UnitTests.Model;
 /// </summary>
 public class SafetyPolicyTests
 {
-    [Theory(DisplayName = "Raw HTML, as a block or inline, shows as the text it was written as")]
-    [InlineData("<div>block</div>", "<div>block</div>")]
-    [InlineData("<script>alert(1)</script>", "<script>alert(1)</script>")]
-    [InlineData("a <b>bold</b> word", "a <b>bold</b> word")]
-    [InlineData("<img src=x onerror=alert(1)>", "<img src=x onerror=alert(1)>")]
-    public void Build_RawHtml_ShowsAsText(string markdown, string text)
+    [Theory(DisplayName = "Raw HTML never passes through: scripts and their content are dropped, and so are unsafe attributes")]
+    [InlineData("<script>alert(1)</script>", "")]
+    [InlineData("a <script>alert(1)</script> b", "a  b")]
+    [InlineData("<style>p { color: red }</style>\n\nafter", "after")]
+    [InlineData("<iframe src=\"https://example.com/\"></iframe>", "")]
+    [InlineData("<span onclick=\"alert(1)\">text</span>", "text")]
+    [InlineData("<!-- a comment -->", "")]
+    public void Build_RawHtml_NeverPassesThrough(string markdown, string text)
     {
         var document = Parse(markdown);
 
-        Assert.Equal(text, Text(Single<ParagraphNode>(document).Inlines));
-        Assert.DoesNotContain(AllNodes(document), node => node is LinkNode);
+        Assert.Equal(text, string.Concat(document.Blocks.OfType<ParagraphNode>().Select(paragraph => Text(paragraph.Inlines))));
+        Assert.DoesNotContain(AllNodes(document), node => node is TextNode { Text: var shown } && shown.Contains('<', StringComparison.Ordinal));
+    }
+
+    [Theory(DisplayName = "An HTML link or image whose address is refused shows only its text")]
+    [InlineData("<a href=\"javascript:alert(1)\">click</a>", "click")]
+    [InlineData("<a href=\"JaVaScRiPt:alert(1)\">click</a>", "click")]
+    [InlineData("<a href=\"data:text/html,x\">click</a>", "click")]
+    [InlineData("<img src=\"javascript:alert(1)\" alt=\"pic\">", "pic")]
+    [InlineData("<img src=x onerror=alert(1)>", "")]
+    public void Build_RefusedHtmlTarget_ShowsText(string markdown, string text)
+    {
+        var document = Parse(markdown);
+
+        Assert.DoesNotContain(AllNodes(document), node => node is LinkNode or ImageNode);
+        Assert.Equal(text, string.Concat(document.Blocks.OfType<ParagraphNode>().Select(paragraph => Text(paragraph.Inlines))));
     }
 
     [Theory(DisplayName = "A link that is not an absolute URI with an allowed scheme shows as its text")]
@@ -135,10 +151,10 @@ public class SafetyPolicyTests
     [Fact(DisplayName = "The text of a footnote goes through the same policy: a script link in it shows as text")]
     public void Build_FootnoteContent_FollowsPolicy()
     {
-        var document = Parse("Text[^1]\n\n[^1]: [click](javascript:alert(1)) <b>bold</b>");
+        var document = Parse("Text[^1]\n\n[^1]: [click](javascript:alert(1)) <a href=\"javascript:alert(1)\">html</a>");
 
         var note = Assert.Single(Assert.IsType<FootnotesNode>(document.Blocks[^1]).Notes);
-        Assert.Equal("click <b>bold</b> \u21A9", Text(Assert.IsType<ParagraphNode>(Assert.Single(note.Blocks)).Inlines));
+        Assert.Equal("click html \u21A9", Text(Assert.IsType<ParagraphNode>(Assert.Single(note.Blocks)).Inlines));
         Assert.DoesNotContain(AllNodes(document), node => node is LinkNode);
     }
 

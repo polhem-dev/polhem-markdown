@@ -23,6 +23,19 @@ flowchart LR
     A[Start] -->|go| B{Done?}
 ```
 
+<div align="center">
+
+A centered paragraph with <sup>raised</sup> text and <kbd>Ctrl</kbd>.
+
+</div>
+
+<details>
+<summary>More</summary>
+
+Hidden text.
+
+</details>
+
 | Name | Qty |
 |:-----|----:|
 | pen  | 2   |

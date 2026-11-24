@@ -48,6 +48,10 @@ const string Markdown = """
         S-->>U: response
     ```
 
+    <p align="center"><img src="https://example.com/logo.png" width="100"></p>
+
+    <details><summary>More</summary>Hidden</details>
+
     | a | b |
     |:--|--:|
     | 1 | 2 |
@@ -71,6 +75,7 @@ Type[] expected =
     typeof(CodeBlockNode), typeof(DiagramNode), typeof(TableNode), typeof(TableRowNode), typeof(TableCellNode), typeof(ThematicBreakNode),
     typeof(TextNode), typeof(EmphasisNode), typeof(CodeSpanNode), typeof(LinkNode), typeof(AnchorLinkNode), typeof(ImageNode), typeof(LineBreakNode),
     typeof(FootnotesNode), typeof(FootnoteNode), typeof(FootnoteReferenceNode), typeof(FootnoteBackLinkNode),
+    typeof(AlignedBlockNode), typeof(DetailsNode),
 ];
 var missing = expected.Where(type => !found.Contains(type)).Select(type => type.Name).ToList();
 if (missing.Count > 0)
@@ -108,6 +113,8 @@ void Collect(MarkdownNode node)
         ListItemNode item => item.Blocks,
         QuoteNode quote => quote.Blocks,
         AlertNode alert => alert.Blocks,
+        AlignedBlockNode aligned => aligned.Blocks,
+        DetailsNode details => details.Summary.Concat<MarkdownNode>(details.Blocks),
         TableNode table => table.HeaderRows.Concat(table.Rows),
         TableRowNode row => row.Cells,
         TableCellNode cell => cell.Inlines,

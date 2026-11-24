@@ -7,24 +7,29 @@ namespace Polhem.Markdown.Avalonia.Images;
 
 /// <summary>
 /// An image in a run of text: its alternative text until the image has loaded, and for good when it cannot be loaded.
-/// The image is shown at its own size and scaled down, never up, to fit the viewer's width.
+/// The image is shown at the size the text asks for, or else its own, and scaled down to fit the viewer's width. Of a
+/// picture with a source for each theme, the one for the viewer's theme is shown.
 /// </summary>
 internal sealed class ImageView : Decorator
 {
     private readonly MarkdownViewer _viewer;
+    private readonly int? _width;
+    private readonly int? _height;
     private readonly Task<LoadedImage?> _loading;
     private Task? _showing;
 
     public ImageView(MarkdownViewer viewer, ImageNode image)
     {
         _viewer = viewer;
-        Source = image.Source;
+        _width = image.Width;
+        _height = image.Height;
+        Source = image.SourceFor(viewer.IsDarkTheme);
         Child = new TextBlock { Text = image.AlternativeText };
         if (image.Title is { } title)
         {
             ToolTip.SetTip(this, title);
         }
-        _loading = viewer.LoadImage(image.Source);
+        _loading = viewer.LoadImage(Source);
     }
 
     /// <summary>The address the image is loaded from.</summary>
@@ -76,13 +81,16 @@ internal sealed class ImageView : Decorator
         }
         if (_loading.IsCompletedSuccessfully && _loading.Result is { } loaded)
         {
+            // A size the text asks for scales the image to it, up or down, keeping its proportions; without one the
+            // image is never scaled up.
+            var sized = _width is not null || _height is not null;
             Child = new Image
             {
                 Source = loaded.Image,
                 Stretch = Stretch.Uniform,
-                StretchDirection = StretchDirection.DownOnly,
-                MaxWidth = loaded.Size.Width,
-                MaxHeight = loaded.Size.Height,
+                StretchDirection = sized ? StretchDirection.Both : StretchDirection.DownOnly,
+                MaxWidth = _width ?? (sized ? double.PositiveInfinity : loaded.Size.Width),
+                MaxHeight = _height ?? (sized ? double.PositiveInfinity : loaded.Size.Height),
             };
         }
     }

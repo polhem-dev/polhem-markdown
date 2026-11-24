@@ -107,6 +107,9 @@ public partial class MarkdownViewer : Control
     private readonly StackPanel _panel = new() { Spacing = 8 };
     private readonly List<string> _sources = [];
 
+    /// <summary>Whether the text shows a picture with a source for a theme, so a change of theme changes what it shows.</summary>
+    private bool _hasThemedImages;
+
     /// <summary>Initializes a new instance of the <see cref="MarkdownViewer"/> class.</summary>
     public MarkdownViewer()
     {
@@ -139,7 +142,7 @@ public partial class MarkdownViewer : Control
         set => SetValue(LinkForegroundProperty, value);
     }
 
-    /// <summary>Gets or sets the background of inline code and code blocks.</summary>
+    /// <summary>Gets or sets the background of inline code, keys (<c>&lt;kbd&gt;</c>) and code blocks.</summary>
     public IBrush CodeBackground
     {
         get => GetValue(CodeBackgroundProperty);
@@ -230,7 +233,7 @@ public partial class MarkdownViewer : Control
         set => SetValue(CodePropertyBrushProperty, value);
     }
 
-    /// <summary>Gets or sets the font of inline code and code blocks.</summary>
+    /// <summary>Gets or sets the font of inline code, keys (<c>&lt;kbd&gt;</c>) and code blocks.</summary>
     public FontFamily CodeFontFamily
     {
         get => GetValue(CodeFontFamilyProperty);
@@ -272,6 +275,11 @@ public partial class MarkdownViewer : Control
 
         if (change.Property == MarkdownProperty)
         {
+            Update(fullRebuild: false);
+        }
+        else if (change.Property == ThemeVariantScope.ActualThemeVariantProperty && _hasThemedImages)
+        {
+            // Only blocks with a picture whose source depends on the theme are rebuilt: the key holds the source shown.
             Update(fullRebuild: false);
         }
         else if (change.Property == OptionsProperty || change.Property == TextElement.FontSizeProperty
@@ -331,6 +339,10 @@ public partial class MarkdownViewer : Control
         }
     }
 
+    /// <summary>Whether the viewer's theme is dark, or derives from the dark one, which picks a picture's source.</summary>
+    internal bool IsDarkTheme => ActualThemeVariant is { } theme
+        && (theme == global::Avalonia.Styling.ThemeVariant.Dark || theme.InheritVariant == global::Avalonia.Styling.ThemeVariant.Dark);
+
     private void Update(bool fullRebuild)
     {
         var markdown = Markdown ?? "";
@@ -341,7 +353,7 @@ public partial class MarkdownViewer : Control
         for (var index = 0; index < document.Blocks.Count; index++)
         {
             var block = document.Blocks[index];
-            var source = BlockKey(markdown.Substring(block.Range.Start, block.Range.Length), block);
+            var source = BlockKey(markdown.Substring(block.Range.Start, block.Range.Length), block, IsDarkTheme);
 
             // NOTE: a block is kept when its own source is unchanged. A link that refers to a reference definition
             // elsewhere in the text therefore keeps its old target when only that definition changes; replies write
@@ -374,6 +386,8 @@ public partial class MarkdownViewer : Control
         }
 
         ForgetImagesNotIn(document);
+        _hasThemedImages = document.Blocks.SelectMany(NodeTree.SelfAndDescendants)
+            .Any(node => node is ImageNode { DarkSource: not null } or ImageNode { LightSource: not null });
         RenderedNodeTypes = renderer.RenderedNodeTypes;
         RenderedShapeTypes = renderer.RenderedShapeTypes;
         LastBuiltBlockCount = built;
@@ -385,7 +399,7 @@ public partial class MarkdownViewer : Control
     /// earlier text into a link, a heading added above another of the same name changes that one's id, and a reference
     /// added earlier renumbers the notes, all without the block's own source changing.
     /// </summary>
-    private static string BlockKey(string source, BlockNode block)
+    private static string BlockKey(string source, BlockNode block, bool dark)
     {
         var anchors = NodeTree.SelfAndDescendants(block)
             .Select(node => node switch
@@ -396,7 +410,8 @@ public partial class MarkdownViewer : Control
                 FootnoteNode note => "[" + note.Id + "=" + note.Number,
                 FootnoteBackLinkNode back => "<" + back.ReferenceId + "=" + back.Position,
                 // An image written by reference (`![a][r]`) takes its source from a definition elsewhere in the text.
-                ImageNode image => "!" + image.Source.AbsoluteUri,
+                // A picture shows the source for the viewer's theme.
+                ImageNode image => "!" + image.SourceFor(dark).AbsoluteUri,
                 _ => null,
             })
             .OfType<string>()

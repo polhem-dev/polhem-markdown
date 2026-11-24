@@ -124,7 +124,7 @@ public partial class MarkdownViewer
         {
             return;
         }
-        var shown = document.Blocks.SelectMany(NodeTree.SelfAndDescendants).OfType<ImageNode>().Select(image => image.Source).ToHashSet();
+        var shown = document.Blocks.SelectMany(NodeTree.SelfAndDescendants).OfType<ImageNode>().Select(image => image.SourceFor(IsDarkTheme)).ToHashSet();
         foreach (var source in _images.Keys.Where(source => !shown.Contains(source)).ToList())
         {
             ReleaseWhenLoaded(_images[source]);

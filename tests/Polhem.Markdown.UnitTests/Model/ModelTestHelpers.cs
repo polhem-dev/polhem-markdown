@@ -37,6 +37,8 @@ internal static class ModelTestHelpers
             ListItemNode item => item.Blocks,
             QuoteNode quote => quote.Blocks,
             AlertNode alert => alert.Blocks,
+            AlignedBlockNode aligned => aligned.Blocks,
+            DetailsNode details => details.Summary.Concat<MarkdownNode>(details.Blocks),
             TableNode table => table.HeaderRows.Concat(table.Rows),
             TableRowNode row => row.Cells,
             TableCellNode cell => cell.Inlines,
