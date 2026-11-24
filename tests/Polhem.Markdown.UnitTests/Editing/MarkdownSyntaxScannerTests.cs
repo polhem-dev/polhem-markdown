@@ -198,6 +198,23 @@ public class MarkdownSyntaxScannerTests
         Assert.Empty(MarkdownSyntaxScanner.Scan(new string('>', 5000) + " deep"));
     }
 
+    [Theory(DisplayName = "A text Markdig nests as deep as it is long is scanned on a small stack without overflowing it")]
+    [InlineData("[", "](u)")]
+    [InlineData("*", "a")]
+    [InlineData("> ", "a")]
+    public void Scan_DeepNesting_DoesNotOverflowTheStack(string unit, string suffix)
+    {
+        // NOTE: an overflow ends the process rather than failing the test, so the scan runs on a thread with a stack
+        // smaller than an iOS background thread's, where an overflow would come first.
+        var markdown = string.Concat(Enumerable.Repeat(unit, 10_000)) + suffix;
+        IReadOnlyList<SyntaxSpan>? spans = null;
+        var thread = new Thread(() => spans = MarkdownSyntaxScanner.Scan(markdown), maxStackSize: 256 * 1024);
+        thread.Start();
+        thread.Join();
+
+        Assert.NotNull(spans);
+    }
+
     [Fact(DisplayName = "The spans of a text with every kind of node are in order, apart, inside the text and never empty")]
     public void Scan_AllNodes_SpansAreOrderedAndApart()
     {

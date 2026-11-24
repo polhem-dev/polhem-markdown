@@ -27,6 +27,17 @@ internal sealed class MarkdownSyntaxScanner
     private readonly string _markdown;
     private readonly SyntaxPainter _painter;
 
+    /// <summary>
+    /// The nodes still to visit. Each node paints its own syntax and queues its children here, which paints a parent
+    /// before its children, as nesting needs.
+    /// </summary>
+    /// <remarks>
+    /// IMPORTANT: the tree is walked with this stack, not by recursion. Markdig nests an unmatched <c>[</c> around
+    /// everything after it, so a text of ten thousand of them is a tree that deep, and recursion overflowed the stack and
+    /// ended the process.
+    /// </remarks>
+    private readonly Stack<MarkdownObject> _pending = new();
+
     /// <summary>Where each line of the source starts, so finding a line costs a search rather than a scan.</summary>
     private readonly List<int> _lineStarts = [0];
 
@@ -53,14 +64,26 @@ internal sealed class MarkdownSyntaxScanner
         }
         var scanner = new MarkdownSyntaxScanner(markdown);
         scanner.Blocks(document);
+        while (scanner._pending.TryPop(out var node))
+        {
+            if (node is Block block)
+            {
+                scanner.Block(block);
+            }
+            else if (node is Inline inline)
+            {
+                scanner.Inline(inline);
+            }
+        }
         return scanner._painter.Runs();
     }
 
+    /// <summary>Queues the blocks of <paramref name="container"/>.</summary>
     private void Blocks(ContainerBlock container)
     {
         foreach (var block in container)
         {
-            Block(block);
+            _pending.Push(block);
         }
     }
 
@@ -344,6 +367,7 @@ internal sealed class MarkdownSyntaxScanner
         _painter.Paint(Part(definition.TitleSpan, range), MarkdownSyntaxKind.Url);
     }
 
+    /// <summary>Queues the inlines of <paramref name="container"/>.</summary>
     private void Inlines(ContainerInline? container)
     {
         if (container is null)
@@ -352,7 +376,7 @@ internal sealed class MarkdownSyntaxScanner
         }
         foreach (var inline in container)
         {
-            Inline(inline);
+            _pending.Push(inline);
         }
     }
 
