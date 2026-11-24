@@ -158,6 +158,7 @@ jobs:
           /d:sonar.token="$SONAR_TOKEN"
           /d:sonar.host.url="https://sonarcloud.io"
           /d:sonar.qualitygate.wait=true
+          /d:sonar.javascript.lcov.reportPaths="$GITHUB_WORKSPACE/TestResults/js/lcov.info"
           /s:"$GITHUB_WORKSPACE/SonarQube.Analysis.xml"
 
       - name: Build
@@ -175,10 +176,9 @@ jobs:
         with:
           node-version: 24
 
-      # The coverage of the script modules under src/, as an LCOV report that SonarQube.Analysis.xml points to. Node does
-      # not create the folder of a report, so the step does. Node writes the paths of the files relative to the
-      # repository, while the scanner resolves them against the folder of each project it analyzes, so the paths are
-      # made absolute.
+      # The coverage of the script modules under src/, as an LCOV report that "SonarScanner begin" points to. Node does
+      # not create the folder of a report, so the step does. The scanner analyzes each project from its own folder, so
+      # both the report's path (given to "SonarScanner begin") and the paths of the files in it must be absolute.
       - name: Test the scripts with coverage
         if: steps.token.outputs.enabled == 'true'
         run: |
