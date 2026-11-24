@@ -1,7 +1,5 @@
 using System.Globalization;
-using Markdig;
 using Markdig.Extensions.Alerts;
-using Markdig.Extensions.EmphasisExtras;
 using Markdig.Extensions.Footnotes;
 using Markdig.Extensions.Mathematics;
 using Markdig.Extensions.Tables;
@@ -10,7 +8,6 @@ using Markdig.Extensions.Yaml;
 using Markdig.Syntax;
 using Markdig.Syntax.Inlines;
 using Polhem.Markdown.Diagrams;
-using Polhem.Markdown.Formulas;
 using Polhem.Markdown.Highlighting;
 using Polhem.Markdown.Model;
 
@@ -35,29 +32,6 @@ namespace Polhem.Markdown;
 /// </remarks>
 internal sealed partial class MarkdownModelBuilder
 {
-    // NOTE: only the extensions whose nodes the viewers render are enabled. `UseAdvancedExtensions` would parse
-    // definition lists and others that no viewer draws. Inline math follows GitHub's rules (`GitHubMathExtension`). Markdig reads raw HTML into HTML blocks and inlines, which
-    // this builder turns into nodes (see `HtmlComposer`); no HTML ever reaches a viewer as markup.
-    private static readonly MarkdownPipeline s_pipeline = Pipeline();
-
-    private static MarkdownPipeline Pipeline()
-    {
-        var builder = new MarkdownPipelineBuilder()
-            .UsePipeTables()
-            .UseAutoLinks()
-            .UseCjkFriendlyEmphasis()
-            .UseEmphasisExtras(EmphasisExtraOptions.Strikethrough)
-            .UseTaskLists()
-            .UseAlertBlocks()
-            .UseEmojiAndSmiley(enableSmileys: false)
-            .UseYamlFrontMatter()
-            .UseFootnotes()
-            .UseMathematics()
-            .UsePreciseSourceLocation();
-        builder.Extensions.Add(new GitHubMathExtension());
-        return builder.Build();
-    }
-
     private readonly string _markdown;
     private readonly MarkdownOptions _options;
     private readonly Dictionary<HeadingBlock, string> _headingIds = [];
@@ -87,15 +61,8 @@ internal sealed partial class MarkdownModelBuilder
         ArgumentNullException.ThrowIfNull(options);
 
         var builder = new MarkdownModelBuilder(markdown, options);
-        MarkdownDocument document;
-        try
+        if (MarkdownParser.Parse(markdown) is not { } document)
         {
-            document = Markdig.Markdown.Parse(markdown, s_pipeline);
-        }
-        catch (ArgumentException)
-        {
-            // Markdig refuses a text nested deeper than its depth limit. The text comes from people and AI models,
-            // so it is shown as written instead of failing the view.
             return new DocumentNode([builder.WholeTextAsParagraph()]);
         }
         builder.AssignHeadingIds(document);

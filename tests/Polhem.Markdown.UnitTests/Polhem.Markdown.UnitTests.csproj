@@ -19,4 +19,9 @@
     <ProjectReference Include="..\..\src\Polhem.Markdown.Blazor\Polhem.Markdown.Blazor.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Include="..\Shared\ModelNodeTypes.cs" Link="Shared\ModelNodeTypes.cs" />
+    <None Include="..\Shared\AllNodes.md" Link="AllNodes.md" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
 </Project>
