@@ -89,9 +89,12 @@ internal sealed class LatexParser
         IFormulaItem? subscript = null;
         IFormulaItem? superscript = null;
         var primes = 0;
-        while (ReadScript(ref subscript, ref superscript, ref primes))
+        bool read;
+        do
         {
+            read = ReadScript(ref subscript, ref superscript, ref primes);
         }
+        while (read);
         if (primes > 0)
         {
             var prime = new FormulaSymbol(new string('\u2032', primes), FormulaSymbolKind.Operator);
@@ -163,26 +166,13 @@ internal sealed class LatexParser
             {
                 return Command();
             }
-            if (char.IsAsciiDigit(c) || (c == '.' && _position + 1 < _source.Length && char.IsAsciiDigit(_source[_position + 1])))
+            if (StartsNumber(_position))
             {
-                var start = _position;
-                while (!AtEnd && (char.IsAsciiDigit(Current) || (Current == '.' && _position + 1 < _source.Length && char.IsAsciiDigit(_source[_position + 1]))))
-                {
-                    _position++;
-                }
-                return new FormulaSymbol(_source[start.._position], FormulaSymbolKind.Number);
+                return Number();
             }
             if (char.IsSurrogate(c))
             {
-                // A character outside the Basic Multilingual Plane, such as 𝔽 or an emoji, is a pair of code units.
-                if (!char.IsSurrogatePair(_source, _position))
-                {
-                    throw Unsupported();
-                }
-                var pair = _source.Substring(_position, 2);
-                var letter = char.IsLetter(_source, _position);
-                _position += 2;
-                return new FormulaSymbol(pair, letter ? FormulaSymbolKind.Identifier : FormulaSymbolKind.Operator);
+                return SurrogatePair();
             }
             _position++;
             if (char.IsLetter(c))
@@ -203,6 +193,34 @@ internal sealed class LatexParser
         {
             _depth--;
         }
+    }
+
+    /// <summary>Whether a number starts at <paramref name="index"/>: a digit, or a point before one.</summary>
+    private bool StartsNumber(int index) =>
+        index < _source.Length
+        && (char.IsAsciiDigit(_source[index]) || (_source[index] == '.' && index + 1 < _source.Length && char.IsAsciiDigit(_source[index + 1])));
+
+    private FormulaSymbol Number()
+    {
+        var start = _position;
+        while (StartsNumber(_position))
+        {
+            _position++;
+        }
+        return new FormulaSymbol(_source[start.._position], FormulaSymbolKind.Number);
+    }
+
+    /// <summary>A character outside the Basic Multilingual Plane, such as 𝔽 or an emoji, written as a pair of code units.</summary>
+    private FormulaSymbol SurrogatePair()
+    {
+        if (!char.IsSurrogatePair(_source, _position))
+        {
+            throw Unsupported();
+        }
+        var pair = _source.Substring(_position, 2);
+        var letter = char.IsLetter(_source, _position);
+        _position += 2;
+        return new FormulaSymbol(pair, letter ? FormulaSymbolKind.Identifier : FormulaSymbolKind.Operator);
     }
 
     private FormulaRow Group()
