@@ -27,7 +27,8 @@ namespace Polhem.Markdown;
 /// the same text (<c>#id</c>), which moves to that heading; a node this builder does not know shows as its source text.
 /// Footnotes that are referenced show at the end, numbered by their first reference, as on GitHub; a reference to a note
 /// that is not defined shows as written. Link reference definitions are not shown, as in any Markdown renderer, and
-/// neither is YAML front matter.
+/// neither is YAML front matter. Inline syntax nested deeper than <see cref="MaxInlineDepth"/> levels, such as emphasis
+/// inside emphasis, shows the rest as written, so the model stays shallow enough for every viewer to render.
 /// </remarks>
 internal sealed partial class MarkdownModelBuilder
 {
@@ -37,6 +38,15 @@ internal sealed partial class MarkdownModelBuilder
     private readonly HashSet<string> _ids = [];
     private readonly Dictionary<Footnote, int> _noteNumbers = [];
     private readonly Dictionary<int, int> _backLinkPositions = [];
+
+    /// <summary>
+    /// The deepest inline nesting the model keeps. Markdig nests emphasis as deep as the text asks, and the conversion and
+    /// the viewers walk it by recursion, so a text of thousands of <c>*</c> overflowed the stack and ended the process.
+    /// </summary>
+    internal const int MaxInlineDepth = 32;
+
+    /// <summary>How many inline containers the conversion is inside, to stop at <see cref="MaxInlineDepth"/>.</summary>
+    private int _inlineDepth;
 
     private MarkdownModelBuilder(string markdown, MarkdownOptions options)
     {
@@ -264,20 +274,65 @@ internal sealed partial class MarkdownModelBuilder
 
     private List<InlineNode> Inlines(ContainerInline? container)
     {
-        var inlines = new List<InlineNode>();
         if (container is null)
         {
+            return [];
+        }
+        if (_inlineDepth >= MaxInlineDepth)
+        {
+            return [SourceText(container)];
+        }
+        _inlineDepth++;
+        try
+        {
+            var children = Flattened(container).ToList();
+            if (children.Exists(inline => inline is HtmlInline))
+            {
+                return InlinesWithHtml(children);
+            }
+            var inlines = new List<InlineNode>();
+            foreach (var inline in children)
+            {
+                AddInline(inline, inlines);
+            }
             return inlines;
         }
-        if (container.Any(inline => inline is HtmlInline))
+        finally
         {
-            return InlinesWithHtml(container);
+            _inlineDepth--;
         }
-        foreach (var inline in container)
+    }
+
+    /// <summary>
+    /// The inlines of <paramref name="container"/>, with the content of each unmatched <c>[</c> or <c>![</c> following it
+    /// at the same level.
+    /// </summary>
+    /// <remarks>
+    /// IMPORTANT: Markdig leaves an unmatched bracket as a container around everything after it, so ten thousand of them
+    /// are a tree that deep. Walking it here without recursion keeps the model, and every viewer that renders it, from
+    /// overflowing the stack.
+    /// </remarks>
+    private static IEnumerable<Inline> Flattened(ContainerInline container)
+    {
+        var after = new Stack<Inline>();
+        var current = container.FirstChild;
+        while (current is not null || after.Count > 0)
         {
-            AddInline(inline, inlines);
+            current ??= after.Pop();
+            yield return current;
+            if (current is LinkDelimiterInline { FirstChild: { } first })
+            {
+                if (current.NextSibling is { } next)
+                {
+                    after.Push(next);
+                }
+                current = first;
+            }
+            else
+            {
+                current = current.NextSibling;
+            }
         }
-        return inlines;
     }
 
     private void AddInline(Inline inline, List<InlineNode> inlines)
@@ -322,6 +377,10 @@ internal sealed partial class MarkdownModelBuilder
                 break;
             case LinkInline link:
                 AddLink(Range(link), link.GetDynamicUrl?.Invoke() ?? link.Url, Inlines(link), inlines);
+                break;
+            case LinkDelimiterInline delimiter:
+                // An unmatched bracket shows as written; its content follows it (see `Flattened`).
+                inlines.Add(new TextNode(Range(delimiter), delimiter.IsImage ? "![" : "["));
                 break;
             case HtmlEntityInline entity:
                 inlines.Add(new TextNode(Range(entity), entity.Transcoded.ToString()));

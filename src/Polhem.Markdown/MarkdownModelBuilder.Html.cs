@@ -47,7 +47,7 @@ internal sealed partial class MarkdownModelBuilder
         return composer.Blocks();
     }
 
-    private List<InlineNode> InlinesWithHtml(ContainerInline container)
+    private List<InlineNode> InlinesWithHtml(IEnumerable<Inline> container)
     {
         var composer = new HtmlComposer(this, blocks: false);
         var converted = new List<InlineNode>();
