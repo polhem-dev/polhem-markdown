@@ -1,3 +1,4 @@
+using System.Buffers;
 using Markdig.Extensions.Mathematics;
 using Markdig.Helpers;
 using Markdig.Parsers;
@@ -12,6 +13,9 @@ namespace Polhem.Markdown.Formulas;
 /// </summary>
 internal sealed class GitHubMathInlineParser : MathInlineParser
 {
+    /// <summary>The characters a delimiter row of a pipe table is made of.</summary>
+    private static readonly SearchValues<char> s_delimiterRow = SearchValues.Create("-:| \t\r");
+
     public override bool Match(InlineProcessor processor, ref StringSlice slice)
     {
         var start = slice.Start;
@@ -81,7 +85,7 @@ internal sealed class GitHubMathInlineParser : MathInlineParser
         {
             var lineEnd = paragraph.IndexOf('\n', lineStart);
             var line = paragraph.AsSpan(lineStart, (lineEnd < 0 ? paragraph.Length : lineEnd) - lineStart);
-            if (line.Contains('-') && !line.ContainsAnyExcept("-:| \t\r"))
+            if (line.Contains('-') && !line.ContainsAnyExcept(s_delimiterRow))
             {
                 return previousStart;
             }
