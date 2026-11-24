@@ -125,7 +125,7 @@ internal static class SvgRasterizer
     private sealed class LimitScan
     {
         private readonly List<string> _useTargets = [];
-        private readonly HashSet<string> _holdsUse = new(StringComparer.Ordinal);
+        private readonly HashSet<string> _holdsUse = [];
         private readonly List<string?> _openIds = [];
         private int _elements;
 
