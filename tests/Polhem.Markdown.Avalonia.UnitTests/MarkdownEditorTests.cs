@@ -172,6 +172,21 @@ public class MarkdownEditorTests(HeadlessSession session)
         Assert.Contains(editor.Colorizer.Spans, span => span.Kind == MarkdownSyntaxKind.Heading);
     });
 
+    [Fact(DisplayName = "The code brushes are the viewer's, with its defaults, so code looks the same in both")]
+    public Task CodeBrushes_AreTheViewers() => session.RunAsync(() =>
+    {
+        var editor = new MarkdownEditor();
+        var viewer = new MarkdownViewer();
+
+        Assert.Same(MarkdownViewer.CodeKeywordBrushProperty, MarkdownEditor.CodeKeywordBrushProperty);
+        Assert.Equal(ColorOf(viewer.CodeKeywordBrush), ColorOf(editor.CodeKeywordBrush));
+        Assert.Equal(ColorOf(viewer.CodeStringBrush), ColorOf(editor.CodeStringBrush));
+        Assert.Equal(ColorOf(viewer.CodeCommentBrush), ColorOf(editor.CodeCommentBrush));
+        Assert.Equal(ColorOf(viewer.CodeConstantBrush), ColorOf(editor.CodeConstantBrush));
+        Assert.Equal(ColorOf(viewer.CodeTagBrush), ColorOf(editor.CodeTagBrush));
+        Assert.Equal(ColorOf(viewer.CodePropertyBrush), ColorOf(editor.CodePropertyBrush));
+    });
+
     [Fact(DisplayName = "A new brush recolours the text")]
     public Task SetBrush_Recolours() => session.RunAsync(async () =>
     {
