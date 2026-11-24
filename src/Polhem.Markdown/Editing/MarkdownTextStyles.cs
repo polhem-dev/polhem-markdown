@@ -2,7 +2,7 @@ namespace Polhem.Markdown.Editing;
 
 /// <summary>The emphasis a stretch of Markdown source is written with, which may combine.</summary>
 [Flags]
-internal enum MarkdownTextStyle : byte
+internal enum MarkdownTextStyles : byte
 {
     /// <summary>No emphasis.</summary>
     None = 0,

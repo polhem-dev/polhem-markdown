@@ -130,51 +130,62 @@ internal sealed class MarkdownSyntaxScanner
 
     private void Heading(HeadingBlock heading)
     {
-        var range = Range(heading);
-        if (!heading.IsSetext)
-        {
-            // Markdig ends an ATX heading at its text; the line goes on with the optional closing #s.
-            range = new SourceRange(range.Start, LineEnd(range.Start) - range.Start);
-        }
-        _painter.Paint(range, MarkdownSyntaxKind.Heading);
         if (heading.IsSetext)
         {
-            // The underline (=== or ---) is the line after the text.
-            var underline = _markdown.LastIndexOfAny(['\n', '\r'], Math.Max(range.End - 1, range.Start));
-            if (underline >= range.Start)
-            {
-                _painter.Paint(new SourceRange(underline + 1, range.End - underline - 1), MarkdownSyntaxKind.Marker);
-            }
+            SetextHeading(Range(heading));
         }
         else
         {
-            // The opening #s, and the optional closing sequence after the text.
-            var start = range.Start;
-            while (start < range.End && _markdown[start] is ' ')
-            {
-                start++;
-            }
-            var hashes = start;
-            while (hashes < range.End && _markdown[hashes] is '#')
-            {
-                hashes++;
-            }
-            _painter.Paint(new SourceRange(start, hashes - start), MarkdownSyntaxKind.Marker);
-
-            var textEnd = heading.Inline is { Span.IsEmpty: false } inline ? Range(inline).End : hashes;
-            var closing = range.End;
-            while (closing > textEnd && _markdown[closing - 1] is ' ' or '\t')
-            {
-                closing--;
-            }
-            var opening = closing;
-            while (opening > textEnd && _markdown[opening - 1] is '#')
-            {
-                opening--;
-            }
-            _painter.Paint(new SourceRange(opening, closing - opening), MarkdownSyntaxKind.Marker);
+            AtxHeading(heading);
         }
         Inlines(heading.Inline);
+    }
+
+    /// <summary>A heading underlined with <c>===</c> or <c>---</c>: the underline is the line after the text.</summary>
+    private void SetextHeading(SourceRange range)
+    {
+        _painter.Paint(range, MarkdownSyntaxKind.Heading);
+        var underline = _markdown.LastIndexOfAny(['\n', '\r'], Math.Max(range.End - 1, range.Start));
+        if (underline >= range.Start)
+        {
+            _painter.Paint(new SourceRange(underline + 1, range.End - underline - 1), MarkdownSyntaxKind.Marker);
+        }
+    }
+
+    /// <summary>A heading opened with <c>#</c>s, and optionally closed with them after the text.</summary>
+    private void AtxHeading(HeadingBlock heading)
+    {
+        // Markdig ends an ATX heading at its text; the line goes on with the optional closing #s.
+        var start = Range(heading).Start;
+        var range = new SourceRange(start, LineEnd(start) - start);
+        _painter.Paint(range, MarkdownSyntaxKind.Heading);
+
+        var opening = Skip(range.Start, range.End, ' ');
+        var hashes = Skip(opening, range.End, '#');
+        _painter.Paint(new SourceRange(opening, hashes - opening), MarkdownSyntaxKind.Marker);
+
+        var textEnd = heading.Inline is { Span.IsEmpty: false } inline ? Range(inline).End : hashes;
+        var closingEnd = range.End;
+        while (closingEnd > textEnd && _markdown[closingEnd - 1] is ' ' or '\t')
+        {
+            closingEnd--;
+        }
+        var closingStart = closingEnd;
+        while (closingStart > textEnd && _markdown[closingStart - 1] is '#')
+        {
+            closingStart--;
+        }
+        _painter.Paint(new SourceRange(closingStart, closingEnd - closingStart), MarkdownSyntaxKind.Marker);
+    }
+
+    /// <summary>The first position from <paramref name="start"/> before <paramref name="end"/> that is not <paramref name="character"/>.</summary>
+    private int Skip(int start, int end, char character)
+    {
+        while (start < end && _markdown[start] == character)
+        {
+            start++;
+        }
+        return start;
     }
 
     private void FencedCode(FencedCodeBlock fenced)
@@ -388,9 +399,9 @@ internal sealed class MarkdownSyntaxScanner
         var range = Range(emphasis);
         var style = emphasis switch
         {
-            { DelimiterChar: '~' } => MarkdownTextStyle.Strikethrough,
-            { DelimiterCount: >= 2 } => MarkdownTextStyle.Bold,
-            _ => MarkdownTextStyle.Italic,
+            { DelimiterChar: '~' } => MarkdownTextStyles.Strikethrough,
+            { DelimiterCount: >= 2 } => MarkdownTextStyles.Bold,
+            _ => MarkdownTextStyles.Italic,
         };
         _painter.AddStyle(range, style);
         Markers(range, emphasis.DelimiterCount);

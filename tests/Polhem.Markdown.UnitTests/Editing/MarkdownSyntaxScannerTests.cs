@@ -8,7 +8,7 @@ public class MarkdownSyntaxScannerTests
     /// <summary>Each span as <c>Kind:text</c>, or <c>Kind+Style:text</c> when it has a style, in order.</summary>
     private static List<string> Spans(string markdown) => MarkdownSyntaxScanner.Scan(markdown)
         .Select(span => span.Kind
-            + (span.Style == MarkdownTextStyle.None ? "" : "+" + span.Style.ToString().Replace(", ", "+", StringComparison.Ordinal))
+            + (span.Style == MarkdownTextStyles.None ? "" : "+" + span.Style.ToString().Replace(", ", "+", StringComparison.Ordinal))
             + ":" + markdown.Substring(span.Range.Start, span.Range.Length))
         .ToList();
 

@@ -10,7 +10,7 @@ namespace Polhem.Markdown.Editing;
 internal sealed class SyntaxPainter(int length)
 {
     private readonly MarkdownSyntaxKind[] _kinds = new MarkdownSyntaxKind[length];
-    private readonly MarkdownTextStyle[] _styles = new MarkdownTextStyle[length];
+    private readonly MarkdownTextStyles[] _styles = new MarkdownTextStyles[length];
 
     /// <summary>Gives <paramref name="range"/> the <paramref name="kind"/>, replacing what it had.</summary>
     public void Paint(SourceRange range, MarkdownSyntaxKind kind)
@@ -20,7 +20,7 @@ internal sealed class SyntaxPainter(int length)
     }
 
     /// <summary>Adds <paramref name="style"/> to the style of <paramref name="range"/>.</summary>
-    public void AddStyle(SourceRange range, MarkdownTextStyle style)
+    public void AddStyle(SourceRange range, MarkdownTextStyles style)
     {
         var (start, end) = Clamp(range);
         for (var index = start; index < end; index++)
@@ -40,7 +40,7 @@ internal sealed class SyntaxPainter(int length)
             {
                 continue;
             }
-            if (_kinds[start] != MarkdownSyntaxKind.None || _styles[start] != MarkdownTextStyle.None)
+            if (_kinds[start] != MarkdownSyntaxKind.None || _styles[start] != MarkdownTextStyles.None)
             {
                 runs.Add(new SyntaxSpan(new SourceRange(start, index - start), _kinds[start], _styles[start]));
             }
