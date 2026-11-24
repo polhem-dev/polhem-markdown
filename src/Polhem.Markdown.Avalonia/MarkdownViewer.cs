@@ -89,6 +89,10 @@ public partial class MarkdownViewer : Control
     public static readonly StyledProperty<FontFamily> CodeFontFamilyProperty =
         AvaloniaProperty.Register<MarkdownViewer, FontFamily>(nameof(CodeFontFamily), new FontFamily("Cascadia Mono, Consolas, Menlo, monospace"));
 
+    /// <summary>Defines the <see cref="CjkFontFamily"/> property.</summary>
+    public static readonly StyledProperty<FontFamily?> CjkFontFamilyProperty =
+        AvaloniaProperty.Register<MarkdownViewer, FontFamily?>(nameof(CjkFontFamily));
+
     /// <summary>Defines the <see cref="CopyCodeLabel"/> property.</summary>
     public static readonly StyledProperty<string> CopyCodeLabelProperty =
         AvaloniaProperty.Register<MarkdownViewer, string>(nameof(CopyCodeLabel), "Copy");
@@ -244,6 +248,35 @@ public partial class MarkdownViewer : Control
     }
 
     /// <summary>
+    /// Gets or sets the font family for Chinese, Japanese and Korean text, or <see langword="null"/>, the default, to draw
+    /// it like any other text.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Set it when bold or italic CJK text does not show as bold or italic. When the text's font has no CJK glyphs,
+    /// Avalonia draws them in a fallback font, and within a line it reuses the fallback font it chose for earlier text
+    /// together with that text's weight and style (<see href="https://github.com/AvaloniaUI/Avalonia/issues/18199"/>).
+    /// A bold word after plain CJK text then shows plain, and plain text after a bold word shows bold.
+    /// </para>
+    /// <para>
+    /// With this property set, the viewer draws the CJK characters of the text in this family, each with its own weight
+    /// and style, and other characters keep their font. A list of names uses the first one installed, so one value can
+    /// cover several platforms, such as <c>PingFang TC, Microsoft JhengHei UI, Noto Sans CJK TC</c>. Choose a family
+    /// with the weights the text uses, a bold one in particular. Inline code and code blocks keep
+    /// <see cref="CodeFontFamily"/>.
+    /// </para>
+    /// <para>
+    /// The viewer also loads the faces of this family that are heavier than regular before it draws, because Avalonia
+    /// matches a weight a family lacks, such as bold in PingFang TC, only among the faces it has already loaded.
+    /// </para>
+    /// </remarks>
+    public FontFamily? CjkFontFamily
+    {
+        get => GetValue(CjkFontFamilyProperty);
+        set => SetValue(CjkFontFamilyProperty, value);
+    }
+
+    /// <summary>
     /// Gets or sets the accessible name and tooltip of the copy button of a code block. Set it to translate the label.
     /// </summary>
     public string CopyCodeLabel
@@ -287,7 +320,8 @@ public partial class MarkdownViewer : Control
             Update(fullRebuild: false);
         }
         else if (change.Property == OptionsProperty || change.Property == TextElement.FontSizeProperty
-            || change.Property == CodeFontFamilyProperty || change.Property == CopyCodeLabelProperty)
+            || change.Property == CodeFontFamilyProperty || change.Property == CjkFontFamilyProperty
+            || change.Property == CopyCodeLabelProperty)
         {
             Update(fullRebuild: true);
         }
@@ -352,6 +386,10 @@ public partial class MarkdownViewer : Control
         var markdown = Markdown ?? "";
         var document = MarkdownModelBuilder.Build(markdown, Options ?? new MarkdownOptions());
         AssignDetailsKeys(document);
+        if (CjkFontFamily is { } cjkFamily)
+        {
+            FontFaceWarmUp.LoadHeavierFaces(cjkFamily);
+        }
         var renderer = new MarkdownRenderer(this);
         var built = 0;
 

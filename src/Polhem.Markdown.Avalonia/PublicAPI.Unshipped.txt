@@ -35,3 +35,6 @@ static readonly Polhem.Markdown.Avalonia.MarkdownViewer.CodePropertyBrushPropert
 Polhem.Markdown.Avalonia.MarkdownViewer.ImageLoader.get -> System.Func<System.Uri!, System.Threading.CancellationToken, System.Threading.Tasks.Task<System.IO.Stream?>!>?
 Polhem.Markdown.Avalonia.MarkdownViewer.ImageLoader.set -> void
 Polhem.Markdown.Avalonia.MarkdownViewer.TrustedSvgHosts.get -> System.Collections.Generic.ISet<string!>!
+Polhem.Markdown.Avalonia.MarkdownViewer.CjkFontFamily.get -> Avalonia.Media.FontFamily?
+Polhem.Markdown.Avalonia.MarkdownViewer.CjkFontFamily.set -> void
+static readonly Polhem.Markdown.Avalonia.MarkdownViewer.CjkFontFamilyProperty -> Avalonia.StyledProperty<Avalonia.Media.FontFamily?>!
