@@ -66,6 +66,7 @@ public class MarkdownEditor : ComponentBase, IAsyncDisposable
 
     private double _lastScanMilliseconds;
     private CancellationTokenSource? _scan;
+    private Task _scanTask = Task.CompletedTask;
     private ElementReference _root;
     private IJSObjectReference? _module;
     private DotNetObjectReference<MarkdownEditorBridge>? _bridge;
@@ -107,6 +108,9 @@ public class MarkdownEditor : ComponentBase, IAsyncDisposable
 
     /// <summary>The text as the editor holds it, with <c>\n</c> line breaks, for the tests.</summary>
     internal string Text => _text;
+
+    /// <summary>The scan scheduled last, for the tests to wait for: sending its spans renders nothing.</summary>
+    internal Task PendingScan => _scanTask;
 
     /// <summary>Moves the keyboard focus to the text.</summary>
     /// <returns>A task that completes when the focus has moved.</returns>
@@ -257,7 +261,7 @@ public class MarkdownEditor : ComponentBase, IAsyncDisposable
         var delay = immediately
             ? 0
             : Math.Min(MaxScanDelayMilliseconds, ScanDelayMilliseconds + (int)(2 * _lastScanMilliseconds));
-        _ = ScanAsync(delay, _scan.Token);
+        _scanTask = ScanAsync(delay, _scan.Token);
     }
 
     /// <summary>

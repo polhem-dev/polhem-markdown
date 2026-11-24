@@ -95,14 +95,15 @@ public class MarkdownEditorTests : BunitContext
     }
 
     [Fact(DisplayName = "The spans of the scan reach the module and cover the syntax of the text")]
-    public void Render_Interactive_SendsSpans()
+    public async Task Render_Interactive_SendsSpans()
     {
         const string Markdown = "# Title\n\nSome **bold** text.";
 
         var editor = Edit(Markdown);
 
-        // The scan runs off the render, on a task of its own.
-        editor.WaitForAssertion(() => _module.VerifyInvoke("applySpans"));
+        // The scan runs off the render, on a task of its own, and sending its spans renders nothing to wait for.
+        await editor.InvokeAsync(() => editor.Instance.PendingScan);
+        _module.VerifyInvoke("applySpans");
         var expected = SyntaxSpanPatch.Pack(MarkdownSyntaxScanner.Scan(Markdown));
         Assert.Equal(expected, SentSpans().SelectMany(span => span).ToArray());
     }
