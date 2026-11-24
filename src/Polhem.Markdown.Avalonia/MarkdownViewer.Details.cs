@@ -7,8 +7,11 @@ public partial class MarkdownViewer
     /// <summary>The sections the reader opened or closed, by key, while the text shows a section with that key.</summary>
     private readonly Dictionary<string, bool> _detailsOpen = [];
 
-    /// <summary>The key of each section of the text being shown; see <see cref="AssignDetailsKeys"/>.</summary>
-    private readonly Dictionary<DetailsNode, string> _detailsKeys = new(ReferenceEqualityComparer.Instance);
+    /// <summary>
+    /// The key of each section of the text being shown; see <see cref="AssignDetailsKeys"/>. Records compare their lists
+    /// of children by reference, so two sections are equal only when they are the same node.
+    /// </summary>
+    private readonly Dictionary<DetailsNode, string> _detailsKeys = [];
 
     /// <summary>
     /// Gives each section a key from its summary and its place among the sections with the same summary. A reply that is
