@@ -54,8 +54,8 @@ public sealed class GalleryView : UserControl
         void Arrange()
         {
             var wide = panes.Bounds.Width >= 700;
-            panes.ColumnDefinitions = new ColumnDefinitions(editor.IsVisible && wide ? "*,*" : "*");
-            panes.RowDefinitions = new RowDefinitions(editor.IsVisible && !wide ? "*,*" : "*");
+            panes.ColumnDefinitions = ColumnDefinitions.Parse(editor.IsVisible && wide ? "*,*" : "*");
+            panes.RowDefinitions = RowDefinitions.Parse(editor.IsVisible && !wide ? "*,*" : "*");
             Grid.SetColumn(viewerScroll, editor.IsVisible && wide ? 1 : 0);
             Grid.SetRow(viewerScroll, editor.IsVisible && !wide ? 1 : 0);
         }
