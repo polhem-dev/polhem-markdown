@@ -13,7 +13,7 @@ internal sealed class ImageView : Decorator
 {
     private readonly MarkdownViewer _viewer;
     private readonly Task<LoadedImage?> _loading;
-    private bool _shown;
+    private Task? _showing;
 
     public ImageView(MarkdownViewer viewer, ImageNode image)
     {
@@ -33,15 +33,14 @@ internal sealed class ImageView : Decorator
     /// <summary>The image once it has loaded, for tests.</summary>
     internal Image? LoadedImage => Child as Image;
 
+    /// <summary>Completes once the view shows the image, or has given up on it, for tests.</summary>
+    internal Task Shown => _showing ?? Task.CompletedTask;
+
     protected override void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs e)
     {
         base.OnAttachedToVisualTree(e);
         _viewer.PropertyChanged += OnViewerPropertyChanged;
-        if (!_shown)
-        {
-            _shown = true;
-            _ = ShowWhenLoadedAsync();
-        }
+        _showing ??= ShowWhenLoadedAsync();
     }
 
     protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)

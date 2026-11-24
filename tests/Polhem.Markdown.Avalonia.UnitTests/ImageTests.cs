@@ -40,23 +40,24 @@ public class ImageTests(HeadlessSession session)
         return Task.FromResult<Stream?>(new MemoryStream(bytes));
     };
 
-    /// <summary>Waits for the viewer's images to load and for the views to show them.</summary>
+    /// <summary>
+    /// Waits for the viewer's one image to load and for its view to show it. The view is awaited itself: it continues on
+    /// the UI thread after the load, and when that happens relative to the test is up to the dispatcher.
+    /// </summary>
     private static async Task<ImageView> LoadedView(MarkdownViewer viewer)
     {
         var view = Descendants<ImageView>(viewer).Single();
-        await ((Task)viewer.LoadImage(view.Source)).ConfigureAwait(ConfigureAwaitOptions.SuppressThrowing | ConfigureAwaitOptions.ContinueOnCapturedContext);
-        Dispatcher.UIThread.RunJobs();
-        return Descendants<ImageView>(viewer).Single();
+        await view.Shown.ConfigureAwait(ConfigureAwaitOptions.ContinueOnCapturedContext);
+        return view;
     }
 
-    /// <summary>Waits for every image the viewer shows to load or fail.</summary>
+    /// <summary>Waits for every image the viewer shows to load or fail, and for each view to show it.</summary>
     private static async Task AllLoaded(MarkdownViewer viewer)
     {
         foreach (var view in Descendants<ImageView>(viewer).ToList())
         {
-            await ((Task)viewer.LoadImage(view.Source)).ConfigureAwait(ConfigureAwaitOptions.SuppressThrowing | ConfigureAwaitOptions.ContinueOnCapturedContext);
+            await view.Shown.ConfigureAwait(ConfigureAwaitOptions.ContinueOnCapturedContext);
         }
-        Dispatcher.UIThread.RunJobs();
     }
 
     [Fact(DisplayName = "An image shows its alternative text until it has loaded, then the image at its own size")]
