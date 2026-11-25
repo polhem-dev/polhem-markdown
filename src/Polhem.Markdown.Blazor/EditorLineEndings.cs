@@ -22,4 +22,36 @@ internal static class EditorLineEndings
     /// <summary>The text of the textarea with the line breaks the host's text used.</summary>
     public static string ToHost(string text, bool crLf) =>
         crLf ? text.Replace("\n", "\r\n", StringComparison.Ordinal) : text;
+
+    /// <summary>
+    /// The offset in the host's text of <paramref name="offset"/> in the textarea's <paramref name="text"/>: one more for
+    /// every line break before it when the host's text uses <c>\r\n</c>.
+    /// </summary>
+    public static int ToHostOffset(string text, int offset, bool crLf)
+    {
+        offset = Math.Clamp(offset, 0, text.Length);
+        return crLf ? offset + text.AsSpan(0, offset).Count('\n') : offset;
+    }
+
+    /// <summary>
+    /// The offset in the textarea's <paramref name="text"/> of <paramref name="hostOffset"/> in the host's text. An offset
+    /// between the <c>\r</c> and the <c>\n</c> of a line break is taken as the start of the break.
+    /// </summary>
+    public static int ToTextareaOffset(string text, int hostOffset, bool crLf)
+    {
+        if (!crLf)
+        {
+            return Math.Clamp(hostOffset, 0, text.Length);
+        }
+        var host = 0;
+        for (var index = 0; index < text.Length; index++)
+        {
+            host += text[index] == '\n' ? 2 : 1;
+            if (host > hostOffset)
+            {
+                return index;
+            }
+        }
+        return text.Length;
+    }
 }

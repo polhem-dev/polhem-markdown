@@ -383,4 +383,35 @@ public class MarkdownEditorTests : BunitContext
         Assert.NotNull(edit);
         Assert.InRange((int)edit[0]!, 0, 2);
     }
+
+    [Fact(DisplayName = "The module reports scrolling only while the host listens, and is told when that changes")]
+    public void Render_ScrollReporting_FollowsCallback()
+    {
+        var editor = Edit("a");
+        Assert.False(Assert.IsType<bool>(Assert.Single(_module.Invocations["init"]).Arguments[4]));
+
+        editor.Render(parameters => parameters.Add(component => component.FirstVisibleSourceOffsetChanged, (int _) => { }));
+
+        Assert.True(Assert.IsType<bool>(Assert.Single(_module.Invocations["watchScroll"]).Arguments[1]));
+    }
+
+    [Fact(DisplayName = "Offsets between the editor and the host count a CRLF line break as two")]
+    public async Task SourceOffsets_CrLf_AreHostOffsets()
+    {
+        var offsets = new List<int>();
+        var editor = Render<MarkdownEditor>(parameters => parameters
+            .Add(component => component.Markdown, "a\r\nb\r\nc")
+            .Add(component => component.FirstVisibleSourceOffsetChanged, offsets.Add));
+        var bridge = new MarkdownEditorBridge(editor.Instance);
+
+        await editor.InvokeAsync(() => bridge.FirstVisibleChanged(4));
+        await editor.InvokeAsync(() => bridge.FirstVisibleChanged(4));
+        await editor.InvokeAsync(() => editor.Instance.ScrollToSourceOffsetAsync(6));
+        await editor.InvokeAsync(() => editor.Instance.SetCaretOffsetAsync(3));
+
+        Assert.Equal([6], offsets);
+        Assert.Equal(6, editor.Instance.FirstVisibleSourceOffset);
+        Assert.Equal(4, Assert.Single(_module.Invocations["scrollToSource"]).Arguments[1]);
+        Assert.Equal(2, Assert.Single(_module.Invocations["setCaret"]).Arguments[1]);
+    }
 }

@@ -27,13 +27,14 @@ const shortcuts = { b: "Bold", i: "Italic", k: "Link", e: "InlineCode" };
 // The start of a line that is a list item, up to the caret: a bullet or a number, then a space.
 const listItem = /^\s*(?:[-*+]|\d+[.)])\s/;
 
-export function init(root, component, text, kindClasses) {
+export function init(root, component, text, kindClasses, reportScroll = false) {
   const textarea = root.querySelector("textarea"), layer = root.querySelector("pre");
   const editor = {
     root, textarea, layer, component, kindClasses,
     local: text, version: 0, pending: [], unsent: [], base: [], spans: [], lines: [],
     composing: false, compositionStart: null, selectionBefore: [0, 0], undo: [], redo: [],
     busy: false, replaying: false, queue: [], generation: 0,
+    reportScroll, frame: 0, firstVisible: -1,
   };
   const on = (type, handler) => textarea.addEventListener(type, handler);
   on("input", e => onInput(editor, e));
@@ -51,6 +52,7 @@ export function init(root, component, text, kindClasses) {
   on("scroll", () => {
     layer.scrollTop = textarea.scrollTop;
     layer.scrollLeft = textarea.scrollLeft;
+    scheduleReport(editor);
   });
   // The layer takes the size of the textarea's text area, which leaves out its scroll bar.
   editor.resize = new ResizeObserver(() => {
@@ -64,6 +66,7 @@ export function init(root, component, text, kindClasses) {
   if (textarea.value !== text) onInput(editor, null);
   render(editor);
   root.classList.add("pmd-editor-ready");
+  scheduleReport(editor);
 }
 
 export function dispose(root) {
@@ -73,8 +76,40 @@ export function dispose(root) {
   editors.delete(root);
 }
 
+// Whether the module tells the component which text is at the top as the editor scrolls.
+export function watchScroll(root, report) {
+  const editor = editors.get(root);
+  if (!editor) return;
+  editor.reportScroll = report;
+  editor.firstVisible = -1;
+  scheduleReport(editor);
+}
+
+// Scrolls the editor so the line holding `offset` is at its top, moved down as far into a wrapped line as the offset is.
+export function scrollToSource(root, offset) {
+  const editor = editors.get(root);
+  if (!editor) return;
+  const text = editor.local, at = Math.min(Math.max(offset, 0), text.length);
+  const index = count(text, "\n", at), line = editor.layer.children[index];
+  if (!line) return;
+  const lineStart = text.lastIndexOf("\n", at - 1) + 1, lineEnd = text.indexOf("\n", at);
+  const lineLength = (lineEnd < 0 ? text.length : lineEnd) - lineStart;
+  const { top, height } = lineBox(editor, line);
+  const fraction = lineLength ? (at - lineStart) / lineLength : 0;
+  editor.textarea.scrollTop = top + fraction * height - paddingTop(editor);
+}
+
+// Moves the focus to the textarea without scrolling it, so the focus does not undo a scroll to the source.
 export function focus(root) {
-  editors.get(root)?.textarea.focus();
+  editors.get(root)?.textarea.focus({ preventScroll: true });
+}
+
+// Puts the caret at `offset`, with nothing selected.
+export function setCaret(root, offset) {
+  const editor = editors.get(root);
+  if (!editor) return;
+  const at = Math.min(Math.max(offset, 0), editor.local.length);
+  editor.textarea.setSelectionRange(at, at);
 }
 
 // Replaces the text with one the host set, which also clears the undo history.
@@ -127,6 +162,52 @@ export function applySpans(root, version, bytes) {
   for (const edit of editor.pending) shift(spans, edit);
   editor.spans = spans;
   render(editor);
+}
+
+function count(text, character, end) {
+  let found = 0;
+  for (let at = text.indexOf(character); at >= 0 && at < end; at = text.indexOf(character, at + 1)) found++;
+  return found;
+}
+
+// The top and height of a line of the layer, in the coordinates the textarea scrolls in.
+function lineBox(editor, line) {
+  const box = line.getBoundingClientRect(), layer = editor.layer.getBoundingClientRect();
+  return { top: box.top - layer.top + editor.layer.scrollTop, height: box.height };
+}
+
+function paddingTop(editor) {
+  return Number.parseFloat(getComputedStyle(editor.textarea).paddingTop) || 0;
+}
+
+// The offset of the text at the top of the editor: the line there, as far into it as the top is down a wrapped line.
+function firstVisible(editor) {
+  const lines = editor.layer.children, top = editor.textarea.scrollTop + paddingTop(editor);
+  let low = 0, high = lines.length - 1;
+  while (low < high) {
+    const middle = (low + high + 1) >> 1;
+    if (lineBox(editor, lines[middle]).top <= top) low = middle;
+    else high = middle - 1;
+  }
+  const text = editor.local;
+  let lineStart = 0;
+  for (let index = 0; index < low; index++) lineStart = text.indexOf("\n", lineStart) + 1;
+  const lineEnd = text.indexOf("\n", lineStart), length = (lineEnd < 0 ? text.length : lineEnd) - lineStart;
+  const box = lineBox(editor, lines[low]);
+  const fraction = box.height > 0 ? Math.min(Math.max((top - box.top) / box.height, 0), 1) : 0;
+  return lineStart + Math.round(fraction * length);
+}
+
+function scheduleReport(editor) {
+  if (!editor.reportScroll || editor.frame) return;
+  editor.frame = requestAnimationFrame(() => {
+    editor.frame = 0;
+    if (!editors.has(editor.root)) return;
+    const offset = firstVisible(editor);
+    if (offset === editor.firstVisible) return;
+    editor.firstVisible = offset;
+    editor.component.invokeMethodAsync("FirstVisibleChanged", offset).catch(() => { /* The component is gone. */ });
+  });
 }
 
 function selection(textarea) {

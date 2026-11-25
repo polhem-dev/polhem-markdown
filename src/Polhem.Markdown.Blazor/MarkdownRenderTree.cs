@@ -39,7 +39,11 @@ internal sealed partial class MarkdownRenderTree
     {
         _builder.OpenElement(0, "div");
         _builder.AddAttribute(1, ClassAttribute, string.IsNullOrWhiteSpace(extraClass) ? "pmd" : "pmd " + extraClass);
-        Blocks(2, document.Blocks);
+        _builder.AddElementReferenceCapture(2, _viewer.SetRootElement);
+
+        // NOTE: each top-level block is one element, a child of this one, which is how the script finds the element of a
+        // block from its index in the source ranges the viewer gives it (MarkdownViewer.Source.cs).
+        Blocks(3, document.Blocks);
         _builder.CloseElement();
     }
 

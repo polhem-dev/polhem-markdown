@@ -17,7 +17,7 @@ namespace Polhem.Markdown.Blazor;
 /// link to a heading of the text loads the package's <c>polhem-markdown.js</c> module on its first click; the page does
 /// not link it.
 /// </remarks>
-public class MarkdownViewer : ComponentBase, IAsyncDisposable
+public partial class MarkdownViewer : ComponentBase, IAsyncDisposable
 {
     private const string ModulePath = "./_content/Polhem.Markdown.Blazor/polhem-markdown.js";
 
@@ -83,6 +83,7 @@ public class MarkdownViewer : ComponentBase, IAsyncDisposable
             _document = string.IsNullOrEmpty(Markdown) ? s_empty : MarkdownModelBuilder.Build(Markdown, Options ?? new MarkdownOptions());
             _parsedMarkdown = Markdown;
             _parsedOptions = Options;
+            KeepSourceRanges();
             ForgetRemovedAnchors();
         }
     }
@@ -232,9 +233,10 @@ public class MarkdownViewer : ComponentBase, IAsyncDisposable
         GC.SuppressFinalize(this);
     }
 
-    /// <summary>Releases the script module, if a link to a heading loaded it.</summary>
+    /// <summary>Releases the script module, if a link to a heading or the source features loaded it.</summary>
     protected virtual async ValueTask DisposeAsyncCore()
     {
+        await StopWatchingSourceAsync();
         var module = _module;
         _module = null;
         if (module is null)
