@@ -67,6 +67,9 @@ public class MarkdownEditor : ComponentBase, IAsyncDisposable
     private double _lastScanMilliseconds;
     private CancellationTokenSource? _scan;
     private Task _scanTask = Task.CompletedTask;
+
+    /// <summary>Whether the module reports scrolling, as it was last told.</summary>
+    private bool _reportingScroll;
     private ElementReference _root;
     private IJSObjectReference? _module;
     private DotNetObjectReference<MarkdownEditorBridge>? _bridge;
@@ -83,6 +86,27 @@ public class MarkdownEditor : ComponentBase, IAsyncDisposable
     /// <summary>Gets or sets what happens when an edit changes the text: it receives the new text.</summary>
     [Parameter]
     public EventCallback<string> MarkdownChanged { get; set; }
+
+    /// <summary>
+    /// Gets or sets what happens when scrolling brings another line to the top of the editor: it receives
+    /// <see cref="FirstVisibleSourceOffset"/>.
+    /// </summary>
+    /// <remarks>
+    /// The offset follows at most once a frame while the editor scrolls, including when typing or
+    /// <see cref="ScrollToSourceOffsetAsync"/> scrolls it.
+    /// </remarks>
+    [Parameter]
+    public EventCallback<int> FirstVisibleSourceOffsetChanged { get; set; }
+
+    /// <summary>
+    /// Gets the offset in <see cref="Markdown"/> of the text at the top of the editor, as last reported while
+    /// <see cref="FirstVisibleSourceOffsetChanged"/> is set; 0 before that.
+    /// </summary>
+    /// <remarks>
+    /// The offset is in the host's text, with <c>\r\n</c> line breaks counted as two when the text uses them, so it can
+    /// be given to <see cref="MarkdownViewer.ScrollToSourceOffsetAsync"/> as it is.
+    /// </remarks>
+    public int FirstVisibleSourceOffset { get; private set; }
 
     /// <summary>Gets or sets whether the text can be read and selected but not changed.</summary>
     [Parameter]
@@ -112,7 +136,21 @@ public class MarkdownEditor : ComponentBase, IAsyncDisposable
     /// <summary>The scan scheduled last, for the tests to wait for: sending its spans renders nothing.</summary>
     internal Task PendingScan => _scanTask;
 
-    /// <summary>Moves the keyboard focus to the text.</summary>
+    /// <summary>
+    /// Puts the caret at <paramref name="sourceOffset"/> in <see cref="Markdown"/>, with nothing selected. It does not
+    /// scroll; <see cref="ScrollToSourceOffsetAsync"/> does.
+    /// </summary>
+    /// <param name="sourceOffset">An offset in <see cref="Markdown"/>, in UTF-16 code units.</param>
+    /// <returns>A task that completes when the request has reached the page.</returns>
+    public async Task SetCaretOffsetAsync(int sourceOffset)
+    {
+        if (_module is not null)
+        {
+            await CallModuleAsync("setCaret", _root, EditorLineEndings.ToTextareaOffset(_text, sourceOffset, _crLf));
+        }
+    }
+
+    /// <summary>Moves the keyboard focus to the text, without scrolling it.</summary>
     /// <returns>A task that completes when the focus has moved.</returns>
     public async Task FocusAsync()
     {
@@ -129,6 +167,39 @@ public class MarkdownEditor : ComponentBase, IAsyncDisposable
     /// <summary>Redoes the last edit undone.</summary>
     /// <returns>Whether there was an edit to redo.</returns>
     public async Task<bool> RedoAsync() => _module is not null && await _module.InvokeAsync<bool>("redo", _root);
+
+    /// <summary>
+    /// Scrolls the editor so that the line holding <paramref name="sourceOffset"/> in <see cref="Markdown"/> is at its
+    /// top, moved down in proportion to how far into a wrapped line the offset is.
+    /// </summary>
+    /// <param name="sourceOffset">
+    /// An offset in <see cref="Markdown"/>, in UTF-16 code units, such as
+    /// <see cref="MarkdownViewer.FirstVisibleSourceOffset"/>.
+    /// </param>
+    /// <returns>A task that completes when the request has reached the page.</returns>
+    public async Task ScrollToSourceOffsetAsync(int sourceOffset)
+    {
+        if (_module is not null)
+        {
+            var offset = EditorLineEndings.ToTextareaOffset(_text, sourceOffset, _crLf);
+            await CallModuleAsync("scrollToSource", _root, offset);
+        }
+    }
+
+    /// <summary>
+    /// Takes the offset of the text now at the top of the editor, from the module, as an offset in the textarea's text.
+    /// Under interactive server rendering the value comes from the browser, so it is kept within the text.
+    /// </summary>
+    internal async Task OnFirstVisibleChangedAsync(int textareaOffset)
+    {
+        var offset = EditorLineEndings.ToHostOffset(_text, textareaOffset, _crLf);
+        if (offset == FirstVisibleSourceOffset)
+        {
+            return;
+        }
+        FirstVisibleSourceOffset = offset;
+        await FirstVisibleSourceOffsetChanged.InvokeAsync(offset);
+    }
 
     /// <summary>
     /// Applies <paramref name="format"/> to the selection, or removes it when the selection already has it, as the
@@ -183,6 +254,12 @@ public class MarkdownEditor : ComponentBase, IAsyncDisposable
     /// <inheritdoc/>
     protected override async Task OnParametersSetAsync()
     {
+        if (_module is not null && FirstVisibleSourceOffsetChanged.HasDelegate != _reportingScroll)
+        {
+            _reportingScroll = FirstVisibleSourceOffsetChanged.HasDelegate;
+            await CallModuleAsync("watchScroll", _root, _reportingScroll);
+        }
+
         var markdown = Markdown ?? "";
         if (string.Equals(markdown, _reported, StringComparison.Ordinal)
             || _reporting.Contains(markdown, StringComparer.Ordinal))
@@ -250,7 +327,8 @@ public class MarkdownEditor : ComponentBase, IAsyncDisposable
             _module = await JS.InvokeAsync<IJSObjectReference>("import", ModulePath);
             _sentSpans = [];
             _sentLength = 0;
-            await _module.InvokeVoidAsync("init", _root, _bridge, _text, s_kindClasses);
+            _reportingScroll = FirstVisibleSourceOffsetChanged.HasDelegate;
+            await _module.InvokeVoidAsync("init", _root, _bridge, _text, s_kindClasses, _reportingScroll);
         }
         catch (JSException)
         {

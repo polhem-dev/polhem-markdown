@@ -6,6 +6,11 @@ import { FakeRoot, FakeComponent, FakeResizeObserver, patchBytes } from "./fake-
 // The module reads the platform once, when it loads: a platform other than a Mac uses Ctrl for its shortcuts.
 Object.defineProperty(globalThis, "navigator", { value: { platform: "Linux x86_64" }, configurable: true });
 globalThis.ResizeObserver = FakeResizeObserver;
+// Frames run when a test asks, and the textarea has the editor's padding.
+const frames = [];
+globalThis.requestAnimationFrame = callback => frames.push(callback);
+globalThis.getComputedStyle = () => ({ paddingTop: "8px" });
+const runFrames = () => { while (frames.length) frames.shift()(); };
 const editor = await import("../../src/Polhem.Markdown.Blazor/wwwroot/polhem-markdown-editor.js");
 
 // Classes by kind, as SyntaxSpanPatch.KindClasses gives them: 1 marker, 2 heading, 3 inline code.
@@ -278,6 +283,7 @@ test("focus and dispose act on the editor, and calls after dispose do nothing", 
   const { root, textarea } = start("a");
 
   editor.focus(root);
+  assert.deepEqual(textarea.focusOptions, { preventScroll: true });
   editor.dispose(root);
   editor.dispose(root);
 
@@ -461,4 +467,88 @@ test("a command the host asks for while another waits comes after it", async () 
 
   assert.deepEqual(component.commands.map(args => args[4]), ["Bold", "Italic"]);
   assert.equal(textarea.value, "Italic:Bold:w");
+});
+
+// Scrolls the textarea, as the user would, and lets a frame pass.
+function scrollTo(textarea, top) {
+  textarea.scrollTop = top;
+  textarea.dispatch("scroll");
+  runFrames();
+}
+
+test("while the host listens, the offset of the line at the top is reported as the editor scrolls, once per change", () => {
+  const root = new FakeRoot("one\ntwo\nthree\nfour"), component = new FakeComponent();
+  editor.init(root, component, root.textarea.value, kinds, true);
+  const { textarea } = root;
+  runFrames();
+
+  scrollTo(textarea, 20);
+  scrollTo(textarea, 20);
+  scrollTo(textarea, 40);
+
+  const reported = component.calls.filter(call => call.method === "FirstVisibleChanged").map(call => call.args[0]);
+  assert.deepEqual(reported, [0, 4, 8]);
+});
+
+test("in a wrapped line, the offset is as far into the line as the top is down it", () => {
+  const root = new FakeRoot("a\n0123456789\nb"), component = new FakeComponent();
+  root.layer.heights[1] = 100;
+  editor.init(root, component, root.textarea.value, kinds, true);
+  runFrames();
+
+  scrollTo(root.textarea, 20 + 50);
+
+  assert.equal(component.calls.at(-1).args[0], 2 + 5);
+});
+
+test("nothing is reported until the host listens, and nothing after it stops", () => {
+  const { root, textarea, component } = start("one\ntwo");
+  scrollTo(textarea, 20);
+  assert.equal(component.calls.length, 0);
+
+  editor.watchScroll(root, true);
+  runFrames();
+  editor.watchScroll(root, false);
+  scrollTo(textarea, 0);
+
+  assert.deepEqual(component.calls.map(call => [call.method, call.args[0]]), [["FirstVisibleChanged", 4]]);
+});
+
+test("scrolling to an offset puts its line at the top, moved down as far into a wrapped line as the offset is", () => {
+  const { root, textarea, layer } = start("a\n0123456789\nb");
+  layer.heights[1] = 100;
+
+  editor.scrollToSource(root, 2);
+  assert.equal(textarea.scrollTop, 20);
+  editor.scrollToSource(root, 7);
+  assert.equal(textarea.scrollTop, 20 + 50);
+  editor.scrollToSource(root, 13);
+  assert.equal(textarea.scrollTop, 120);
+  // Past the end is the end of the last line, its bottom.
+  editor.scrollToSource(root, 99);
+  assert.equal(textarea.scrollTop, 140);
+});
+
+test("the caret goes to an offset, kept within the text", () => {
+  const { root, textarea } = start("abc");
+
+  editor.setCaret(root, 2);
+  assert.deepEqual([textarea.selectionStart, textarea.selectionEnd], [2, 2]);
+  editor.setCaret(root, -4);
+  assert.deepEqual([textarea.selectionStart, textarea.selectionEnd], [0, 0]);
+});
+
+test("after dispose, scrolling and the caret do nothing, and a pending report is dropped", () => {
+  const root = new FakeRoot("a\nb"), component = new FakeComponent();
+  editor.init(root, component, "a\nb", kinds, true);
+
+  editor.dispose(root);
+  runFrames();
+  editor.watchScroll(root, true);
+  editor.scrollToSource(root, 2);
+  editor.setCaret(root, 1);
+
+  assert.equal(component.calls.length, 0);
+  assert.equal(root.textarea.scrollTop, 0);
+  assert.equal(root.textarea.selectionStart, 3);
 });

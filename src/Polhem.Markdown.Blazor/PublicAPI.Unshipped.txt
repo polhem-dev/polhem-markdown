@@ -22,3 +22,18 @@ override Polhem.Markdown.Blazor.MarkdownEditor.BuildRenderTree(Microsoft.AspNetC
 override Polhem.Markdown.Blazor.MarkdownEditor.OnAfterRenderAsync(bool firstRender) -> System.Threading.Tasks.Task!
 override Polhem.Markdown.Blazor.MarkdownEditor.OnParametersSetAsync() -> System.Threading.Tasks.Task!
 virtual Polhem.Markdown.Blazor.MarkdownEditor.DisposeAsyncCore() -> System.Threading.Tasks.ValueTask
+Polhem.Markdown.Blazor.MarkdownSourceRequestedEventArgs
+Polhem.Markdown.Blazor.MarkdownSourceRequestedEventArgs.MarkdownSourceRequestedEventArgs(int sourceOffset) -> void
+Polhem.Markdown.Blazor.MarkdownSourceRequestedEventArgs.SourceOffset.get -> int
+Polhem.Markdown.Blazor.MarkdownViewer.FirstVisibleSourceOffset.get -> int
+Polhem.Markdown.Blazor.MarkdownViewer.FirstVisibleSourceOffsetChanged.get -> Microsoft.AspNetCore.Components.EventCallback<int>
+Polhem.Markdown.Blazor.MarkdownViewer.FirstVisibleSourceOffsetChanged.set -> void
+Polhem.Markdown.Blazor.MarkdownViewer.OnSourceRequested.get -> Microsoft.AspNetCore.Components.EventCallback<Polhem.Markdown.Blazor.MarkdownSourceRequestedEventArgs!>
+Polhem.Markdown.Blazor.MarkdownViewer.OnSourceRequested.set -> void
+Polhem.Markdown.Blazor.MarkdownViewer.ScrollToSourceOffsetAsync(int sourceOffset) -> System.Threading.Tasks.Task!
+override Polhem.Markdown.Blazor.MarkdownViewer.OnAfterRenderAsync(bool firstRender) -> System.Threading.Tasks.Task!
+Polhem.Markdown.Blazor.MarkdownEditor.FirstVisibleSourceOffset.get -> int
+Polhem.Markdown.Blazor.MarkdownEditor.FirstVisibleSourceOffsetChanged.get -> Microsoft.AspNetCore.Components.EventCallback<int>
+Polhem.Markdown.Blazor.MarkdownEditor.FirstVisibleSourceOffsetChanged.set -> void
+Polhem.Markdown.Blazor.MarkdownEditor.ScrollToSourceOffsetAsync(int sourceOffset) -> System.Threading.Tasks.Task!
+Polhem.Markdown.Blazor.MarkdownEditor.SetCaretOffsetAsync(int sourceOffset) -> System.Threading.Tasks.Task!

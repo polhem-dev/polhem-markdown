@@ -37,8 +37,9 @@ export class FakeTextarea {
     this.selectionStart = this.selectionEnd = start + text.length;
   }
 
-  focus() {
+  focus(options) {
     this.focused = true;
+    this.focusOptions = options;
   }
 
   // What the browser does when the user types `text` over the selection: the value changes, then `input` fires.
@@ -71,6 +72,16 @@ class FakeLine {
     return unescape(this.html.replace(/<[^>]+>/g, ""));
   }
 
+  // Lines are 20 high unless the layer says otherwise, as a wrapped line is, start below the layer's padding of 8, and
+  // move up as the layer scrolls.
+  getBoundingClientRect() {
+    const lines = this.parent.children, index = lines.indexOf(this);
+    let top = 8;
+    for (let at = 0; at < index; at++) top += this.parent.heightOf(at);
+    top -= this.parent.scrollTop;
+    return { top, height: this.parent.heightOf(index), bottom: top + this.parent.heightOf(index) };
+  }
+
   remove() {
     this.parent.children.splice(this.parent.children.indexOf(this), 1);
   }
@@ -87,6 +98,15 @@ export class FakeLayer {
     this.style = {};
     this.scrollTop = 0;
     this.scrollLeft = 0;
+    this.heights = {};
+  }
+
+  heightOf(index) {
+    return this.heights[index] ?? 20;
+  }
+
+  getBoundingClientRect() {
+    return { top: 0, height: 300, bottom: 300 };
   }
 
   // The module writes each line as `<span>…\n</span>`, and a line holds no other line break.

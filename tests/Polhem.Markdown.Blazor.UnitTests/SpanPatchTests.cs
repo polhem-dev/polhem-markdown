@@ -78,4 +78,26 @@ public class SpanPatchTests
         Assert.Equal(crLf, EditorLineEndings.UsesCrLf(host));
         Assert.Equal(crLf ? host : textarea, EditorLineEndings.ToHost(textarea, crLf));
     }
+
+    [Theory(DisplayName = "Offsets in the textarea's text and in the host's text match up, a CRLF line break counting as two")]
+    [InlineData("a\nb\nc", true, 0, 0)]
+    [InlineData("a\nb\nc", true, 2, 3)]
+    [InlineData("a\nb\nc", true, 4, 6)]
+    [InlineData("a\nb\nc", true, 5, 7)]
+    [InlineData("a\nb\nc", false, 4, 4)]
+    public void Offsets_RoundTrip(string textarea, bool crLf, int offset, int hostOffset)
+    {
+        Assert.Equal(hostOffset, EditorLineEndings.ToHostOffset(textarea, offset, crLf));
+        Assert.Equal(offset, EditorLineEndings.ToTextareaOffset(textarea, hostOffset, crLf));
+    }
+
+    [Theory(DisplayName = "A host offset inside a CRLF, or outside the text, is kept within the textarea's text")]
+    [InlineData(2, 1)]
+    [InlineData(99, 5)]
+    [InlineData(-3, 0)]
+    public void Offsets_InsideCrLfOrOutside_AreKeptWithin(int hostOffset, int expected)
+    {
+        Assert.Equal(expected, EditorLineEndings.ToTextareaOffset("a\nb\nc", hostOffset, crLf: hostOffset != -3));
+        Assert.Equal(5, EditorLineEndings.ToHostOffset("a\nb\nc", 99, crLf: false));
+    }
 }
