@@ -22,6 +22,7 @@
     --pmd-url          link destinations and bare URLs
     --pmd-math         formulas
     --pmd-selection    the background of selected text, which must let the text show through
+    --pmd-caret        the caret, which otherwise has the color of the text
 */
 
 .pmd {
@@ -414,7 +415,7 @@
   outline: none;
   overflow: auto;
   color: inherit;
-  caret-color: currentColor;
+  caret-color: var(--pmd-caret, auto);
   background: transparent;
 }
 
@@ -422,12 +423,14 @@
   visibility: visible;
 }
 
+/* NOTE: only the fill of the letters is transparent. The text color stays, because the caret takes its color from it:
+   a transparent color would hide the caret too. */
 .pmd-editor.pmd-editor-ready > .pmd-editor-input {
-  color: transparent;
+  -webkit-text-fill-color: transparent;
 }
 
 .pmd-editor > .pmd-editor-input::selection {
-  color: transparent;
+  -webkit-text-fill-color: transparent;
   background: var(--pmd-selection, rgba(59, 130, 246, 0.3));
 }
 
