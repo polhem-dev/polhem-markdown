@@ -46,8 +46,8 @@ and defaults are at the top of `polhem-markdown.css`:
 
 ## MarkdownEditor
 
-Edits Markdown as source in a native `<textarea>`, colored the way the viewer reads it, with format commands and list
-keys. It works under interactive server, WebAssembly and auto rendering. Put a `MarkdownViewer` beside it for a live
+Edits Markdown as source in a native `<textarea>`, colored the way the viewer reads it, with a toolbar, line numbers,
+format commands and list keys. It works under interactive server, WebAssembly and auto rendering. Put a `MarkdownViewer` beside it for a live
 preview:
 
 ```razor
@@ -62,6 +62,22 @@ preview:
 
     // Toggles bold on the selection, as Ctrl+B or Command+B does.
     private Task Bold() => editor.ApplyFormatAsync(MarkdownFormat.Bold);
+}
+```
+
+The toolbar's labels are English; give your own, or `null` to keep one. Set `ShowToolbar="false"` to lay out buttons of
+your own instead:
+
+```razor
+<MarkdownEditor @bind-Markdown="text" ToolbarLabels="Label" />
+
+@code {
+    private static string? Label(MarkdownToolbarItem item) => item switch
+    {
+        MarkdownToolbarItem.Bold => "粗體",
+        MarkdownToolbarItem.Italic => "斜體",
+        _ => null,
+    };
 }
 ```
 

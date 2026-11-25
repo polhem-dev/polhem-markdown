@@ -1,11 +1,12 @@
 // Tests of polhem-markdown-editor.js, the browser side of the Blazor MarkdownEditor, run by `node --test tests/js`.
 import { test, beforeEach, mock } from "node:test";
 import assert from "node:assert/strict";
-import { FakeRoot, FakeComponent, FakeResizeObserver, patchBytes } from "./fake-dom.mjs";
+import { FakeRoot, FakeComponent, FakeResizeObserver, FakeMutationObserver, patchBytes } from "./fake-dom.mjs";
 
 // The module reads the platform once, when it loads: a platform other than a Mac uses Ctrl for its shortcuts.
 Object.defineProperty(globalThis, "navigator", { value: { platform: "Linux x86_64" }, configurable: true });
 globalThis.ResizeObserver = FakeResizeObserver;
+globalThis.MutationObserver = FakeMutationObserver;
 // Frames run when a test asks, and the textarea has the editor's padding.
 const frames = [];
 globalThis.requestAnimationFrame = callback => frames.push(callback);
@@ -575,4 +576,117 @@ test("after dispose, scrolling and the caret do nothing, and a pending report is
   assert.equal(component.calls.length, 0);
   assert.equal(root.textarea.scrollTop, 0);
   assert.equal(root.textarea.selectionStart, 3);
+});
+
+function startWithToolbar(text, items) {
+  const root = new FakeRoot(text, items), component = new FakeComponent();
+  editor.init(root, component, text, kinds);
+  return { root, component, textarea: root.textarea };
+}
+
+test("a toolbar button keeps the focus and the selection in the text, and applies its format as one step", async () => {
+  const { root, textarea, component } = startWithToolbar("a word", ["Bold", "Undo", "Redo"]);
+  component.answer = (command, version, at, length, argument) =>
+    command === "format" && argument === "Bold" ? edit(at, length, "**word**", at + 2, 4) : null;
+  textarea.setSelectionRange(2, 6);
+
+  const { pressPrevented } = root.button("Bold").click();
+  await component.release();
+
+  assert.ok(pressPrevented);
+  assert.deepEqual(component.commands, [["format", 0, 2, 4, "Bold"]]);
+  assert.equal(textarea.value, "a **word**");
+  assert.ok(textarea.focused);
+  editor.undo(root);
+  assert.equal(textarea.value, "a word");
+});
+
+test("the heading button and the host's call ask for the heading cycle", async () => {
+  const { root, textarea, component } = startWithToolbar("title", ["Heading"]);
+  textarea.setSelectionRange(0, 0);
+
+  root.button("Heading").click();
+  await component.release();
+  editor.cycleHeading(root);
+  await component.release();
+
+  assert.deepEqual(component.commands.map(call => call[0]), ["cycleHeading", "cycleHeading"]);
+});
+
+test("undo and redo are enabled with a step to take, and take it", () => {
+  const { root, textarea } = startWithToolbar("a", ["Undo", "Redo"]);
+  const undo = root.button("Undo"), redo = root.button("Redo");
+  assert.deepEqual([undo.disabled, redo.disabled], [true, true]);
+
+  textarea.type("b");
+  assert.deepEqual([undo.disabled, redo.disabled], [false, true]);
+
+  undo.click();
+  assert.equal(textarea.value, "a");
+  assert.deepEqual([undo.disabled, redo.disabled], [true, false]);
+
+  redo.click();
+  assert.equal(textarea.value, "ab");
+  assert.deepEqual([undo.disabled, redo.disabled], [false, true]);
+});
+
+test("undo and redo are disabled while the editor is read-only, and a text the host sets clears them", () => {
+  const { root, textarea } = startWithToolbar("a", ["Undo", "Redo"]);
+  textarea.type("b");
+
+  textarea.readOnly = true;
+  FakeMutationObserver.last.callback();
+  assert.ok(root.button("Undo").disabled);
+
+  textarea.readOnly = false;
+  FakeMutationObserver.last.callback();
+  assert.equal(root.button("Undo").disabled, false);
+
+  editor.setText(root, "new");
+  assert.ok(root.button("Undo").disabled);
+});
+
+test("a disabled button does nothing", () => {
+  const { root, component } = startWithToolbar("a", ["Bold", "Undo"]);
+  root.button("Bold").disabled = true;
+
+  root.button("Bold").click();
+  root.button("Undo").click();
+
+  assert.equal(component.commands.length, 0);
+});
+
+test("the arrow keys, Home and End move between the enabled buttons, and Escape goes back to the text", () => {
+  const { root, textarea } = startWithToolbar("a", ["Bold", "Italic", "Link", "Undo", "Redo"]);
+  const bold = root.button("Bold"), italic = root.button("Italic"), link = root.button("Link");
+
+  assert.ok(bold.key("ArrowRight").defaultPrevented);
+  assert.equal(root.focused, italic);
+  assert.deepEqual([bold.tabIndex, italic.tabIndex], [-1, 0]);
+
+  // Undo and redo have no step to take, so End stops at the last button that can do something.
+  italic.key("End");
+  assert.equal(root.focused, link);
+  link.key("ArrowRight");
+  assert.equal(root.focused, bold);
+  bold.key("ArrowLeft");
+  assert.equal(root.focused, link);
+
+  link.key("Escape");
+  assert.ok(textarea.focused);
+});
+
+test("away from a Mac the tooltips keep their Ctrl shortcuts", () => {
+  const { root } = startWithToolbar("a", ["Bold"]);
+
+  assert.equal(root.button("Bold").title, "Bold (pc)");
+});
+
+test("a press on the gutter keeps the focus in the text", () => {
+  const { root, textarea } = start("a");
+
+  const press = root.dispatch("mousedown", { target: root.body });
+
+  assert.ok(press.defaultPrevented);
+  assert.ok(textarea.focused);
 });

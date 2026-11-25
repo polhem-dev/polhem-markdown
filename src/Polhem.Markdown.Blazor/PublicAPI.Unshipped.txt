@@ -39,3 +39,8 @@ Polhem.Markdown.Blazor.MarkdownEditor.FirstVisibleSourceOffsetChanged.get -> Mic
 Polhem.Markdown.Blazor.MarkdownEditor.FirstVisibleSourceOffsetChanged.set -> void
 Polhem.Markdown.Blazor.MarkdownEditor.ScrollToSourceOffsetAsync(int sourceOffset) -> System.Threading.Tasks.Task!
 Polhem.Markdown.Blazor.MarkdownEditor.SetCaretOffsetAsync(int sourceOffset) -> System.Threading.Tasks.Task!
+Polhem.Markdown.Blazor.MarkdownEditor.CycleHeadingAsync() -> System.Threading.Tasks.Task!
+Polhem.Markdown.Blazor.MarkdownEditor.ShowToolbar.get -> bool
+Polhem.Markdown.Blazor.MarkdownEditor.ShowToolbar.set -> void
+Polhem.Markdown.Blazor.MarkdownEditor.ToolbarLabels.get -> System.Func<Polhem.Markdown.MarkdownToolbarItem, string?>?
+Polhem.Markdown.Blazor.MarkdownEditor.ToolbarLabels.set -> void
