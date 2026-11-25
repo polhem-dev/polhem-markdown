@@ -13,11 +13,11 @@
         @* The side under the pointer or with the focus leads the scrolling, so the other one, scrolled to match, does not
            scroll it back. *@
         <div class="split">
-            <div class="source" @onpointerenter="() => _leader = Pane.Editor" @onfocusin="() => _leader = Pane.Editor">
+            <div class="frame source" @onpointerenter="() => _leader = Pane.Editor" @onfocusin="() => _leader = Pane.Editor">
                 <MarkdownEditor @ref="_editor" Markdown="@_markdown" MarkdownChanged="Edited" aria-label="Markdown source"
                                 FirstVisibleSourceOffsetChanged="EditorScrolled" />
             </div>
-            <div class="preview" @onpointerenter="() => _leader = Pane.Viewer" @onfocusin="() => _leader = Pane.Viewer">
+            <div class="frame viewer-frame preview" @onpointerenter="() => _leader = Pane.Viewer" @onfocusin="() => _leader = Pane.Viewer">
                 <MarkdownViewer @ref="_viewer" Markdown="@_preview" Options="_options" OnLinkActivated="OnLinkActivated"
                                 FirstVisibleSourceOffsetChanged="ViewerScrolled" OnSourceRequested="GoToSource" />
             </div>
@@ -25,7 +25,9 @@
     }
     else
     {
-        <MarkdownViewer Markdown="@_markdown" Options="_options" OnLinkActivated="OnLinkActivated" />
+        <div class="frame viewer-frame">
+            <MarkdownViewer Markdown="@_markdown" Options="_options" OnLinkActivated="OnLinkActivated" />
+        </div>
     }
 </div>
 
