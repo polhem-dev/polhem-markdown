@@ -27,7 +27,7 @@
   <ItemGroup>
     <Compile Include="..\MarkdownGallery\SampleText.cs" Link="SampleText.cs" />
     <Content Include="..\MarkdownGallery.Blazor\Components\GalleryPage.razor" Link="Components\GalleryPage.razor" />
-    <Content Include="..\MarkdownGallery.Blazor\wwwroot\gallery.css" Link="wwwroot\gallery.css" />
+    <Content Include="..\MarkdownGallery.Blazor\Components\GalleryPage.razor.css" Link="Components\GalleryPage.razor.css" />
   </ItemGroup>
 
   <Target Name="PolhemMarkdownTrimWarnings" AfterTargets="PrepareForILLink">
