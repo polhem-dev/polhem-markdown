@@ -18,6 +18,8 @@ Polhem.Markdown.Blazor.MarkdownEditor.RedoAsync() -> System.Threading.Tasks.Task
 Polhem.Markdown.Blazor.MarkdownEditor.UndoAsync() -> System.Threading.Tasks.Task<bool>!
 Polhem.Markdown.Blazor.MarkdownEditor.WordWrap.get -> bool
 Polhem.Markdown.Blazor.MarkdownEditor.WordWrap.set -> void
+Polhem.Markdown.Blazor.MarkdownEditor.ShowLineNumbers.get -> bool
+Polhem.Markdown.Blazor.MarkdownEditor.ShowLineNumbers.set -> void
 override Polhem.Markdown.Blazor.MarkdownEditor.BuildRenderTree(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder! builder) -> void
 override Polhem.Markdown.Blazor.MarkdownEditor.OnAfterRenderAsync(bool firstRender) -> System.Threading.Tasks.Task!
 override Polhem.Markdown.Blazor.MarkdownEditor.OnParametersSetAsync() -> System.Threading.Tasks.Task!

@@ -201,6 +201,17 @@ public class MarkdownEditorTests : BunitContext
         Assert.Contains("pmd-editor-nowrap", editor.Find("div").ClassList);
     }
 
+    [Fact(DisplayName = "Line numbers are on by default, and the host can turn them off")]
+    public void Render_ShowLineNumbers_SetsClass()
+    {
+        var editor = Render<MarkdownEditor>();
+        Assert.Contains("pmd-editor-lines", editor.Find("div").ClassList);
+
+        editor.Render(parameters => parameters.Add(component => component.ShowLineNumbers, false));
+
+        Assert.DoesNotContain("pmd-editor-lines", editor.Find("div").ClassList);
+    }
+
     [Fact(DisplayName = "Attributes the host adds, such as an accessible name, go to the textarea")]
     public void Render_AdditionalAttributes_OnTextarea()
     {

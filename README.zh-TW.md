@@ -99,7 +99,7 @@
 - **原始碼中的連結無法從編輯器開啟**，要從會檢查 scheme 的檢視器開啟。
 - **Avalonia 版**建立在 AvaloniaEdit 上，任何主題都能用，不需要宿主提供樣式。
 - **Blazor 版**在原生的 textarea 裡輸入，輸入法與螢幕閱讀器的行為與頁面上其他地方相同；支援 interactive server、WebAssembly
-  與 auto 渲染。目前還沒有工具列、行號與搜尋面板。
+  與 auto 渲染。目前還沒有工具列與搜尋面板。
 
 ![範例文字在瀏覽器裡的 Blazor 編輯器中，旁邊是檢視器](docs/images/editor-blazor.png)
 

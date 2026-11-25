@@ -23,6 +23,7 @@
     --pmd-math         formulas
     --pmd-selection    the background of selected text, which must let the text show through
     --pmd-caret        the caret, which otherwise has the color of the text
+    --pmd-line-number  line numbers
 */
 
 .pmd {
@@ -367,8 +368,14 @@
 
   Bold and italic need a font whose bold and italic letters are as wide as the regular ones, as monospaced fonts are;
   otherwise the layer drifts from the textarea. Keep --pmd-code-font monospaced.
+
+  Line numbers go in a gutter at the left of the layer, as wide as the number of digits the script sets in
+  --pmd-gutter-digits. The textarea starts to the right of the gutter, so its caret and selection never reach it. Each
+  line of the layer is a block holding a block of text; the number is the outer block's ::before, placed against the
+  layer, so it stays put while the text inside is moved sideways for a textarea that scrolls sideways.
 */
 .pmd-editor {
+  --pmd-gutter: 0px;
   position: relative;
   min-height: 8em;
   font-family: var(--pmd-code-font, "Cascadia Mono", Consolas, Menlo, ui-monospace, monospace);
@@ -400,7 +407,14 @@
   overflow-wrap: normal;
 }
 
+/* The gutter opens once the script draws the numbers, so a statically rendered editor keeps its text at the left. */
+.pmd-editor.pmd-editor-lines.pmd-editor-ready {
+  --pmd-gutter: calc(var(--pmd-gutter-digits, 2) * 1ch + 16px);
+}
+
 .pmd-editor > .pmd-editor-layer {
+  padding-left: calc(var(--pmd-gutter) + 12px);
+  counter-reset: pmd-line;
   overflow: hidden;
   pointer-events: none;
   color: inherit;
@@ -408,8 +422,38 @@
   visibility: hidden;
 }
 
+.pmd-editor > .pmd-editor-layer > span {
+  display: block;
+  counter-increment: pmd-line;
+}
+
+/* Only text that does not wrap scrolls sideways: there the text of each line moves, and is cut off at the gutter. A
+   wrapped line keeps its text inline, which lays out faster. */
+.pmd-editor.pmd-editor-nowrap > .pmd-editor-layer > span {
+  overflow: hidden;
+}
+
+.pmd-editor.pmd-editor-nowrap > .pmd-editor-layer > span > span {
+  display: block;
+  transform: translateX(var(--pmd-scroll-left, 0px));
+}
+
+.pmd-editor.pmd-editor-lines > .pmd-editor-layer > span::before {
+  content: counter(pmd-line);
+  position: absolute;
+  left: 0;
+  box-sizing: border-box;
+  width: var(--pmd-gutter);
+  padding-right: 8px;
+  text-align: right;
+  color: var(--pmd-line-number, #8a8f98);
+  font-weight: normal;
+  font-style: normal;
+}
+
 .pmd-editor > .pmd-editor-input {
-  width: 100%;
+  left: var(--pmd-gutter);
+  width: calc(100% - var(--pmd-gutter));
   height: 100%;
   resize: none;
   outline: none;

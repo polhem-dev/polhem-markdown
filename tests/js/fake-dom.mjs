@@ -10,6 +10,8 @@ export class FakeTextarea {
     this.readOnly = false;
     this.scrollTop = 0;
     this.scrollLeft = 0;
+    this.offsetWidth = 400;
+    this.offsetHeight = 300;
     this.clientWidth = 400;
     this.clientHeight = 300;
     this.focused = false;
@@ -92,10 +94,17 @@ class FakeLine {
   }
 }
 
+// A style that records what is set on it, custom properties included, and compares as a plain object.
+function fakeStyle() {
+  const style = {};
+  Object.defineProperty(style, "setProperty", { value: (name, value) => { style[name] = value; } });
+  return style;
+}
+
 export class FakeLayer {
   constructor() {
     this.children = [];
-    this.style = {};
+    this.style = fakeStyle();
     this.scrollTop = 0;
     this.scrollLeft = 0;
     this.heights = {};
@@ -109,9 +118,9 @@ export class FakeLayer {
     return { top: 0, height: 300, bottom: 300 };
   }
 
-  // The module writes each line as `<span>…\n</span>`, and a line holds no other line break.
+  // The module writes each line as `<span><span>…\n</span></span>`, and a line holds no other line break.
   parse(html) {
-    return html.split("\n</span>").slice(0, -1).map(line => new FakeLine(this, line.replace(/^<span>/, "") + "\n"));
+    return html.split("\n</span></span>").slice(0, -1).map(line => new FakeLine(this, line.replace(/^<span><span>/, "") + "\n"));
   }
 
   insertAdjacentHTML(position, html) {
@@ -130,6 +139,7 @@ export class FakeRoot {
     this.layer = new FakeLayer();
     this.classes = new Set();
     this.classList = { add: name => this.classes.add(name) };
+    this.style = fakeStyle();
   }
 
   querySelector(selector) {

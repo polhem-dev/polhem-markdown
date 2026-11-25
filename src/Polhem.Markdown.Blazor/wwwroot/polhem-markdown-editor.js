@@ -50,14 +50,17 @@ export function init(root, component, text, kindClasses, reportScroll = false) {
     endComposition(editor);
   });
   on("scroll", () => {
+    // NOTE: the layer itself does not scroll sideways: the text of each line moves instead, so the line numbers in the
+    // gutter stay put and the text never slides under them.
     layer.scrollTop = textarea.scrollTop;
-    layer.scrollLeft = textarea.scrollLeft;
+    layer.style.setProperty("--pmd-scroll-left", -textarea.scrollLeft + "px");
     scheduleReport(editor);
   });
-  // The layer takes the size of the textarea's text area, which leaves out its scroll bar.
+  // The layer covers the editor but for the textarea's scroll bars. NOTE: the sizes are left to the browser, as the
+  // gutter's width has a fraction a size in whole pixels would round off, and lines would then wrap apart.
   editor.resize = new ResizeObserver(() => {
-    layer.style.width = textarea.clientWidth + "px";
-    layer.style.height = textarea.clientHeight + "px";
+    layer.style.width = "calc(100% - " + (textarea.offsetWidth - textarea.clientWidth) + "px)";
+    layer.style.height = "calc(100% - " + (textarea.offsetHeight - textarea.clientHeight) + "px)";
   });
   editor.resize.observe(textarea);
   editors.set(root, editor);
@@ -514,12 +517,19 @@ function render(editor) {
   const removed = old.length - head - tail;
   for (let index = 0; index < removed; index++) layer.children[head].remove();
   const html = [];
-  for (let index = head; index < lines.length - tail; index++) html.push("<span>" + lines[index] + "\n</span>");
+  for (let index = head; index < lines.length - tail; index++) html.push("<span><span>" + lines[index] + "\n</span></span>");
   if (html.length) {
     const next = layer.children[head];
     next ? next.insertAdjacentHTML("beforebegin", html.join("")) : layer.insertAdjacentHTML("beforeend", html.join(""));
   }
   editor.lines = lines;
+
+  // The gutter is as wide as the number of the last line, and at least two digits, so it does not grow at line 10.
+  const digits = Math.max(2, String(lines.length).length);
+  if (digits !== editor.digits) {
+    editor.digits = digits;
+    editor.root.style.setProperty("--pmd-gutter-digits", String(digits));
+  }
   // NOTE: the scroll position is not copied here. Reading the textarea's makes the browser lay out the whole text at
   // once, which took about 40 ms a keystroke in a text of 130,000 characters; the scroll listener copies it instead.
 }
