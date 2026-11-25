@@ -9,8 +9,12 @@ Polhem.Markdown 各套件值得注意的變更，每個版本只列幾項重點�
 
 ## [Unreleased]
 
-- `Polhem.Markdown.Blazor` 標記為支援裁剪與 AOT（`IsAotCompatible`），並新增以裁剪方式在 CI 發佈的 Blazor WebAssembly
-  範例 `samples/MarkdownGallery.Wasm`。只裁剪標記為可裁剪組件的應用程式（`TrimMode=partial`）現在也會裁剪這個組件。
+## [0.3.1] - 2026-11-25
+
+詳細內容：[docs/zh-TW/changelogs/0.3.1.md](docs/zh-TW/changelogs/0.3.1.md)
+
+- `Polhem.Markdown.Blazor` 標記為支援裁剪與 AOT，並在 Blazor WebAssembly 應用程式中以裁剪方式驗證。只裁剪標記為可裁剪組件的
+  應用程式（`TrimMode=partial`）現在也會裁剪這個組件。
 
 ## [0.3.0] - 2026-11-25
 
@@ -57,7 +61,9 @@ Polhem.Markdown 各套件值得注意的變更，每個版本只列幾項重點�
 - `Polhem.Markdown.Blazor` 新增 `MarkdownViewer` 元件，把 Markdown 文字呈現為語意化 HTML：連結以 `OnLinkActivated`
   交給宿主、程式碼區塊附複製鈕，樣式以 `--pmd-*` CSS 變數設定。
 
-[Unreleased]: https://github.com/polhem-dev/polhem-markdown/compare/v0.2.1...HEAD
+[Unreleased]: https://github.com/polhem-dev/polhem-markdown/compare/v0.3.1...HEAD
+[0.3.1]: https://github.com/polhem-dev/polhem-markdown/compare/v0.3.0...v0.3.1
+[0.3.0]: https://github.com/polhem-dev/polhem-markdown/compare/v0.2.1...v0.3.0
 [0.2.1]: https://github.com/polhem-dev/polhem-markdown/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/polhem-dev/polhem-markdown/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/polhem-dev/polhem-markdown/releases/tag/v0.1.0

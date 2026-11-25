@@ -9,9 +9,12 @@ and versions follow [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
-- `Polhem.Markdown.Blazor` is marked trim and AOT compatible (`IsAotCompatible`), and a trimmed Blazor WebAssembly
-  sample, `samples/MarkdownGallery.Wasm`, is published in CI. An app that trims only the assemblies marked trimmable
-  (`TrimMode=partial`) now trims this one too.
+## [0.3.1] - 2026-11-25
+
+Details: [docs/en/changelogs/0.3.1.md](docs/en/changelogs/0.3.1.md)
+
+- `Polhem.Markdown.Blazor` is marked trim and AOT compatible, and is checked under trimming in a Blazor WebAssembly
+  app. An app that trims only the assemblies marked trimmable (`TrimMode=partial`) now trims this one too.
 
 ## [0.3.0] - 2026-11-25
 
@@ -61,7 +64,9 @@ Details: [docs/en/changelogs/0.2.0.md](docs/en/changelogs/0.2.0.md)
 - `Polhem.Markdown.Blazor` adds `MarkdownViewer`, a component that renders a Markdown text as semantic HTML, with
   `OnLinkActivated` for links, code blocks with a copy button, and a stylesheet set through `--pmd-*` CSS variables.
 
-[Unreleased]: https://github.com/polhem-dev/polhem-markdown/compare/v0.2.1...HEAD
+[Unreleased]: https://github.com/polhem-dev/polhem-markdown/compare/v0.3.1...HEAD
+[0.3.1]: https://github.com/polhem-dev/polhem-markdown/compare/v0.3.0...v0.3.1
+[0.3.0]: https://github.com/polhem-dev/polhem-markdown/compare/v0.2.1...v0.3.0
 [0.2.1]: https://github.com/polhem-dev/polhem-markdown/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/polhem-dev/polhem-markdown/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/polhem-dev/polhem-markdown/releases/tag/v0.1.0
