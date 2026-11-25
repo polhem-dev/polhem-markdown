@@ -4,6 +4,8 @@ A Markdown viewer component that renders semantic HTML styled with CSS variables
 component, for Blazor. The viewer renders the same model as `Polhem.Markdown.Avalonia`, so a Blazor and an Avalonia
 front end show the same text the same way.
 
+![The same reply in the Blazor viewer and the Avalonia viewer](https://raw.githubusercontent.com/polhem-dev/polhem-markdown/main/docs/images/viewer-hero.png)
+
 Link the stylesheet in the host page:
 
 ```html
@@ -49,6 +51,8 @@ and defaults are at the top of `polhem-markdown.css`:
 Edits Markdown as source in a native `<textarea>`, colored the way the viewer reads it, with a toolbar, line numbers,
 format commands and list keys. It works under interactive server, WebAssembly and auto rendering. Put a `MarkdownViewer` beside it for a live
 preview:
+
+![The editor with its toolbar and line numbers, beside the viewer showing the same text, in a browser](https://raw.githubusercontent.com/polhem-dev/polhem-markdown/main/docs/images/editor-blazor.png)
 
 ```razor
 <div style="display: grid; grid-template-columns: 1fr 1fr; height: 30rem">
