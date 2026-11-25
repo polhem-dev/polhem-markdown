@@ -9,15 +9,15 @@
 [![Code Smells](https://sonarcloud.io/api/project_badges/measure?project=polhem-dev_polhem-markdown&metric=code_smells)](https://sonarcloud.io/project/overview?id=polhem-dev_polhem-markdown)
 [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=polhem-dev_polhem-markdown&metric=coverage)](https://sonarcloud.io/project/overview?id=polhem-dev_polhem-markdown)
 
-Markdown viewers for .NET that show the same text the same way on different front ends, and a Markdown source editor
-for Avalonia. One package parses the text and applies the safety policy; a viewer package for each UI framework renders
-the result.
+Markdown viewers for .NET that show the same text the same way on different front ends, and Markdown source editors for
+Avalonia and Blazor. One package parses the text and applies the safety policy; a package for each UI framework renders
+the result and edits the source.
 
 | Package | For |
 |---------|-----|
 | `Polhem.Markdown` | Parsing (with [Markdig](https://github.com/xoofx/markdig)) and the safety policy shared by the viewers |
 | `Polhem.Markdown.Avalonia` | A viewer control and a source editor control for Avalonia |
-| `Polhem.Markdown.Blazor` | A viewer component for Blazor, rendering semantic HTML styled with CSS variables |
+| `Polhem.Markdown.Blazor` | A viewer component for Blazor, rendering semantic HTML styled with CSS variables, and a source editor component |
 
 The packages are published on [nuget.org](https://www.nuget.org/packages?q=Polhem.Markdown); the changes of each release
 are in the [CHANGELOG](CHANGELOG.md). They are at 0.x: a minor version may still change the API, and the CHANGELOG says
@@ -66,21 +66,26 @@ Each viewer's README lists what it supports in detail, and how to set its colors
 
 ![The sample text in the editor, beside the viewer showing it](docs/images/editor.png)
 
-`MarkdownEditor` in `Polhem.Markdown.Avalonia` edits Markdown as source, with a live preview in `MarkdownViewer` beside
-it, not as rich text.
+`MarkdownEditor`, in `Polhem.Markdown.Avalonia` and in `Polhem.Markdown.Blazor`, edits Markdown as source, with a live
+preview in `MarkdownViewer` beside it, not as rich text. The two editors color and edit a text the same way.
 
 - **Colours the source the way the viewer reads it**: markers, headings, emphasis, inline code, links and their
   addresses, raw HTML and formulas, and fenced code with the viewer's highlighting.
-- **Formats and list keys**: `ApplyFormat` toggles bold, italic, strikethrough, inline code, links, headings, lists,
+- **Formats and list keys**: `ApplyFormat` (`ApplyFormatAsync` on Blazor) toggles bold, italic, strikethrough, inline code, links, headings, lists,
   task lists, quotes and code blocks, with Ctrl or Cmd and B, I, K or E for the inline ones. Enter continues a list,
   and Tab and Shift+Tab move an item in and out.
 - **Keeps in step with the viewer**: the editor reports the source at the top of its view and scrolls to a source
   offset; the viewer maps source offsets to positions and back, and a command-click asks for the source of what was
   clicked. The gallery wires the two together.
-- **Works under any theme** with no styles from the host, and its links cannot be opened from the source: the viewer
-  checks their scheme.
+- **Its links cannot be opened from the source**: the viewer opens them after checking their scheme.
+- **On Avalonia** it is built on AvaloniaEdit and works under any theme with no styles from the host.
+- **On Blazor** the text is typed into a native textarea, so input methods and screen readers work as anywhere on the
+  page, under interactive server, WebAssembly and auto rendering. It has no line numbers and no search panel.
 
-The [Avalonia README](src/Polhem.Markdown.Avalonia/README.md) has the details. There is no Blazor editor yet.
+![The sample text in the Blazor editor, beside the viewer, in a browser](docs/images/editor-blazor.png)
+
+Each package's README has the details: [Avalonia](src/Polhem.Markdown.Avalonia/README.md),
+[Blazor](src/Polhem.Markdown.Blazor/README.md).
 
 ## Samples
 
@@ -92,7 +97,8 @@ dotnet run --project samples/MarkdownGallery.Desktop
 dotnet run --project samples/MarkdownGallery.Blazor
 ```
 
-The Blazor gallery shows the same text, so the two viewers can be compared side by side.
+The Blazor gallery shows the same text, so the two viewers can be compared side by side. Its Edit switch puts the Blazor
+editor beside the viewer in the same way.
 
 The iOS head is not in the solution, because it needs the iOS workload. On a Mac, build and start it on a simulator:
 

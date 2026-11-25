@@ -14,11 +14,11 @@
            scroll it back. *@
         <div class="split">
             <div class="source" @onpointerenter="() => _leader = Pane.Editor" @onfocusin="() => _leader = Pane.Editor">
-                <MarkdownEditor @ref="_editor" @bind-Markdown="_markdown" aria-label="Markdown source"
+                <MarkdownEditor @ref="_editor" Markdown="@_markdown" MarkdownChanged="Edited" aria-label="Markdown source"
                                 FirstVisibleSourceOffsetChanged="EditorScrolled" />
             </div>
             <div class="preview" @onpointerenter="() => _leader = Pane.Viewer" @onfocusin="() => _leader = Pane.Viewer">
-                <MarkdownViewer @ref="_viewer" Markdown="@_markdown" Options="_options" OnLinkActivated="OnLinkActivated"
+                <MarkdownViewer @ref="_viewer" Markdown="@_preview" Options="_options" OnLinkActivated="OnLinkActivated"
                                 FirstVisibleSourceOffsetChanged="ViewerScrolled" OnSourceRequested="GoToSource" />
             </div>
         </div>
@@ -34,6 +34,11 @@
 
     private readonly MarkdownOptions _options = CreateOptions();
     private string _markdown = MarkdownGallery.SampleText.Markdown;
+
+    // What the preview shows while editing: the text a moment after typing stops, so the viewer does not rebuild on
+    // every key.
+    private string _preview = MarkdownGallery.SampleText.Markdown;
+    private CancellationTokenSource? _previewDelay;
     private string? _status;
     private bool _dark;
     private bool _edit;
@@ -74,6 +79,28 @@
             await _editor.FocusAsync();
         }
     }
+
+    private async Task Edited(string text)
+    {
+        _markdown = text;
+        if (_previewDelay is not null)
+        {
+            await _previewDelay.CancelAsync();
+            _previewDelay.Dispose();
+        }
+        _previewDelay = new CancellationTokenSource();
+        try
+        {
+            await Task.Delay(150, _previewDelay.Token);
+        }
+        catch (TaskCanceledException)
+        {
+            // Another edit came; its delay updates the preview.
+            return;
+        }
+        _preview = _markdown;
+    }
+
     private CancellationTokenSource? _replay;
 
     private static MarkdownOptions CreateOptions()
@@ -94,7 +121,7 @@
         for (var shown = 0; shown < text.Length && !token.IsCancellationRequested;)
         {
             shown = Math.Min(shown + ReplayChunk, text.Length);
-            _markdown = text[..shown];
+            _markdown = _preview = text[..shown];
             StateHasChanged();
             await Task.Delay(30, CancellationToken.None);
         }
@@ -112,5 +139,9 @@
         }
     }
 
-    public async ValueTask DisposeAsync() => await StopReplayAsync();
+    public async ValueTask DisposeAsync()
+    {
+        await StopReplayAsync();
+        _previewDelay?.Dispose();
+    }
 }
