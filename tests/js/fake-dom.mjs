@@ -133,17 +133,80 @@ export class FakeLayer {
   }
 }
 
+// A toolbar button as the component renders it: its item, its tooltips, and whether it is enabled and a tab stop.
+export class FakeButton {
+  constructor(root, item) {
+    this.root = root;
+    this.attributes = { "data-pmd-item": item, "data-pmd-title-mac": item + " (mac)" };
+    this.title = item + " (pc)";
+    this.disabled = item === "Undo" || item === "Redo";
+    this.tabIndex = item === "Bold" ? 0 : -1;
+  }
+
+  getAttribute(name) {
+    return this.attributes[name] ?? null;
+  }
+
+  closest(selector) {
+    return selector.includes("button") ? this : null;
+  }
+
+  focus() {
+    this.root.focused = this;
+  }
+
+  // What the browser sends for a click: the press, which a page may cancel, then the click.
+  click() {
+    const press = this.root.dispatch("mousedown", { target: this });
+    const click = this.root.dispatch("click", { target: this });
+    return { pressPrevented: press.defaultPrevented, click };
+  }
+
+  key(key) {
+    return this.root.dispatch("keydown", { target: this, key });
+  }
+}
+
 export class FakeRoot {
-  constructor(text) {
+  // `items` are the toolbar's buttons, by MarkdownToolbarItem name; none renders no toolbar.
+  constructor(text, items = []) {
     this.textarea = new FakeTextarea(text);
     this.layer = new FakeLayer();
     this.classes = new Set();
     this.classList = { add: name => this.classes.add(name) };
     this.style = fakeStyle();
+    this.listeners = {};
+    this.buttons = items.map(item => new FakeButton(this, item));
+    this.body = { className: "pmd-editor-body" };
+    this.textarea.parentElement = this.body;
+    this.focused = null;
+  }
+
+  addEventListener(type, handler) {
+    (this.listeners[type] ||= []).push(handler);
+  }
+
+  dispatch(type, properties = {}) {
+    const event = { type, cancelable: true, defaultPrevented: false, ...properties };
+    event.preventDefault = () => { event.defaultPrevented = true; };
+    for (const handler of this.listeners[type] || []) handler(event);
+    return event;
+  }
+
+  button(item) {
+    return this.buttons.find(button => button.getAttribute("data-pmd-item") === item);
   }
 
   querySelector(selector) {
-    return selector === "textarea" ? this.textarea : this.layer;
+    if (selector === "textarea") return this.textarea;
+    if (selector === "pre") return this.layer;
+    return this.querySelectorAll(selector)[0] ?? null;
+  }
+
+  // The toolbar's buttons, all of them, those with a Mac tooltip, or the one of an item.
+  querySelectorAll(selector) {
+    const item = /data-pmd-item=(\w+)/.exec(selector);
+    return item ? this.buttons.filter(button => button.getAttribute("data-pmd-item") === item[1]) : this.buttons;
   }
 }
 
@@ -184,6 +247,24 @@ export class FakeComponent {
     let text = initial;
     for (const { args: [, start, removed, inserted] } of this.edits) text = text.slice(0, start) + inserted + text.slice(start + removed);
     return text;
+  }
+}
+
+export class FakeMutationObserver {
+  static last = null;
+
+  constructor(callback) {
+    this.callback = callback;
+    FakeMutationObserver.last = this;
+  }
+
+  observe(target, options) {
+    this.target = target;
+    this.options = options;
+  }
+
+  disconnect() {
+    this.target = null;
   }
 }
 

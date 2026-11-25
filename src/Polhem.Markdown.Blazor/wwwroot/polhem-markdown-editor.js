@@ -2,7 +2,8 @@
 // text is transparent, and this module draws the same text with colors on the layer behind it, from the spans the
 // component's scan found. The textarea belongs to the user: the module reads each edit from it and sends the change to
 // the component, and only writes to it for a command (a format, continuing a list, indenting), an undo, a redo, or a
-// text the host sets.
+// text the host sets. It also handles the toolbar the component renders above the text: its clicks and keys, and the
+// state of its undo and redo buttons, whose history the module keeps.
 
 const editors = new WeakMap();
 const isMac = /Mac|iPhone|iPad/.test(navigator.platform);
@@ -63,7 +64,29 @@ export function init(root, component, text, kindClasses, reportScroll = false) {
     layer.style.height = "calc(100% - " + (textarea.offsetHeight - textarea.clientHeight) + "px)";
   });
   editor.resize.observe(textarea);
+
+  // NOTE: the toolbar's events are taken on the root, as the component adds and removes the toolbar with ShowToolbar.
+  root.addEventListener("mousedown", e => {
+    // Pressing a button would take the focus, and with it the selection the button acts on, from the textarea.
+    if (toolbarButton(e)) e.preventDefault();
+    // A press on the gutter, beside the textarea, keeps the focus in the text rather than dropping it.
+    else if (e.target === textarea.parentElement) {
+      e.preventDefault();
+      textarea.focus({ preventScroll: true });
+    }
+  });
+  root.addEventListener("click", e => {
+    const button = toolbarButton(e);
+    if (button && !button.disabled) onToolbarButton(editor, button);
+  });
+  root.addEventListener("keydown", e => {
+    if (toolbarButton(e)) onToolbarKey(editor, e);
+  });
+  // The component sets read-only on the textarea; undo and redo follow it.
+  editor.readOnlyWatch = new MutationObserver(() => updateHistoryButtons(editor));
+  editor.readOnlyWatch.observe(textarea, { attributes: true, attributeFilter: ["readonly"] });
   editors.set(root, editor);
+  refreshToolbar(root);
 
   // Text typed before the module loaded is kept, and sent as an edit.
   if (textarea.value !== text) onInput(editor, null);
@@ -76,6 +99,7 @@ export function dispose(root) {
   const editor = editors.get(root);
   if (!editor) return;
   editor.resize.disconnect();
+  editor.readOnlyWatch.disconnect();
   editors.delete(root);
 }
 
@@ -129,6 +153,7 @@ export function setText(root, text) {
   editor.undo.length = 0;
   editor.redo.length = 0;
   render(editor);
+  updateHistoryButtons(editor);
 }
 
 export function undo(root) {
@@ -145,6 +170,67 @@ export function redo(root) {
 export function command(root, format) {
   const editor = editors.get(root);
   if (editor) act(editor, { command: "format", argument: format });
+}
+
+// Makes the selected lines headings one level deeper, as the toolbar's heading button does.
+export function cycleHeading(root) {
+  const editor = editors.get(root);
+  if (editor) act(editor, { command: "cycleHeading" });
+}
+
+// Sets up a toolbar the component rendered: its tooltips written for the platform, and undo and redo for the history.
+export function refreshToolbar(root) {
+  const editor = editors.get(root);
+  if (!editor) return;
+  if (isMac) {
+    for (const button of root.querySelectorAll(".pmd-editor-toolbar > button[data-pmd-title-mac]")) {
+      button.title = button.getAttribute("data-pmd-title-mac");
+    }
+  }
+  updateHistoryButtons(editor);
+}
+
+// The toolbar button an event happened on, if any.
+function toolbarButton(e) {
+  return e.target?.closest?.(".pmd-editor-toolbar > button") ?? null;
+}
+
+function onToolbarButton(editor, button) {
+  const item = button.getAttribute("data-pmd-item");
+  if (item === "Undo" || item === "Redo") history(editor, item === "Undo" ? "undo" : "redo");
+  else if (item === "Heading") act(editor, { command: "cycleHeading" });
+  else act(editor, { command: "format", argument: item });
+  // A click with the keyboard leaves the focus on the button; the text is where the result is.
+  editor.textarea.focus({ preventScroll: true });
+}
+
+// Moves between the toolbar's buttons with the arrow keys, Home and End, and back to the text with Escape. Tab reaches
+// the toolbar once, on the button last moved to.
+function onToolbarKey(editor, e) {
+  if (e.key === "Escape") {
+    e.preventDefault();
+    editor.textarea.focus({ preventScroll: true });
+    return;
+  }
+  const buttons = [...editor.root.querySelectorAll(".pmd-editor-toolbar > button")].filter(button => !button.disabled);
+  const current = buttons.indexOf(e.target.closest("button"));
+  if (current < 0) return;
+  const next = { ArrowLeft: (current + buttons.length - 1) % buttons.length, ArrowRight: (current + 1) % buttons.length,
+    Home: 0, End: buttons.length - 1 }[e.key];
+  if (next === undefined) return;
+  e.preventDefault();
+  for (const button of buttons) button.tabIndex = -1;
+  buttons[next].tabIndex = 0;
+  buttons[next].focus();
+}
+
+// Enables undo and redo when there is a step to take and the editor is not read-only.
+function updateHistoryButtons(editor) {
+  const root = editor.root, readOnly = editor.textarea.readOnly;
+  const undo = root.querySelector(".pmd-editor-toolbar > button[data-pmd-item=Undo]");
+  const redo = root.querySelector(".pmd-editor-toolbar > button[data-pmd-item=Redo]");
+  if (undo) undo.disabled = readOnly || editor.undo.length === 0;
+  if (redo) redo.disabled = readOnly || editor.redo.length === 0;
 }
 
 // Takes the spans of a scan of the text as it was after edit `version`, as a patch on those sent before (the format is
@@ -307,6 +393,7 @@ function record(editor, edit, kind, selectionBefore, selectionAfter) {
       previous.inserted += edit.inserted;
       last.selectionAfter = selectionAfter;
       last.time = time;
+      updateHistoryButtons(editor);
       return;
     }
     if (!edit.inserted && !previous.inserted && edit.start + edit.removed.length === previous.start) {
@@ -314,11 +401,13 @@ function record(editor, edit, kind, selectionBefore, selectionAfter) {
       previous.removed = edit.removed + previous.removed;
       last.selectionAfter = selectionAfter;
       last.time = time;
+      updateHistoryButtons(editor);
       return;
     }
   }
   editor.undo.push({ kind, edit, selectionBefore, selectionAfter, time });
   if (editor.undo.length > historyLimit) editor.undo.shift();
+  updateHistoryButtons(editor);
 }
 
 function history(editor, which) {
@@ -341,6 +430,7 @@ function history(editor, which) {
     step.time = 0;
     editor.undo.push(step);
   }
+  updateHistoryButtons(editor);
   return true;
 }
 

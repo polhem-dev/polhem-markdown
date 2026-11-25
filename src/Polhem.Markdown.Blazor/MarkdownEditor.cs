@@ -1,5 +1,3 @@
-using System.Diagnostics;
-using System.Runtime.InteropServices;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Rendering;
 using Microsoft.JSInterop;
@@ -28,18 +26,9 @@ namespace Polhem.Markdown.Blazor;
 /// It works under interactive server, WebAssembly and auto rendering. Rendered statically, it shows the text read-only.
 /// </para>
 /// </remarks>
-public class MarkdownEditor : ComponentBase, IAsyncDisposable
+public partial class MarkdownEditor : ComponentBase, IAsyncDisposable
 {
     private const string ModulePath = "./_content/Polhem.Markdown.Blazor/polhem-markdown-editor.js";
-
-    /// <summary>How long after the last edit a text is scanned again, before the time of the last scan is added.</summary>
-    private const int ScanDelayMilliseconds = 150;
-
-    /// <summary>
-    /// The most the wait before a scan grows. Under WebAssembly the scan runs on the page's only thread, so a large text,
-    /// whose scan holds the page longer, waits longer for typing to stop.
-    /// </summary>
-    private const int MaxScanDelayMilliseconds = 1000;
 
     private static readonly string[] s_kindClasses = SyntaxSpanPatch.KindClasses();
 
@@ -59,14 +48,6 @@ public class MarkdownEditor : ComponentBase, IAsyncDisposable
 
     /// <summary>The number of the last edit the module sent, so the colors of a scan are matched to the text scanned.</summary>
     private int _version;
-
-    /// <summary>The spans the module has, and the length of the text they are for, to send the next scan as a patch.</summary>
-    private int[] _sentSpans = [];
-    private int _sentLength;
-
-    private double _lastScanMilliseconds;
-    private CancellationTokenSource? _scan;
-    private Task _scanTask = Task.CompletedTask;
 
     /// <summary>Whether the module reports scrolling, as it was last told.</summary>
     private bool _reportingScroll;
@@ -233,7 +214,7 @@ public class MarkdownEditor : ComponentBase, IAsyncDisposable
     /// <summary>
     /// The edit of a command the module asks for, for the text as it was after edit <paramref name="version"/>:
     /// <c>format</c> with a <see cref="MarkdownFormat"/> name as <paramref name="argument"/>, <c>continueList</c>,
-    /// <c>indent</c> or <c>outdent</c>. It is the start, length and text of the change and the selection after it, or
+    /// <c>indent</c>, <c>outdent</c> or <c>cycleHeading</c>. It is the start, length and text of the change and the selection after it, or
     /// <see langword="null"/> when there is nothing to do or the text has changed since, in which case the module
     /// drops the command.
     /// </summary>
@@ -254,6 +235,7 @@ public class MarkdownEditor : ComponentBase, IAsyncDisposable
             "continueList" => MarkdownFormatter.ContinueList(_text, start),
             "indent" => MarkdownFormatter.IndentListItem(_text, start, length, outdent: false),
             "outdent" => MarkdownFormatter.IndentListItem(_text, start, length, outdent: true),
+            "cycleHeading" => MarkdownFormatter.CycleHeading(_text, start, length),
             _ => (MarkdownEdit?)null,
         };
         return edit is { } change
@@ -303,32 +285,48 @@ public class MarkdownEditor : ComponentBase, IAsyncDisposable
             "pmd-editor", WordWrap ? null : "pmd-editor-nowrap", ShowLineNumbers ? "pmd-editor-lines" : null, Class));
         builder.AddElementReferenceCapture(2, element => _root = element);
 
+        if (ShowToolbar)
+        {
+            builder.OpenRegion(3);
+            BuildToolbar(builder);
+            builder.CloseRegion();
+        }
+
+        builder.OpenElement(4, "div");
+        builder.AddAttribute(5, "class", "pmd-editor-body");
+
         // The layer the module draws the colors on. Blazor renders it empty and never touches its content.
-        builder.OpenElement(3, "pre");
-        builder.AddAttribute(4, "class", "pmd-editor-layer");
-        builder.AddAttribute(5, "aria-hidden", "true");
+        builder.OpenElement(6, "pre");
+        builder.AddAttribute(7, "class", "pmd-editor-layer");
+        builder.AddAttribute(8, "aria-hidden", "true");
         builder.CloseElement();
 
-        builder.OpenElement(6, "textarea");
-        builder.AddMultipleAttributes(7, AdditionalAttributes);
-        builder.AddAttribute(8, "class", "pmd-editor-input");
-        builder.AddAttribute(9, "spellcheck", "false");
-        builder.AddAttribute(10, "wrap", WordWrap ? "soft" : "off");
-        builder.AddAttribute(11, "readonly", IsReadOnly || !RendererInfo.IsInteractive);
+        builder.OpenElement(9, "textarea");
+        builder.AddMultipleAttributes(10, AdditionalAttributes);
+        builder.AddAttribute(11, "class", "pmd-editor-input");
+        builder.AddAttribute(12, "spellcheck", "false");
+        builder.AddAttribute(13, "wrap", WordWrap ? "soft" : "off");
+        builder.AddAttribute(14, "readonly", IsReadOnly || !RendererInfo.IsInteractive);
 
         // NOTE: the value is the same in every render, so Blazor sets it once. After that the textarea is the user's,
         // and the module changes it when the host sets another text: writing it from here while the user types would
         // throw away what they typed since the last round trip.
-        builder.AddAttribute(12, "value", _initialText);
+        builder.AddAttribute(15, "value", _initialText);
         builder.CloseElement();
 
+        builder.CloseElement();
         builder.CloseElement();
     }
 
     /// <inheritdoc/>
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (!firstRender || !RendererInfo.IsInteractive)
+        if (!firstRender)
+        {
+            await RefreshToolbarAsync();
+            return;
+        }
+        if (!RendererInfo.IsInteractive)
         {
             return;
         }
@@ -340,6 +338,7 @@ public class MarkdownEditor : ComponentBase, IAsyncDisposable
             _sentLength = 0;
             _reportingScroll = FirstVisibleSourceOffsetChanged.HasDelegate;
             await _module.InvokeVoidAsync("init", _root, _bridge, _text, s_kindClasses, _reportingScroll);
+            _toolbarReady = ShowToolbar;
         }
         catch (JSException)
         {
@@ -390,48 +389,6 @@ public class MarkdownEditor : ComponentBase, IAsyncDisposable
         {
             _reporting.Remove(reported);
         }
-    }
-
-    private void ScheduleScan(bool immediately)
-    {
-        _scan?.Cancel();
-        _scan?.Dispose();
-        _scan = new CancellationTokenSource();
-        var delay = immediately
-            ? 0
-            : Math.Min(MaxScanDelayMilliseconds, ScanDelayMilliseconds + (int)(2 * _lastScanMilliseconds));
-        _scanTask = ScanAsync(delay, _scan.Token);
-    }
-
-    /// <summary>
-    /// Scans the text after <paramref name="delay"/> milliseconds and sends the module the spans that changed, unless
-    /// another edit came meanwhile; the scan that edit scheduled sends them instead.
-    /// </summary>
-    private async Task ScanAsync(int delay, CancellationToken token)
-    {
-        try
-        {
-            await Task.Delay(delay, token);
-        }
-        catch (TaskCanceledException)
-        {
-            return;
-        }
-
-        var text = _text;
-        var version = _version;
-        var watch = Stopwatch.StartNew();
-        var spans = SyntaxSpanPatch.Pack(await Task.Run(() => MarkdownSyntaxScanner.Scan(text), CancellationToken.None));
-        _lastScanMilliseconds = watch.Elapsed.TotalMilliseconds;
-        if (token.IsCancellationRequested || _module is null || _disposed)
-        {
-            return;
-        }
-
-        var patch = SyntaxSpanPatch.Diff(_sentSpans, _sentLength, spans, text.Length);
-        _sentSpans = spans;
-        _sentLength = text.Length;
-        await CallModuleAsync("applySpans", _root, version, MemoryMarshal.AsBytes(patch.AsSpan()).ToArray());
     }
 
     /// <summary>

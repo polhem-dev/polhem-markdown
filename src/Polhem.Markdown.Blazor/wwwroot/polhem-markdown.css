@@ -24,6 +24,9 @@
     --pmd-selection    the background of selected text, which must let the text show through
     --pmd-caret        the caret, which otherwise has the color of the text
     --pmd-line-number  line numbers
+    --pmd-toolbar-background, --pmd-toolbar-border
+                       the toolbar's background, and the line under it and between its groups of buttons
+    --pmd-toolbar-icon the toolbar's icons, which otherwise have the color of the text
 */
 
 .pmd {
@@ -376,15 +379,16 @@
 */
 .pmd-editor {
   --pmd-gutter: 0px;
-  position: relative;
+  display: flex;
+  flex-direction: column;
   min-height: 8em;
   font-family: var(--pmd-code-font, "Cascadia Mono", Consolas, Menlo, ui-monospace, monospace);
   font-size: 0.9em;
   line-height: 1.5;
 }
 
-.pmd-editor > .pmd-editor-layer,
-.pmd-editor > .pmd-editor-input {
+.pmd-editor > .pmd-editor-body > .pmd-editor-layer,
+.pmd-editor > .pmd-editor-body > .pmd-editor-input {
   position: absolute;
   inset: 0;
   margin: 0;
@@ -401,10 +405,71 @@
   word-break: normal;
 }
 
-.pmd-editor.pmd-editor-nowrap > .pmd-editor-layer,
-.pmd-editor.pmd-editor-nowrap > .pmd-editor-input {
+.pmd-editor.pmd-editor-nowrap > .pmd-editor-body > .pmd-editor-layer,
+.pmd-editor.pmd-editor-nowrap > .pmd-editor-body > .pmd-editor-input {
   white-space: pre;
   overflow-wrap: normal;
+}
+
+/* The text sits under the toolbar, in the rest of the editor's height. */
+.pmd-editor > .pmd-editor-body {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+}
+
+.pmd-editor > .pmd-editor-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px;
+  padding: 2px 4px;
+  border-bottom: 1px solid var(--pmd-toolbar-border, rgba(138, 143, 152, 0.35));
+  background: var(--pmd-toolbar-background, transparent);
+}
+
+.pmd-editor-toolbar > .pmd-editor-separator {
+  width: 1px;
+  height: 16px;
+  margin: 0 4px;
+  background: var(--pmd-toolbar-border, rgba(138, 143, 152, 0.35));
+}
+
+.pmd-editor-toolbar > .pmd-editor-button {
+  display: inline-flex;
+  margin: 0;
+  border: 0;
+  border-radius: 4px;
+  padding: 5px;
+  color: var(--pmd-toolbar-icon, inherit);
+  background: transparent;
+  cursor: pointer;
+}
+
+.pmd-editor-toolbar > .pmd-editor-button:hover:not(:disabled) {
+  background: rgba(128, 128, 128, 0.15);
+}
+
+.pmd-editor-toolbar > .pmd-editor-button:active:not(:disabled) {
+  background: rgba(128, 128, 128, 0.25);
+}
+
+.pmd-editor-toolbar > .pmd-editor-button:focus-visible {
+  outline: 2px solid var(--pmd-link, #3b82f6);
+  outline-offset: -2px;
+}
+
+.pmd-editor-toolbar > .pmd-editor-button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.pmd-editor-toolbar > .pmd-editor-button > svg {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 /* The gutter opens once the script draws the numbers, so a statically rendered editor keeps its text at the left. */
@@ -412,7 +477,7 @@
   --pmd-gutter: calc(var(--pmd-gutter-digits, 2) * 1ch + 16px);
 }
 
-.pmd-editor > .pmd-editor-layer {
+.pmd-editor > .pmd-editor-body > .pmd-editor-layer {
   padding-left: calc(var(--pmd-gutter) + 12px);
   counter-reset: pmd-line;
   overflow: hidden;
@@ -422,23 +487,23 @@
   visibility: hidden;
 }
 
-.pmd-editor > .pmd-editor-layer > span {
+.pmd-editor > .pmd-editor-body > .pmd-editor-layer > span {
   display: block;
   counter-increment: pmd-line;
 }
 
 /* Only text that does not wrap scrolls sideways: there the text of each line moves, and is cut off at the gutter. A
    wrapped line keeps its text inline, which lays out faster. */
-.pmd-editor.pmd-editor-nowrap > .pmd-editor-layer > span {
+.pmd-editor.pmd-editor-nowrap > .pmd-editor-body > .pmd-editor-layer > span {
   overflow: hidden;
 }
 
-.pmd-editor.pmd-editor-nowrap > .pmd-editor-layer > span > span {
+.pmd-editor.pmd-editor-nowrap > .pmd-editor-body > .pmd-editor-layer > span > span {
   display: block;
   transform: translateX(var(--pmd-scroll-left, 0px));
 }
 
-.pmd-editor.pmd-editor-lines > .pmd-editor-layer > span::before {
+.pmd-editor.pmd-editor-lines > .pmd-editor-body > .pmd-editor-layer > span::before {
   content: counter(pmd-line);
   position: absolute;
   left: 0;
@@ -451,7 +516,7 @@
   font-style: normal;
 }
 
-.pmd-editor > .pmd-editor-input {
+.pmd-editor > .pmd-editor-body > .pmd-editor-input {
   left: var(--pmd-gutter);
   width: calc(100% - var(--pmd-gutter));
   height: 100%;
@@ -463,17 +528,17 @@
   background: transparent;
 }
 
-.pmd-editor.pmd-editor-ready > .pmd-editor-layer {
+.pmd-editor.pmd-editor-ready > .pmd-editor-body > .pmd-editor-layer {
   visibility: visible;
 }
 
 /* NOTE: only the fill of the letters is transparent. The text color stays, because the caret takes its color from it:
    a transparent color would hide the caret too. */
-.pmd-editor.pmd-editor-ready > .pmd-editor-input {
+.pmd-editor.pmd-editor-ready > .pmd-editor-body > .pmd-editor-input {
   -webkit-text-fill-color: transparent;
 }
 
-.pmd-editor > .pmd-editor-input::selection {
+.pmd-editor > .pmd-editor-body > .pmd-editor-input::selection {
   -webkit-text-fill-color: transparent;
   background: var(--pmd-selection, rgba(59, 130, 246, 0.3));
 }
