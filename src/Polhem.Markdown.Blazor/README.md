@@ -1,9 +1,10 @@
 # Polhem.Markdown.Blazor
 
-A Markdown viewer component for Blazor that renders semantic HTML styled with CSS variables. It renders the same model
-as `Polhem.Markdown.Avalonia`, so a Blazor and an Avalonia front end show the same text the same way.
+A Markdown viewer component for Blazor that renders semantic HTML styled with CSS variables, and a Markdown source
+editor component. The viewer renders the same model as `Polhem.Markdown.Avalonia`, so a Blazor and an Avalonia front
+end show the same text the same way, and the editor colors and edits the source the way the Avalonia editor does.
 
-Link the stylesheet in the host page, then use the component:
+Link the stylesheet in the host page, then use the components:
 
 ```html
 <link rel="stylesheet" href="_content/Polhem.Markdown.Blazor/polhem-markdown.css" />
@@ -14,6 +15,8 @@ Link the stylesheet in the host page, then use the component:
 
 <MarkdownViewer Markdown="@reply" OnLinkActivated="OpenLink" />
 ```
+
+## MarkdownViewer
 
 - **Raw HTML** is never added as markup. The elements README files use become part of the text: `<img>` (with `width`
   and `height`), `<a href>`, `<br>`, `<b>`, `<strong>`, `<i>`, `<em>`, `<code>`, `<sup>`, `<sub>`, `<kbd>`, `<p>` and
@@ -52,6 +55,12 @@ Link the stylesheet in the host page, then use the component:
   the component, with no script, centered, and scales down when it is wider than the page. Boxes use `--pmd-code-bg`, lifelines
   `--pmd-rule`, and lines and text the text color. A diagram of another type, or one using syntax the viewer does not
   support, shows as code; set `Options.RenderMermaidDiagrams` to `false` to show every diagram as code.
+- **Keeping in step with an editor**: `ScrollToSourceOffsetAsync` scrolls the view around the viewer (the nearest
+  element that scrolls, or the page) so the text at a source offset is at its top; `FirstVisibleSourceOffsetChanged`
+  reports the offset at the top as the view scrolls; and with `OnSourceRequested` set, a click with Ctrl (Command on a
+  Mac) reports the source offset of what was clicked instead of doing anything else, such as opening a link. An offset
+  is placed in the top-level block it falls in, in proportion to how far into the block's source it is. The viewer
+  loads its script for these only when one of them is used.
 - **Styles** inherit the font and the text color of the surrounding page. Everything is scoped under `.pmd`; `Class`
   adds classes to that element.
 
@@ -75,5 +84,56 @@ Link the stylesheet in the host page, then use the component:
 | `--pmd-code-property` | Attribute names, JSON and YAML keys, CSS properties, shell variables | `#3b82f6` |
 
 The defaults read on light and dark pages and match the Avalonia viewer.
+
+## MarkdownEditor
+
+`MarkdownEditor` edits Markdown as source, colored the way the viewer reads it. Put a `MarkdownViewer` beside it for a
+live preview.
+
+```razor
+<MarkdownEditor @bind-Markdown="text" aria-label="Markdown source" />
+```
+
+- **Input** is a native `<textarea>`, so input methods, on-screen keyboards and screen readers work as anywhere on the
+  page; attributes the component does not know, such as `aria-label`, go to the textarea. The colors are drawn behind
+  it by the package's `polhem-markdown-editor.js` module, which the component loads itself. The editor fills the height
+  its host gives it.
+- **Text**: `Markdown` follows every edit through `MarkdownChanged`, so `@bind-Markdown` keeps a field up to date;
+  setting another text replaces it and clears the undo history. A text with `\r\n` line breaks gets them back.
+  `IsReadOnly` and `WordWrap` (on by default) do what they say. The editor keeps its own undo history, which Ctrl+Z
+  (Command+Z), Ctrl+Shift+Z, Ctrl+Y, the browser's Edit menu, `UndoAsync` and `RedoAsync` use.
+- **Coloring**: markers, headings (bold), emphasis (bold, italic, struck through), inline code, links and their
+  addresses, raw HTML and formulas, and the code of fenced blocks with the viewer's highlighting. The text is scanned a
+  moment after typing stops; until then the colors move with the edits. A long text waits a little longer, which
+  matters under WebAssembly, where the scan runs on the page's only thread.
+- **Formats**: `ApplyFormatAsync(MarkdownFormat)` applies a format to the selection, or removes it when the selection
+  already has it, as one step to undo. Inline formats wrap the selection, or insert a pair at the caret; line formats
+  apply to every line the selection touches. Ctrl, or Command on a Mac, with B, I, K and E applies bold, italic, a link
+  and inline code.
+- **Lists**: Enter on a list item starts the next one, and on an empty item ends the list. Tab and Shift+Tab move a list
+  item in and out; elsewhere Tab moves the focus on, so a keyboard user can leave the editor.
+- **Keeping in step with a viewer**: `ScrollToSourceOffsetAsync`, `FirstVisibleSourceOffsetChanged` and
+  `FirstVisibleSourceOffset` work as the viewer's do, with the same offsets, so a host passes them from one to the
+  other; `SetCaretOffsetAsync` and `FocusAsync` move the user there after `OnSourceRequested`. The repository's Blazor
+  gallery does it in its Edit mode.
+- **Rendering**: it works under interactive server, WebAssembly and auto rendering. Rendered statically, it shows the
+  text read-only.
+- **Links** in the source cannot be opened from the editor; the viewer opens them after checking their scheme.
+- **Unlike the Avalonia editor**, it has no line numbers and no search panel; the browser's own find searches the page.
+
+Besides `--pmd-code-font`, `--pmd-link` and the `--pmd-code-*` token colors, the editor uses:
+
+| Variable | Sets | Default |
+|----------|------|---------|
+| `--pmd-heading` | Headings | `#8b5cf6` |
+| `--pmd-marker` | Syntax such as heading and emphasis markers, list bullets and fences, and raw HTML | `#8a8f98` |
+| `--pmd-inline-code` | Inline code | `#e5484d` |
+| `--pmd-url` | Link destinations and bare URLs | `#22a35a` |
+| `--pmd-math` | Formulas | `#d97706` |
+| `--pmd-selection` | The background of selected text, which must let the text show through | `rgba(59, 130, 246, 0.3)` |
+| `--pmd-caret` | The caret | the text color |
+
+Keep `--pmd-code-font` monospaced: the colored text is drawn behind the textarea and must line up with it, which needs
+bold and italic letters as wide as regular ones.
 
 The package is at 0.x: a minor version may still change the API. See the [repository](https://github.com/polhem-dev/polhem-markdown).

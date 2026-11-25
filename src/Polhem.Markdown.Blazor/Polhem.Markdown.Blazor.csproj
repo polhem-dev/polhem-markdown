@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk.Razor">
 
   <PropertyGroup>
-    <Description>A Markdown viewer component for Blazor that renders semantic HTML styled with CSS variables, rendering the same model as Polhem.Markdown.Avalonia so both front ends show a text the same way.</Description>
+    <Description>A Markdown viewer component for Blazor that renders semantic HTML styled with CSS variables, rendering the same model as Polhem.Markdown.Avalonia so both front ends show a text the same way, and a Markdown source editor component that colors the source the way the viewer reads it.</Description>
   </PropertyGroup>
 
   <ItemGroup>
