@@ -2,6 +2,10 @@
 
   <PropertyGroup>
     <Description>A Markdown viewer component for Blazor that renders semantic HTML styled with CSS variables, rendering the same model as Polhem.Markdown.Avalonia so both front ends show a text the same way, and a Markdown source editor component that colors the source the way the viewer reads it.</Description>
+    <!-- Under WebAssembly the app is trimmed when published. The trim and AOT analyzers turn every incompatible call into
+         a build error, and the "wasm" job of .github/workflows/build-ci.yml publishes samples/MarkdownGallery.Wasm,
+         trimmed, with every warning an error. -->
+    <IsAotCompatible>true</IsAotCompatible>
   </PropertyGroup>
 
   <ItemGroup>

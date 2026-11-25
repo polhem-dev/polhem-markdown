@@ -1,0 +1,40 @@
+<Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
+
+  <!-- The gallery on standalone Blazor WebAssembly: the same page as samples/MarkdownGallery.Blazor, running in the
+       browser with no server. The "wasm" job of .github/workflows/build-ci.yml publishes it, which trims it the way a
+       consumer's WebAssembly app is trimmed. -->
+
+  <PropertyGroup>
+    <!-- The Blazor WebAssembly SDK hides trim warnings by default; shown, they are errors under TreatWarningsAsErrors. -->
+    <SuppressTrimAnalysisWarnings>false</SuppressTrimAnalysisWarnings>
+    <TrimMode>full</TrimMode>
+    <!-- The Blazor framework assemblies themselves warn under full trimming. Each assembly's warnings are folded into one IL2104, and that one is not an error. The assemblies
+         this repository ships, Markdig, which comes with them, and this sample report every warning one by one
+         instead (PolhemMarkdownTrimWarnings below), so a trim problem in the packages still fails the publish. -->
+    <NoWarn>$(NoWarn);IL2104</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="10.0.15" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="10.0.15" PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Polhem.Markdown.Blazor\Polhem.Markdown.Blazor.csproj" />
+  </ItemGroup>
+
+  <!-- The page, its text and its layout are those of the server gallery, so the two show the same thing. -->
+  <ItemGroup>
+    <Compile Include="..\MarkdownGallery\SampleText.cs" Link="SampleText.cs" />
+    <Content Include="..\MarkdownGallery.Blazor\Components\GalleryPage.razor" Link="Components\GalleryPage.razor" />
+    <Content Include="..\MarkdownGallery.Blazor\wwwroot\gallery.css" Link="wwwroot\gallery.css" />
+  </ItemGroup>
+
+  <Target Name="PolhemMarkdownTrimWarnings" AfterTargets="PrepareForILLink">
+    <ItemGroup>
+      <ManagedAssemblyToLink Update="@(ManagedAssemblyToLink)" TrimmerSingleWarn="false"
+                             Condition="'%(Filename)' == 'Polhem.Markdown' or '%(Filename)' == 'Polhem.Markdown.Blazor' or '%(Filename)' == 'Markdig' or '%(Filename)' == '$(AssemblyName)'" />
+    </ItemGroup>
+  </Target>
+
+</Project>

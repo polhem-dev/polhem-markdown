@@ -47,6 +47,8 @@ node --test tests/js/*.test.mjs
 # Native AOT: what the `aot` job of build-ci.yml runs
 dotnet publish tests/Polhem.Markdown.AotSmoke/Polhem.Markdown.AotSmoke.csproj --configuration Release --output aot-smoke
 ./aot-smoke/Polhem.Markdown.AotSmoke
+# Trimmed Blazor WebAssembly: what the `wasm` job of build-ci.yml runs
+dotnet publish samples/MarkdownGallery.Wasm/MarkdownGallery.Wasm.csproj --configuration Release --output wasm-gallery
 ```
 
 ## Workflow

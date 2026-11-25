@@ -9,6 +9,10 @@ and versions follow [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+- `Polhem.Markdown.Blazor` is marked trim and AOT compatible (`IsAotCompatible`), and a trimmed Blazor WebAssembly
+  sample, `samples/MarkdownGallery.Wasm`, is published in CI. An app that trims only the assemblies marked trimmable
+  (`TrimMode=partial`) now trims this one too.
+
 ## [0.3.0] - 2026-11-25
 
 Details: [docs/en/changelogs/0.3.0.md](docs/en/changelogs/0.3.0.md)

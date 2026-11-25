@@ -9,6 +9,9 @@ Polhem.Markdown 各套件值得注意的變更，每個版本只列幾項重點�
 
 ## [Unreleased]
 
+- `Polhem.Markdown.Blazor` 標記為支援裁剪與 AOT（`IsAotCompatible`），並新增以裁剪方式在 CI 發佈的 Blazor WebAssembly
+  範例 `samples/MarkdownGallery.Wasm`。只裁剪標記為可裁剪組件的應用程式（`TrimMode=partial`）現在也會裁剪這個組件。
+
 ## [0.3.0] - 2026-11-25
 
 詳細內容：[docs/zh-TW/changelogs/0.3.0.md](docs/zh-TW/changelogs/0.3.0.md)
