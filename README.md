@@ -124,10 +124,13 @@ chunks as a streamed reply arrives. Its Edit switch puts the editor beside the v
 ```bash
 dotnet run --project samples/MarkdownGallery.Desktop
 dotnet run --project samples/MarkdownGallery.Blazor
+dotnet run --project samples/MarkdownGallery.Wasm
 ```
 
 The Blazor gallery shows the same text, so the two viewers can be compared side by side. Its Edit switch puts the Blazor
-editor beside the viewer in the same way.
+editor beside the viewer in the same way. `MarkdownGallery.Blazor` runs with interactive server rendering;
+`MarkdownGallery.Wasm` runs the same page on standalone Blazor WebAssembly, in the browser with no server. Build CI
+publishes it trimmed, so a change that breaks the Blazor package under trimming fails the build.
 
 The iOS head is not in the solution, because it needs the iOS workload. On a Mac, build and start it on a simulator:
 

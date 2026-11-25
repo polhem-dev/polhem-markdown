@@ -14,5 +14,6 @@
     <Project Path="samples/MarkdownGallery/MarkdownGallery.csproj" />
     <Project Path="samples/MarkdownGallery.Desktop/MarkdownGallery.Desktop.csproj" />
     <Project Path="samples/MarkdownGallery.Blazor/MarkdownGallery.Blazor.csproj" />
+    <Project Path="samples/MarkdownGallery.Wasm/MarkdownGallery.Wasm.csproj" />
   </Folder>
 </Solution>

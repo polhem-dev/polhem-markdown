@@ -113,9 +113,12 @@
 ```bash
 dotnet run --project samples/MarkdownGallery.Desktop
 dotnet run --project samples/MarkdownGallery.Blazor
+dotnet run --project samples/MarkdownGallery.Wasm
 ```
 
 Blazor 版 Gallery 顯示同一份文字，方便兩個檢視器並排比對；它的 Edit 開關同樣會把 Blazor 編輯器放在檢視器旁邊。
+`MarkdownGallery.Blazor` 以 interactive server 渲染執行；`MarkdownGallery.Wasm` 是同一個頁面跑在獨立的 Blazor WebAssembly
+上，完全在瀏覽器裡執行、不需要伺服器。Build CI 會以裁剪（trimming）方式發佈它，Blazor 套件若有改動在裁剪後無法運作，建置就會失敗。
 
 iOS head 需要 iOS workload，所以不在 solution 裡。在 Mac 上建置並於模擬器啟動：
 

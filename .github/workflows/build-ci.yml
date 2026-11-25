@@ -87,6 +87,33 @@ jobs:
         if: steps.changes.outputs.build == 'true'
         run: ./aot-smoke/Polhem.Markdown.AotSmoke
 
+  # WebAssembly: publishes samples/MarkdownGallery.Wasm, which trims the app the way a consumer's Blazor WebAssembly app
+  # is trimmed. The sample reports every trim warning in this repository's assemblies and in Markdig as an error, so a
+  # change to the Blazor package that breaks under trimming fails here.
+  wasm:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+        with:
+          fetch-depth: 2
+
+      - name: Detect documentation-only pull request
+        id: changes
+        run: bash .github/scripts/detect-docs-only.sh
+
+      - name: Setup .NET
+        if: steps.changes.outputs.build == 'true'
+        uses: actions/setup-dotnet@c2fa09f4bde5ebb9d1777cf28262a3eb3db3ced7  # v5.2.0
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Publish trimmed
+        if: steps.changes.outputs.build == 'true'
+        run: dotnet publish samples/MarkdownGallery.Wasm/MarkdownGallery.Wasm.csproj --configuration Release --output wasm-gallery
+
   # SonarCloud analysis. It runs apart from the build job above, because the scanner wraps the build and turns warnings
   # back into warnings, so the build job stays the gate for TreatWarningsAsErrors. Settings tied to the files of this
   # repository are in SonarQube.Analysis.xml.
