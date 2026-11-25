@@ -9,6 +9,9 @@ public class ViewerSourceTests : BunitContext
 {
     private const string ModulePath = "./_content/Polhem.Markdown.Blazor/polhem-markdown.js";
 
+    /// <summary>The source ranges of <c>a\n\nb</c>: two paragraphs of one character.</summary>
+    private static readonly int[] s_twoBlocks = [0, 1, 3, 1];
+
     private readonly BunitJSModuleInterop _module;
 
     public ViewerSourceTests()
@@ -57,9 +60,9 @@ public class ViewerSourceTests : BunitContext
             .Add(component => component.OnSourceRequested, (MarkdownSourceRequestedEventArgs _) => { }));
 
         var watch = Assert.Single(_module.Invocations["watchSource"]);
-        Assert.Equal(new[] { 0, 1, 3, 1 }, watch.Arguments[2]);
-        Assert.Equal(true, watch.Arguments[3]);
-        Assert.Equal(true, watch.Arguments[4]);
+        Assert.Equal(s_twoBlocks, watch.Arguments[2]);
+        Assert.True(Assert.IsType<bool>(watch.Arguments[3]));
+        Assert.True(Assert.IsType<bool>(watch.Arguments[4]));
     }
 
     [Fact(DisplayName = "A new text gives the module new ranges; the same text does not call it again")]
@@ -71,7 +74,7 @@ public class ViewerSourceTests : BunitContext
         viewer.Render(parameters => parameters.Add(component => component.Markdown, "a\n\nb"));
 
         Assert.Equal(2, _module.Invocations["watchSource"].Count);
-        Assert.Equal(new[] { 0, 1, 3, 1 }, _module.Invocations["watchSource"][1].Arguments[2]);
+        Assert.Equal(s_twoBlocks, _module.Invocations["watchSource"][1].Arguments[2]);
     }
 
     [Fact(DisplayName = "When the host stops listening, the module stops watching")]

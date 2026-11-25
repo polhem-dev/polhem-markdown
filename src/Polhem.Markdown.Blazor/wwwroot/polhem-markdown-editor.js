@@ -177,7 +177,7 @@ function lineBox(editor, line) {
 }
 
 function paddingTop(editor) {
-  return parseFloat(getComputedStyle(editor.textarea).paddingTop) || 0;
+  return Number.parseFloat(getComputedStyle(editor.textarea).paddingTop) || 0;
 }
 
 // The offset of the text at the top of the editor: the line there, as far into it as the top is down a wrapped line.

@@ -388,11 +388,11 @@ public class MarkdownEditorTests : BunitContext
     public void Render_ScrollReporting_FollowsCallback()
     {
         var editor = Edit("a");
-        Assert.Equal(false, Assert.Single(_module.Invocations["init"]).Arguments[4]);
+        Assert.False(Assert.IsType<bool>(Assert.Single(_module.Invocations["init"]).Arguments[4]));
 
         editor.Render(parameters => parameters.Add(component => component.FirstVisibleSourceOffsetChanged, (int _) => { }));
 
-        Assert.Equal(true, Assert.Single(_module.Invocations["watchScroll"]).Arguments[1]);
+        Assert.True(Assert.IsType<bool>(Assert.Single(_module.Invocations["watchScroll"]).Arguments[1]));
     }
 
     [Fact(DisplayName = "Offsets between the editor and the host count a CRLF line break as two")]
