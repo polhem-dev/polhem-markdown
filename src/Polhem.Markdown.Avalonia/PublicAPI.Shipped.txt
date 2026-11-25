@@ -19,6 +19,7 @@ Polhem.Markdown.Avalonia.MarkdownEditor.CodeStringBrush.get -> Avalonia.Media.IB
 Polhem.Markdown.Avalonia.MarkdownEditor.CodeStringBrush.set -> void
 Polhem.Markdown.Avalonia.MarkdownEditor.CodeTagBrush.get -> Avalonia.Media.IBrush!
 Polhem.Markdown.Avalonia.MarkdownEditor.CodeTagBrush.set -> void
+Polhem.Markdown.Avalonia.MarkdownEditor.CycleHeading() -> void
 Polhem.Markdown.Avalonia.MarkdownEditor.FirstVisibleSourceOffset.get -> int
 Polhem.Markdown.Avalonia.MarkdownEditor.HeadingBrush.get -> Avalonia.Media.IBrush!
 Polhem.Markdown.Avalonia.MarkdownEditor.HeadingBrush.set -> void
@@ -39,6 +40,14 @@ Polhem.Markdown.Avalonia.MarkdownEditor.SelectionBrush.get -> Avalonia.Media.IBr
 Polhem.Markdown.Avalonia.MarkdownEditor.SelectionBrush.set -> void
 Polhem.Markdown.Avalonia.MarkdownEditor.ShowLineNumbers.get -> bool
 Polhem.Markdown.Avalonia.MarkdownEditor.ShowLineNumbers.set -> void
+Polhem.Markdown.Avalonia.MarkdownEditor.ShowToolbar.get -> bool
+Polhem.Markdown.Avalonia.MarkdownEditor.ShowToolbar.set -> void
+Polhem.Markdown.Avalonia.MarkdownEditor.ToolbarBackground.get -> Avalonia.Media.IBrush?
+Polhem.Markdown.Avalonia.MarkdownEditor.ToolbarBackground.set -> void
+Polhem.Markdown.Avalonia.MarkdownEditor.ToolbarBorderBrush.get -> Avalonia.Media.IBrush!
+Polhem.Markdown.Avalonia.MarkdownEditor.ToolbarBorderBrush.set -> void
+Polhem.Markdown.Avalonia.MarkdownEditor.ToolbarLabels.get -> System.Func<Polhem.Markdown.MarkdownToolbarItem, string?>?
+Polhem.Markdown.Avalonia.MarkdownEditor.ToolbarLabels.set -> void
 Polhem.Markdown.Avalonia.MarkdownEditor.Undo() -> bool
 Polhem.Markdown.Avalonia.MarkdownEditor.UrlBrush.get -> Avalonia.Media.IBrush!
 Polhem.Markdown.Avalonia.MarkdownEditor.UrlBrush.set -> void
@@ -121,6 +130,10 @@ static readonly Polhem.Markdown.Avalonia.MarkdownEditor.MarkerBrushProperty -> A
 static readonly Polhem.Markdown.Avalonia.MarkdownEditor.MathBrushProperty -> Avalonia.StyledProperty<Avalonia.Media.IBrush!>!
 static readonly Polhem.Markdown.Avalonia.MarkdownEditor.SelectionBrushProperty -> Avalonia.StyledProperty<Avalonia.Media.IBrush?>!
 static readonly Polhem.Markdown.Avalonia.MarkdownEditor.ShowLineNumbersProperty -> Avalonia.StyledProperty<bool>!
+static readonly Polhem.Markdown.Avalonia.MarkdownEditor.ShowToolbarProperty -> Avalonia.StyledProperty<bool>!
+static readonly Polhem.Markdown.Avalonia.MarkdownEditor.ToolbarBackgroundProperty -> Avalonia.StyledProperty<Avalonia.Media.IBrush?>!
+static readonly Polhem.Markdown.Avalonia.MarkdownEditor.ToolbarBorderBrushProperty -> Avalonia.StyledProperty<Avalonia.Media.IBrush!>!
+static readonly Polhem.Markdown.Avalonia.MarkdownEditor.ToolbarLabelsProperty -> Avalonia.StyledProperty<System.Func<Polhem.Markdown.MarkdownToolbarItem, string?>?>!
 static readonly Polhem.Markdown.Avalonia.MarkdownEditor.UrlBrushProperty -> Avalonia.StyledProperty<Avalonia.Media.IBrush!>!
 static readonly Polhem.Markdown.Avalonia.MarkdownEditor.WordWrapProperty -> Avalonia.StyledProperty<bool>!
 static readonly Polhem.Markdown.Avalonia.MarkdownViewer.AlertCautionBrushProperty -> Avalonia.StyledProperty<Avalonia.Media.IBrush!>!

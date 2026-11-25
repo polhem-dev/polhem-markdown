@@ -1,14 +1,1 @@
 #nullable enable
-Polhem.Markdown.Avalonia.MarkdownEditor.CycleHeading() -> void
-Polhem.Markdown.Avalonia.MarkdownEditor.ShowToolbar.get -> bool
-Polhem.Markdown.Avalonia.MarkdownEditor.ShowToolbar.set -> void
-Polhem.Markdown.Avalonia.MarkdownEditor.ToolbarBackground.get -> Avalonia.Media.IBrush?
-Polhem.Markdown.Avalonia.MarkdownEditor.ToolbarBackground.set -> void
-Polhem.Markdown.Avalonia.MarkdownEditor.ToolbarBorderBrush.get -> Avalonia.Media.IBrush!
-Polhem.Markdown.Avalonia.MarkdownEditor.ToolbarBorderBrush.set -> void
-Polhem.Markdown.Avalonia.MarkdownEditor.ToolbarLabels.get -> System.Func<Polhem.Markdown.MarkdownToolbarItem, string?>?
-Polhem.Markdown.Avalonia.MarkdownEditor.ToolbarLabels.set -> void
-static readonly Polhem.Markdown.Avalonia.MarkdownEditor.ShowToolbarProperty -> Avalonia.StyledProperty<bool>!
-static readonly Polhem.Markdown.Avalonia.MarkdownEditor.ToolbarBackgroundProperty -> Avalonia.StyledProperty<Avalonia.Media.IBrush?>!
-static readonly Polhem.Markdown.Avalonia.MarkdownEditor.ToolbarBorderBrushProperty -> Avalonia.StyledProperty<Avalonia.Media.IBrush!>!
-static readonly Polhem.Markdown.Avalonia.MarkdownEditor.ToolbarLabelsProperty -> Avalonia.StyledProperty<System.Func<Polhem.Markdown.MarkdownToolbarItem, string?>?>!

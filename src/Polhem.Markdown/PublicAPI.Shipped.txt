@@ -6,12 +6,15 @@ Polhem.Markdown.MarkdownFormat.CodeBlock = 12 -> Polhem.Markdown.MarkdownFormat
 Polhem.Markdown.MarkdownFormat.Heading1 = 5 -> Polhem.Markdown.MarkdownFormat
 Polhem.Markdown.MarkdownFormat.Heading2 = 6 -> Polhem.Markdown.MarkdownFormat
 Polhem.Markdown.MarkdownFormat.Heading3 = 7 -> Polhem.Markdown.MarkdownFormat
+Polhem.Markdown.MarkdownFormat.HorizontalRule = 15 -> Polhem.Markdown.MarkdownFormat
+Polhem.Markdown.MarkdownFormat.Image = 13 -> Polhem.Markdown.MarkdownFormat
 Polhem.Markdown.MarkdownFormat.InlineCode = 3 -> Polhem.Markdown.MarkdownFormat
 Polhem.Markdown.MarkdownFormat.Italic = 1 -> Polhem.Markdown.MarkdownFormat
 Polhem.Markdown.MarkdownFormat.Link = 4 -> Polhem.Markdown.MarkdownFormat
 Polhem.Markdown.MarkdownFormat.NumberedList = 9 -> Polhem.Markdown.MarkdownFormat
 Polhem.Markdown.MarkdownFormat.Quote = 11 -> Polhem.Markdown.MarkdownFormat
 Polhem.Markdown.MarkdownFormat.Strikethrough = 2 -> Polhem.Markdown.MarkdownFormat
+Polhem.Markdown.MarkdownFormat.Table = 14 -> Polhem.Markdown.MarkdownFormat
 Polhem.Markdown.MarkdownFormat.TaskList = 10 -> Polhem.Markdown.MarkdownFormat
 Polhem.Markdown.MarkdownOptions
 Polhem.Markdown.MarkdownOptions.AllowedImageSchemes.get -> System.Collections.Generic.ISet<string!>!
@@ -21,3 +24,20 @@ Polhem.Markdown.MarkdownOptions.BaseUri.set -> void
 Polhem.Markdown.MarkdownOptions.MarkdownOptions() -> void
 Polhem.Markdown.MarkdownOptions.RenderMermaidDiagrams.get -> bool
 Polhem.Markdown.MarkdownOptions.RenderMermaidDiagrams.set -> void
+Polhem.Markdown.MarkdownToolbarItem
+Polhem.Markdown.MarkdownToolbarItem.Bold = 0 -> Polhem.Markdown.MarkdownToolbarItem
+Polhem.Markdown.MarkdownToolbarItem.BulletList = 7 -> Polhem.Markdown.MarkdownToolbarItem
+Polhem.Markdown.MarkdownToolbarItem.CodeBlock = 5 -> Polhem.Markdown.MarkdownToolbarItem
+Polhem.Markdown.MarkdownToolbarItem.Heading = 3 -> Polhem.Markdown.MarkdownToolbarItem
+Polhem.Markdown.MarkdownToolbarItem.HorizontalRule = 13 -> Polhem.Markdown.MarkdownToolbarItem
+Polhem.Markdown.MarkdownToolbarItem.Image = 11 -> Polhem.Markdown.MarkdownToolbarItem
+Polhem.Markdown.MarkdownToolbarItem.InlineCode = 4 -> Polhem.Markdown.MarkdownToolbarItem
+Polhem.Markdown.MarkdownToolbarItem.Italic = 1 -> Polhem.Markdown.MarkdownToolbarItem
+Polhem.Markdown.MarkdownToolbarItem.Link = 10 -> Polhem.Markdown.MarkdownToolbarItem
+Polhem.Markdown.MarkdownToolbarItem.NumberedList = 8 -> Polhem.Markdown.MarkdownToolbarItem
+Polhem.Markdown.MarkdownToolbarItem.Quote = 6 -> Polhem.Markdown.MarkdownToolbarItem
+Polhem.Markdown.MarkdownToolbarItem.Redo = 15 -> Polhem.Markdown.MarkdownToolbarItem
+Polhem.Markdown.MarkdownToolbarItem.Strikethrough = 2 -> Polhem.Markdown.MarkdownToolbarItem
+Polhem.Markdown.MarkdownToolbarItem.Table = 12 -> Polhem.Markdown.MarkdownToolbarItem
+Polhem.Markdown.MarkdownToolbarItem.TaskList = 9 -> Polhem.Markdown.MarkdownToolbarItem
+Polhem.Markdown.MarkdownToolbarItem.Undo = 14 -> Polhem.Markdown.MarkdownToolbarItem

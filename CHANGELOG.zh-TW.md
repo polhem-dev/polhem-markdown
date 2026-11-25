@@ -9,6 +9,18 @@ Polhem.Markdown 各套件值得注意的變更，每個版本只列幾項重點�
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-11-25
+
+詳細內容：[docs/zh-TW/changelogs/0.3.0.md](docs/zh-TW/changelogs/0.3.0.md)
+
+- `Polhem.Markdown.Blazor` 新增 `MarkdownEditor`，在原生 textarea 中編輯 Markdown 原始碼，依檢視器讀取文字的方式上色，
+  有格式指令、清單按鍵與自己的復原紀錄，並可與檢視器同步。
+- 兩個編輯器都顯示工具列（`ShowToolbar`，預設開啟；`ToolbarLabels` 替換英文標籤），Blazor 編輯器也有了與 Avalonia 版相同的
+  行號（`ShowLineNumbers`）。
+- `MarkdownFormat` 新增 `Image`、`Table` 與 `HorizontalRule`；編輯器新增標題循環（`CycleHeading`）。
+- Blazor 的 `MarkdownViewer` 能在原始碼位置與捲動位置之間換算，並把按住命令鍵的點選回報為要求跳到原始碼。
+- 升級的應用會在 Avalonia 編輯器中看到多出的工具列，Tab 也不再停在編輯器本身。
+
 ## [0.2.1] - 2026-11-24
 
 詳細內容：[docs/zh-TW/changelogs/0.2.1.md](docs/zh-TW/changelogs/0.2.1.md)
