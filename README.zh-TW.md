@@ -52,7 +52,7 @@
   的圖片會載入。宿主可以加入自己的 scheme，並決定這類連結要做什麼。
 - **串流**：回覆陸續送達時可以反覆設定文字，範例的「重播」功能可看到效果。
 
-各檢視器支援的細節與色彩設定，見各自的 README：
+各檢視器的用法見各套件的 README：
 [Avalonia](src/Polhem.Markdown.Avalonia/README.md)、[Blazor](src/Polhem.Markdown.Blazor/README.md)。
 
 ## 編輯器
@@ -75,7 +75,7 @@
 
 ![範例文字在瀏覽器裡的 Blazor 編輯器中，旁邊是檢視器](docs/images/editor-blazor.png)
 
-細節見各套件的 README：[Avalonia](src/Polhem.Markdown.Avalonia/README.md)、[Blazor](src/Polhem.Markdown.Blazor/README.md)。
+編輯器的用法見各套件的 README：[Avalonia](src/Polhem.Markdown.Avalonia/README.md)、[Blazor](src/Polhem.Markdown.Blazor/README.md)。
 
 ## 範例
 

@@ -59,7 +59,7 @@ shows the start of the sample text in each.
   link does.
 - **Streaming**: the text can be set again as a reply arrives; the gallery's replay shows it.
 
-Each viewer's README lists what it supports in detail, and how to set its colors:
+Each package's README shows how to use its viewer:
 [Avalonia](src/Polhem.Markdown.Avalonia/README.md), [Blazor](src/Polhem.Markdown.Blazor/README.md).
 
 ## The editor
@@ -84,7 +84,7 @@ preview in `MarkdownViewer` beside it, not as rich text. The two editors color a
 
 ![The sample text in the Blazor editor, beside the viewer, in a browser](docs/images/editor-blazor.png)
 
-Each package's README has the details: [Avalonia](src/Polhem.Markdown.Avalonia/README.md),
+Each package's README shows how to use its editor: [Avalonia](src/Polhem.Markdown.Avalonia/README.md),
 [Blazor](src/Polhem.Markdown.Blazor/README.md).
 
 ## Samples
