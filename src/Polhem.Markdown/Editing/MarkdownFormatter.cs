@@ -6,8 +6,8 @@ namespace Polhem.Markdown.Editing;
 
 /// <summary>
 /// The edits a Markdown editor makes for its commands, worked out on the text alone so any editor can apply them:
-/// formats (<see cref="Apply"/>), continuing a list on Enter (<see cref="ContinueList"/>) and moving a list item in or out
-/// (<see cref="IndentListItem"/>).
+/// formats (<see cref="Apply"/>), the next heading level (<see cref="CycleHeading"/>), continuing a list on Enter
+/// (<see cref="ContinueList"/>) and moving a list item in or out (<see cref="IndentListItem"/>).
 /// </summary>
 /// <remarks>
 /// Each command is one <see cref="MarkdownEdit"/>, so an editor applies it as one step to undo. Offsets are UTF-16 code
@@ -22,7 +22,8 @@ internal static partial class MarkdownFormatter
     /// An inline format wraps the selection in its markers, or unwraps it when the markers are just inside or just
     /// outside the selection; with nothing selected it inserts a pair with the caret between, or removes an empty pair
     /// around the caret. A line format applies to every line the selection touches, and is removed when every one of
-    /// those lines has it.
+    /// those lines has it. <see cref="MarkdownFormat.Table"/> and <see cref="MarkdownFormat.HorizontalRule"/> insert a
+    /// block instead, and are never removed.
     /// </remarks>
     public static MarkdownEdit Apply(string text, int selectionStart, int selectionLength, MarkdownFormat format)
     {
@@ -35,7 +36,8 @@ internal static partial class MarkdownFormatter
             MarkdownFormat.Italic => Toggle(text, start, end, '*', 1),
             MarkdownFormat.Strikethrough => Toggle(text, start, end, '~', 2),
             MarkdownFormat.InlineCode => Toggle(text, start, end, '`', 1),
-            MarkdownFormat.Link => Link(text, start, end),
+            MarkdownFormat.Link => Link(text, start, end, "["),
+            MarkdownFormat.Image => Link(text, start, end, "!["),
             MarkdownFormat.Heading1 => Lines(text, start, end, lines => Heading(lines, 1)),
             MarkdownFormat.Heading2 => Lines(text, start, end, lines => Heading(lines, 2)),
             MarkdownFormat.Heading3 => Lines(text, start, end, lines => Heading(lines, 3)),
@@ -44,8 +46,28 @@ internal static partial class MarkdownFormatter
             MarkdownFormat.TaskList => Lines(text, start, end, Tasks),
             MarkdownFormat.Quote => Lines(text, start, end, Quotes),
             MarkdownFormat.CodeBlock => CodeBlock(text, start, end),
+            MarkdownFormat.Table => Table(text, start, end),
+            MarkdownFormat.HorizontalRule => HorizontalRule(text, start, end),
             _ => throw new ArgumentOutOfRangeException(nameof(format), format, null),
         };
+    }
+
+    /// <summary>
+    /// Makes the lines the selection touches headings one level deeper than the first of them is, from plain text to
+    /// level 1, then 2, then 3, and back to plain text from level 3 or deeper.
+    /// </summary>
+    /// <remarks>Lines without text are left as they are.</remarks>
+    public static MarkdownEdit CycleHeading(string text, int selectionStart, int selectionLength)
+    {
+        ArgumentNullException.ThrowIfNull(text);
+        var start = Math.Clamp(selectionStart, 0, text.Length);
+        var end = Math.Clamp(selectionStart + selectionLength, start, text.Length);
+        return Lines(text, start, end, lines =>
+        {
+            var first = lines.FirstOrDefault(IsText);
+            var level = first is not null && HeadingRegex().Match(first) is { Success: true } heading ? heading.Groups["hashes"].Length : 0;
+            return level >= 3 ? PlainText(lines) : Heading(lines, level + 1);
+        });
     }
 
     /// <summary>
@@ -197,14 +219,15 @@ internal static partial class MarkdownFormatter
         return count;
     }
 
-    private static MarkdownEdit Link(string text, int start, int end)
+    /// <summary>A link, or with <paramref name="opening"/> <c>![</c> an image, around the selection as its text.</summary>
+    private static MarkdownEdit Link(string text, int start, int end, string opening)
     {
         const string Address = "url";
         var label = text[start..end];
-        var link = "[" + label + "](" + Address + ")";
+        var link = opening + label + "](" + Address + ")";
         return label.Length == 0
-            ? new MarkdownEdit(start, 0, link, start + 1, 0)
-            : new MarkdownEdit(start, end - start, link, start + label.Length + 3, Address.Length);
+            ? new MarkdownEdit(start, 0, link, start + opening.Length, 0)
+            : new MarkdownEdit(start, end - start, link, start + opening.Length + label.Length + 2, Address.Length);
     }
 
     private static MarkdownEdit CodeBlock(string text, int start, int end)
@@ -255,6 +278,10 @@ internal static partial class MarkdownFormatter
             return all ? rest : new string('#', level) + " " + rest;
         })];
     }
+
+    /// <summary>The lines with any heading marker taken off.</summary>
+    private static List<string> PlainText(IReadOnlyList<string> lines) =>
+        [.. lines.Select(line => HeadingRegex().Match(line) is { Success: true } heading ? line[heading.Length..] : line)];
 
     private static List<string> Bullets(IReadOnlyList<string> lines) =>
         Items(lines, item => item.Groups["bullet"].Success && !item.Groups["task"].Success, (_, indent, content) => indent + "- " + content);

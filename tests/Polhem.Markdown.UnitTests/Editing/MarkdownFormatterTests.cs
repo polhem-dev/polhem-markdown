@@ -198,4 +198,56 @@ public class MarkdownFormatterTests
         var (text, start, length) = Parse(before);
         Assert.Null(MarkdownFormatter.IndentListItem(text, start, length, outdent));
     }
+
+    [Theory(DisplayName = "An image wraps the selection as its text and selects the address to type over")]
+    [InlineData("see «cat» now", "see ![cat](«url») now")]
+    [InlineData("see ‸ now", "see ![‸](url) now")]
+    public void Apply_Image(string before, string after)
+    {
+        Assert.Equal(after, Apply(before, MarkdownFormat.Image));
+    }
+
+    [Theory(DisplayName = "A rule goes below the line, apart from the text around it, with the caret on the line after it")]
+    [InlineData("text‸", "text\n\n---\n‸")]
+    [InlineData("a‸\nb", "a\n\n---\n‸\nb")]
+    [InlineData("a‸\n\nb", "a\n\n---\n‸\nb")]
+    [InlineData("a\n\n‸\nb", "a\n\n---\n‸\nb")]
+    [InlineData("a\n‸", "a\n\n---\n‸")]
+    [InlineData("‸", "---\n‸")]
+    [InlineData("«a\nb»\nc", "a\nb\n\n---\n‸\nc")]
+    [InlineData("a‸\r\nb", "a\r\n\r\n---\r\n‸\r\nb")]
+    public void Apply_HorizontalRule(string before, string after)
+    {
+        Assert.Equal(after, Apply(before, MarkdownFormat.HorizontalRule));
+    }
+
+    [Theory(DisplayName = "A table goes below the line, apart from the text around it, with the caret in its first header cell")]
+    [InlineData("‸", "| ‸    |     |\n| --- | --- |\n|     |     |")]
+    [InlineData("a‸", "a\n\n| ‸    |     |\n| --- | --- |\n|     |     |")]
+    [InlineData("a‸\nb", "a\n\n| ‸    |     |\n| --- | --- |\n|     |     |\n\nb")]
+    [InlineData("a\n\n‸", "a\n\n| ‸    |     |\n| --- | --- |\n|     |     |")]
+    public void Apply_Table(string before, string after)
+    {
+        Assert.Equal(after, Apply(before, MarkdownFormat.Table));
+    }
+
+    [Fact(DisplayName = "A rule and a table are inserted again rather than removed")]
+    public void Apply_Blocks_AreNotToggled()
+    {
+        Assert.Equal("---\n\n---\n‸", Apply("---\n‸", MarkdownFormat.HorizontalRule));
+    }
+
+    [Theory(DisplayName = "The heading cycle goes from plain text through levels 1 to 3 and back to plain text")]
+    [InlineData("‸title", "# ‸title")]
+    [InlineData("# ti‸tle", "## ti‸tle")]
+    [InlineData("## ti‸tle", "### ti‸tle")]
+    [InlineData("### ti‸tle", "ti‸tle")]
+    [InlineData("#### ti‸tle", "ti‸tle")]
+    [InlineData("«# a\nb»", "«## a\n## b»")]
+    [InlineData("«a\n\n### b»", "«# a\n\n# b»")]
+    public void CycleHeading_GoesToNextLevel(string before, string after)
+    {
+        var (text, start, length) = Parse(before);
+        Assert.Equal(after, Show(text, MarkdownFormatter.CycleHeading(text, start, length)));
+    }
 }

@@ -38,6 +38,42 @@ public class MarkdownEditorCommandTests(HeadlessSession session)
         Assert.Equal("a word b", editor.Markdown);
     });
 
+    [Fact(DisplayName = "The heading cycle makes the line a deeper heading each time, and one undo takes a step back")]
+    public Task CycleHeading_IsOneUndoStepEachTime() => session.RunAsync(() =>
+    {
+        var editor = Show("title");
+
+        editor.CycleHeading();
+        editor.CycleHeading();
+
+        Assert.Equal("## title", editor.Markdown);
+        Assert.True(editor.Undo());
+        Assert.Equal("# title", editor.Markdown);
+    });
+
+    [Fact(DisplayName = "The heading cycle does nothing while the editor is read-only")]
+    public Task CycleHeading_ReadOnly_DoesNothing() => session.RunAsync(() =>
+    {
+        var editor = Show("title");
+        editor.IsReadOnly = true;
+
+        editor.CycleHeading();
+
+        Assert.Equal("title", editor.Markdown);
+    });
+
+    [Fact(DisplayName = "A rule is inserted below the line, with the caret on the line after it")]
+    public Task ApplyFormat_HorizontalRule_InsertsBelow() => session.RunAsync(() =>
+    {
+        var editor = Show("text");
+        editor.CaretOffset = 4;
+
+        editor.ApplyFormat(MarkdownFormat.HorizontalRule);
+
+        Assert.Equal("text\n\n---\n", editor.Markdown);
+        Assert.Equal(10, editor.CaretOffset);
+    });
+
     [Theory(DisplayName = "The command shortcuts apply bold, italic, a link and inline code")]
     [InlineData(Key.B, "**x**")]
     [InlineData(Key.I, "*x*")]

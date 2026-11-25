@@ -336,6 +336,17 @@ public class MarkdownEditorTests : BunitContext
         Assert.Equal([2, 4, "**word**", 4, 4], edit);
     }
 
+    [Theory(DisplayName = "The formats that insert a block or an image come back as the formatter's edits")]
+    [InlineData("Image", new object[] { 2, 0, "![](url)", 4, 0 })]
+    [InlineData("HorizontalRule", new object[] { 2, 0, "\n\n---\n", 8, 0 })]
+    public void Command_NewFormats_ReturnEdits(string format, object[] expected)
+    {
+        var editor = Edit("ab");
+        var bridge = new MarkdownEditorBridge(editor.Instance);
+
+        Assert.Equal(expected, bridge.Command("format", 0, 2, 0, format));
+    }
+
     [Fact(DisplayName = "Continuing a list and moving an item in and out come back as the formatter's edits")]
     public void Command_ListCommands_ReturnEdits()
     {

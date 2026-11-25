@@ -71,9 +71,10 @@ preview in `MarkdownViewer` beside it, not as rich text. The two editors color a
 
 - **Colours the source the way the viewer reads it**: markers, headings, emphasis, inline code, links and their
   addresses, raw HTML and formulas, and fenced code with the viewer's highlighting.
-- **Formats and list keys**: `ApplyFormat` (`ApplyFormatAsync` on Blazor) toggles bold, italic, strikethrough, inline code, links, headings, lists,
-  task lists, quotes and code blocks, with Ctrl or Cmd and B, I, K or E for the inline ones. Enter continues a list,
-  and Tab and Shift+Tab move an item in and out.
+- **Formats and list keys**: `ApplyFormat` (`ApplyFormatAsync` on Blazor) toggles bold, italic, strikethrough, inline code, links, images, headings, lists,
+  task lists, quotes and code blocks, and inserts tables and horizontal rules, with Ctrl or Cmd and B, I, K or E for
+  the inline ones. On Avalonia, `CycleHeading` steps a line through heading levels 1 to 3 and back to plain text. Enter
+  continues a list, and Tab and Shift+Tab move an item in and out.
 - **Keeps in step with the viewer**: the editor reports the source at the top of its view and scrolls to a source
   offset; the viewer maps source offsets to positions and back, and a command-click asks for the source of what was
   clicked. The gallery wires the two together.
