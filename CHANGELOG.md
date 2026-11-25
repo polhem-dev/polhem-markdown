@@ -9,6 +9,19 @@ and versions follow [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-11-25
+
+Details: [docs/en/changelogs/0.3.0.md](docs/en/changelogs/0.3.0.md)
+
+- `Polhem.Markdown.Blazor` adds `MarkdownEditor`, a Markdown source editor in a native textarea, colored as the viewers
+  read the text, with formats, list keys and its own undo, and kept in step with the viewer.
+- Both editors show a toolbar (`ShowToolbar`, on by default; `ToolbarLabels` replaces its English labels), and the
+  Blazor editor has line numbers (`ShowLineNumbers`) as the Avalonia one does.
+- `MarkdownFormat` adds `Image`, `Table` and `HorizontalRule`; the editors add a heading cycle (`CycleHeading`).
+- The Blazor `MarkdownViewer` maps between source offsets and its scroll position, and reports a command-click as a
+  request for the source.
+- The Avalonia editor's toolbar is a new row for applications that upgrade, and Tab passes the editor itself by.
+
 ## [0.2.1] - 2026-11-24
 
 Details: [docs/en/changelogs/0.2.1.md](docs/en/changelogs/0.2.1.md)
