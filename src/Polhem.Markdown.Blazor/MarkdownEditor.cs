@@ -116,6 +116,14 @@ public class MarkdownEditor : ComponentBase, IAsyncDisposable
     [Parameter]
     public bool WordWrap { get; set; } = true;
 
+    /// <summary>Gets or sets whether line numbers show beside the text. The default is <see langword="true"/>.</summary>
+    /// <remarks>
+    /// A wrapped line has one number, beside its first row. The numbers are drawn by the script module, so an editor
+    /// rendered statically shows none. <c>--pmd-line-number</c> sets their color.
+    /// </remarks>
+    [Parameter]
+    public bool ShowLineNumbers { get; set; } = true;
+
     /// <summary>Gets or sets further CSS classes for the outer element.</summary>
     [Parameter]
     public string? Class { get; set; }
@@ -291,7 +299,8 @@ public class MarkdownEditor : ComponentBase, IAsyncDisposable
     {
         _initialText ??= _text;
         builder.OpenElement(0, "div");
-        builder.AddAttribute(1, "class", CombineClasses("pmd-editor", WordWrap ? null : "pmd-editor-nowrap", Class));
+        builder.AddAttribute(1, "class", CombineClasses(
+            "pmd-editor", WordWrap ? null : "pmd-editor-nowrap", ShowLineNumbers ? "pmd-editor-lines" : null, Class));
         builder.AddElementReferenceCapture(2, element => _root = element);
 
         // The layer the module draws the colors on. Blazor renders it empty and never touches its content.

@@ -109,8 +109,7 @@ preview in `MarkdownViewer` beside it, not as rich text. The two editors color a
 - **Its links cannot be opened from the source**: the viewer opens them after checking their scheme.
 - **On Avalonia** it is built on AvaloniaEdit and works under any theme with no styles from the host.
 - **On Blazor** the text is typed into a native textarea, so input methods and screen readers work as anywhere on the
-  page, under interactive server, WebAssembly and auto rendering. It has no toolbar, no line numbers and no search
-  panel yet.
+  page, under interactive server, WebAssembly and auto rendering. It has no toolbar and no search panel yet.
 
 ![The sample text in the Blazor editor, beside the viewer, in a browser](docs/images/editor-blazor.png)
 

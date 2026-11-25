@@ -275,8 +275,32 @@ test("scrolling and resizing the textarea move and size the layer", () => {
   textarea.dispatch("scroll");
   FakeResizeObserver.last.callback();
 
-  assert.deepEqual([layer.scrollTop, layer.scrollLeft], [120, 7]);
-  assert.deepEqual(layer.style, { width: "400px", height: "300px" });
+  assert.equal(layer.scrollTop, 120);
+  assert.equal(layer.scrollLeft, 0);
+  assert.deepEqual(layer.style, { "--pmd-scroll-left": "-7px", width: "calc(100% - 0px)", height: "calc(100% - 0px)" });
+});
+
+test("the layer leaves out the textarea's scroll bars", () => {
+  const { textarea, layer } = start("a");
+
+  textarea.clientWidth = 385;
+  textarea.clientHeight = 290;
+  FakeResizeObserver.last.callback();
+
+  assert.equal(layer.style.width, "calc(100% - 15px)");
+  assert.equal(layer.style.height, "calc(100% - 10px)");
+});
+
+test("the gutter is as wide as the number of the last line, and at least two digits", () => {
+  const { root, textarea } = start("a");
+  assert.equal(root.style["--pmd-gutter-digits"], "2");
+
+  textarea.type("\n".repeat(99));
+  assert.equal(root.style["--pmd-gutter-digits"], "3");
+
+  textarea.setSelectionRange(0, textarea.value.length);
+  textarea.type("b");
+  assert.equal(root.style["--pmd-gutter-digits"], "2");
 });
 
 test("focus and dispose act on the editor, and calls after dispose do nothing", () => {
