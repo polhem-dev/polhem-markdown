@@ -101,13 +101,16 @@ preview in `MarkdownViewer` beside it, not as rich text. The two editors color a
   task lists, quotes and code blocks, and inserts tables and horizontal rules, with Ctrl or Cmd and B, I, K or E for
   the inline ones. On Avalonia, `CycleHeading` steps a line through heading levels 1 to 3 and back to plain text. Enter
   continues a list, and Tab and Shift+Tab move an item in and out.
+- **A toolbar** above the text on Avalonia, with a button for each format, the heading cycle, undo and redo. Its
+  labels are English unless the host gives its own; `ShowToolbar = false` hides it.
 - **Keeps in step with the viewer**: the editor reports the source at the top of its view and scrolls to a source
   offset; the viewer maps source offsets to positions and back, and a command-click asks for the source of what was
   clicked. The gallery wires the two together.
 - **Its links cannot be opened from the source**: the viewer opens them after checking their scheme.
 - **On Avalonia** it is built on AvaloniaEdit and works under any theme with no styles from the host.
 - **On Blazor** the text is typed into a native textarea, so input methods and screen readers work as anywhere on the
-  page, under interactive server, WebAssembly and auto rendering. It has no line numbers and no search panel.
+  page, under interactive server, WebAssembly and auto rendering. It has no toolbar, no line numbers and no search
+  panel yet.
 
 ![The sample text in the Blazor editor, beside the viewer, in a browser](docs/images/editor-blazor.png)
 

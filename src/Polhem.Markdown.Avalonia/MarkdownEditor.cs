@@ -94,11 +94,16 @@ public partial class MarkdownEditor : Control
             _ = ScanAsync();
         });
 
+        _toolbar = CreateToolbar();
+        LogicalChildren.Add(_toolbar);
+        VisualChildren.Add(_toolbar);
         LogicalChildren.Add(_editor);
         VisualChildren.Add(_editor);
 
-        // Focus given to the editor, such as by Focus() or Tab navigation, goes on to the text inside.
+        // Focus given to the editor, such as by Focus(), goes on to the text inside. Tab passes the editor itself by and
+        // goes to the toolbar, then to the text.
         Focusable = true;
+        IsTabStop = false;
     }
 
     /// <summary>Gets or sets the Markdown text. It follows every edit, and binds two-way by default.</summary>
@@ -169,6 +174,15 @@ public partial class MarkdownEditor : Control
         else if (change.Property == IsReadOnlyProperty)
         {
             _editor.IsReadOnly = IsReadOnly;
+            UpdateToolbarState();
+        }
+        else if (change.Property == ShowToolbarProperty)
+        {
+            _toolbar.IsVisible = ShowToolbar;
+        }
+        else if (change.Property == ToolbarLabelsProperty)
+        {
+            UpdateToolbarLabels();
         }
         else if (change.Property == ShowLineNumbersProperty)
         {
@@ -196,20 +210,29 @@ public partial class MarkdownEditor : Control
     protected override void OnGotFocus(FocusChangedEventArgs e)
     {
         base.OnGotFocus(e);
-        _editor.TextArea.Focus();
+
+        // NOTE: the focus event bubbles up from the toolbar's buttons too, and those keep their focus.
+        if (e.Source == this)
+        {
+            _editor.TextArea.Focus();
+        }
     }
 
     /// <inheritdoc/>
     protected override Size MeasureOverride(Size availableSize)
     {
-        _editor.Measure(availableSize);
-        return _editor.DesiredSize;
+        _toolbar.Measure(availableSize);
+        var toolbar = _toolbar.DesiredSize;
+        _editor.Measure(availableSize.Deflate(new Thickness(0, toolbar.Height, 0, 0)));
+        return new Size(Math.Max(toolbar.Width, _editor.DesiredSize.Width), toolbar.Height + _editor.DesiredSize.Height);
     }
 
     /// <inheritdoc/>
     protected override Size ArrangeOverride(Size finalSize)
     {
-        _editor.Arrange(new Rect(finalSize));
+        var toolbarHeight = _toolbar.DesiredSize.Height;
+        _toolbar.Arrange(new Rect(0, 0, finalSize.Width, toolbarHeight));
+        _editor.Arrange(new Rect(0, toolbarHeight, finalSize.Width, Math.Max(0, finalSize.Height - toolbarHeight)));
         return finalSize;
     }
 

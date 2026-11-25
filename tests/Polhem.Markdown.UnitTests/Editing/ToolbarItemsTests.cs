@@ -30,10 +30,14 @@ public class ToolbarItemsTests
         }
     }
 
-    [Fact(DisplayName = "Every button has a label")]
-    public void Label_IsSetForEveryItem()
+    [Fact(DisplayName = "Every button has a label and an icon")]
+    public void LabelAndIcon_AreSetForEveryItem()
     {
-        Assert.All(Enum.GetValues<MarkdownToolbarItem>(), item => Assert.False(string.IsNullOrWhiteSpace(ToolbarItems.Label(item))));
+        Assert.All(Enum.GetValues<MarkdownToolbarItem>(), item =>
+        {
+            Assert.False(string.IsNullOrWhiteSpace(ToolbarItems.Label(item)));
+            Assert.StartsWith("M", ToolbarItems.Icon(item), StringComparison.Ordinal);
+        });
     }
 
     [Theory(DisplayName = "A tooltip adds the shortcut the editors handle, written for the platform")]

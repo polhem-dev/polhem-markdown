@@ -44,26 +44,32 @@ public sealed class GalleryView : UserControl
         bar.Children.Add(_status);
 
         var viewerScroll = new ScrollViewer { Content = new Border { Padding = new Thickness(16, 8, 16, 24), Child = _viewer } };
-        var editor = new MarkdownEditor { Markdown = SampleText.Markdown, IsVisible = false, Margin = new Thickness(8, 0, 0, 0) };
+        var editor = new MarkdownEditor { Markdown = SampleText.Markdown };
         _ = new SourceSync(editor, _viewer, viewerScroll);
 
-        // The editor sits beside the viewer, or above it on a narrow screen such as a phone's.
-        var panes = new Grid();
-        panes.Children.Add(editor);
-        panes.Children.Add(viewerScroll);
+        // The editor sits beside the viewer, or above it on a narrow screen such as a phone's, each in a frame.
+        var editorFrame = Frame(editor);
+        var viewerFrame = Frame(viewerScroll);
+        editorFrame.IsVisible = false;
+        var panes = new Grid { Margin = new Thickness(16, 0, 16, 16) };
+        panes.Children.Add(editorFrame);
+        panes.Children.Add(viewerFrame);
         void Arrange()
         {
+            var editing = editorFrame.IsVisible;
             var wide = panes.Bounds.Width >= 700;
-            panes.ColumnDefinitions = ColumnDefinitions.Parse(editor.IsVisible && wide ? "*,*" : "*");
-            panes.RowDefinitions = RowDefinitions.Parse(editor.IsVisible && !wide ? "*,*" : "*");
-            Grid.SetColumn(viewerScroll, editor.IsVisible && wide ? 1 : 0);
-            Grid.SetRow(viewerScroll, editor.IsVisible && !wide ? 1 : 0);
+            panes.ColumnDefinitions = ColumnDefinitions.Parse(editing && wide ? "*,*" : "*");
+            panes.RowDefinitions = RowDefinitions.Parse(editing && !wide ? "*,*" : "*");
+            Grid.SetColumn(viewerFrame, editing && wide ? 1 : 0);
+            Grid.SetRow(viewerFrame, editing && !wide ? 1 : 0);
+            editorFrame.Margin = new Thickness(0, 0, editing && wide ? 8 : 0, editing && !wide ? 8 : 0);
+            viewerFrame.Margin = new Thickness(editing && wide ? 8 : 0, editing && !wide ? 8 : 0, 0, 0);
         }
         panes.SizeChanged += (_, _) => Arrange();
         edit.IsCheckedChanged += (_, _) =>
         {
-            editor.IsVisible = edit.IsChecked == true;
-            replay.IsEnabled = !editor.IsVisible;
+            editorFrame.IsVisible = edit.IsChecked == true;
+            replay.IsEnabled = !editorFrame.IsVisible;
             Arrange();
         };
 
@@ -72,6 +78,20 @@ public sealed class GalleryView : UserControl
         layout.Children.Add(bar);
         layout.Children.Add(panes);
         Content = layout;
+    }
+
+    /// <summary>A rounded frame in the theme's border colour, which clips its content to its corners.</summary>
+    private static Border Frame(Control content)
+    {
+        var frame = new Border
+        {
+            Child = content,
+            BorderThickness = new Thickness(1),
+            CornerRadius = new CornerRadius(6),
+            ClipToBounds = true,
+        };
+        frame.Bind(Border.BorderBrushProperty, frame.GetResourceObservable("SemiColorBorder"));
+        return frame;
     }
 
     protected override void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs e)
