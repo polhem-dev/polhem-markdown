@@ -3,6 +3,8 @@
 A Markdown viewer control and a Markdown source editor control for Avalonia. The viewer renders the same model as
 `Polhem.Markdown.Blazor`, so an Avalonia and a Blazor front end show the same text the same way.
 
+![The same reply in the Blazor viewer and the Avalonia viewer](https://raw.githubusercontent.com/polhem-dev/polhem-markdown/main/docs/images/viewer-hero.png)
+
 ## MarkdownViewer
 
 Shows Markdown: GitHub Flavored Markdown, highlighted code, math, Mermaid diagrams and the HTML that README files use.
@@ -42,6 +44,8 @@ Set `CjkFontFamily` when the text has Chinese, Japanese or Korean, so bold CJK t
 
 Edits Markdown as source on AvaloniaEdit, colored the way the viewer reads it, with a toolbar, format commands and list
 keys. Put a `MarkdownViewer` beside it for a live preview:
+
+![The editor with its toolbar and line numbers, beside the viewer showing the same text](https://raw.githubusercontent.com/polhem-dev/polhem-markdown/main/docs/images/editor.png)
 
 ```xml
 <Grid ColumnDefinitions="*,*">
