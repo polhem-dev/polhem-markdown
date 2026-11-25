@@ -92,12 +92,14 @@
   程式碼區塊則用與檢視器相同的語法上色。
 - **格式指令與清單按鍵**：`ApplyFormat`（Blazor 為 `ApplyFormatAsync`）可切換粗體、斜體、刪除線、行內程式碼、連結、圖片、標題、清單、待辦清單、引言與程式碼區塊，
   也能插入表格與分隔線；行內格式的快捷鍵是 Ctrl 或 Cmd 加 B、I、K、E。Avalonia 的 `CycleHeading` 讓一行依序成為一到三級標題，再回到一般文字。Enter 會延續清單，Tab 與 Shift+Tab 調整項目層級。
+- **工具列**：Avalonia 版在文字上方有工具列，每種格式、標題循環、復原與重做各一顆按鈕。按鈕標籤預設為英文，宿主可換成自己的；
+  設 `ShowToolbar = false` 可隱藏。
 - **與檢視器同步**：編輯器回報畫面最上方的原文位置，也能捲動到指定的原文位置；檢視器能在原文位置與畫面位置之間換算，
   按住 Command 鍵點擊時會要求跳到該處的原文。範例程式把兩者接在一起。
 - **原始碼中的連結無法從編輯器開啟**，要從會檢查 scheme 的檢視器開啟。
 - **Avalonia 版**建立在 AvaloniaEdit 上，任何主題都能用，不需要宿主提供樣式。
 - **Blazor 版**在原生的 textarea 裡輸入，輸入法與螢幕閱讀器的行為與頁面上其他地方相同；支援 interactive server、WebAssembly
-  與 auto 渲染。沒有行號，也沒有搜尋面板。
+  與 auto 渲染。目前還沒有工具列、行號與搜尋面板。
 
 ![範例文字在瀏覽器裡的 Blazor 編輯器中，旁邊是檢視器](docs/images/editor-blazor.png)
 

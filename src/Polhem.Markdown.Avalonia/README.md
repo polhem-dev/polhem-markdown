@@ -40,8 +40,8 @@ Set `CjkFontFamily` when the text has Chinese, Japanese or Korean, so bold CJK t
 
 ## MarkdownEditor
 
-Edits Markdown as source on AvaloniaEdit, colored the way the viewer reads it, with format commands and list keys. Put
-a `MarkdownViewer` beside it for a live preview:
+Edits Markdown as source on AvaloniaEdit, colored the way the viewer reads it, with a toolbar, format commands and list
+keys. Put a `MarkdownViewer` beside it for a live preview:
 
 ```xml
 <Grid ColumnDefinitions="*,*">
@@ -53,6 +53,18 @@ a `MarkdownViewer` beside it for a live preview:
 ```csharp
 Editor.ApplyFormat(MarkdownFormat.Bold);   // toggles bold on the selection, as Ctrl+B or Cmd+B does
 Editor.CycleHeading();                     // plain text, then #, ##, ###, then plain text again
+```
+
+The toolbar's labels are English; give your own, or `null` to keep one. Set `ShowToolbar="False"` to lay out buttons of
+your own instead:
+
+```csharp
+Editor.ToolbarLabels = item => item switch
+{
+    MarkdownToolbarItem.Bold => "粗體",
+    MarkdownToolbarItem.Italic => "斜體",
+    _ => null,
+};
 ```
 
 The editor brings the styles its AvaloniaEdit parts need, so it works under any theme. The gallery in the repository
