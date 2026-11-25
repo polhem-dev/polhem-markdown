@@ -82,9 +82,11 @@ internal static class ToolbarItems
         {
             return null;
         }
-        return mac
-            ? (item == MarkdownToolbarItem.Redo ? "⇧⌘" : "⌘") + key
-            : "Ctrl+" + key;
+        if (!mac)
+        {
+            return "Ctrl+" + key;
+        }
+        return item == MarkdownToolbarItem.Redo ? "⇧⌘" + key : "⌘" + key;
     }
 
     /// <summary>The tooltip of a button: <paramref name="label"/>, followed by the shortcut in parentheses if there is one.</summary>
