@@ -1,6 +1,9 @@
 namespace Polhem.Markdown;
 
-/// <summary>A format a Markdown editor applies to the selection, or removes when the selection already has it.</summary>
+/// <summary>
+/// A format a Markdown editor applies to the selection, or removes when the selection already has it; or, for
+/// <see cref="Table"/> and <see cref="HorizontalRule"/>, a block it inserts.
+/// </summary>
 public enum MarkdownFormat
 {
     /// <summary>Strong emphasis: <c>**text**</c>.</summary>
@@ -41,4 +44,18 @@ public enum MarkdownFormat
 
     /// <summary>A fenced code block around the selected lines.</summary>
     CodeBlock,
+
+    /// <summary>An image: <c>![text](url)</c>, with the address selected to type over.</summary>
+    Image,
+
+    /// <summary>
+    /// A table of two columns, a header row and one row of cells, inserted as a block below the selection with the caret in
+    /// its first header cell. Applying it again inserts another table.
+    /// </summary>
+    Table,
+
+    /// <summary>
+    /// A horizontal rule, <c>---</c>, inserted as a block below the selection. Applying it again inserts another rule.
+    /// </summary>
+    HorizontalRule,
 }

@@ -1,1 +1,21 @@
 #nullable enable
+Polhem.Markdown.MarkdownFormat.HorizontalRule = 15 -> Polhem.Markdown.MarkdownFormat
+Polhem.Markdown.MarkdownFormat.Image = 13 -> Polhem.Markdown.MarkdownFormat
+Polhem.Markdown.MarkdownFormat.Table = 14 -> Polhem.Markdown.MarkdownFormat
+Polhem.Markdown.MarkdownToolbarItem
+Polhem.Markdown.MarkdownToolbarItem.Bold = 0 -> Polhem.Markdown.MarkdownToolbarItem
+Polhem.Markdown.MarkdownToolbarItem.BulletList = 7 -> Polhem.Markdown.MarkdownToolbarItem
+Polhem.Markdown.MarkdownToolbarItem.CodeBlock = 5 -> Polhem.Markdown.MarkdownToolbarItem
+Polhem.Markdown.MarkdownToolbarItem.Heading = 3 -> Polhem.Markdown.MarkdownToolbarItem
+Polhem.Markdown.MarkdownToolbarItem.HorizontalRule = 13 -> Polhem.Markdown.MarkdownToolbarItem
+Polhem.Markdown.MarkdownToolbarItem.Image = 11 -> Polhem.Markdown.MarkdownToolbarItem
+Polhem.Markdown.MarkdownToolbarItem.InlineCode = 4 -> Polhem.Markdown.MarkdownToolbarItem
+Polhem.Markdown.MarkdownToolbarItem.Italic = 1 -> Polhem.Markdown.MarkdownToolbarItem
+Polhem.Markdown.MarkdownToolbarItem.Link = 10 -> Polhem.Markdown.MarkdownToolbarItem
+Polhem.Markdown.MarkdownToolbarItem.NumberedList = 8 -> Polhem.Markdown.MarkdownToolbarItem
+Polhem.Markdown.MarkdownToolbarItem.Quote = 6 -> Polhem.Markdown.MarkdownToolbarItem
+Polhem.Markdown.MarkdownToolbarItem.Redo = 15 -> Polhem.Markdown.MarkdownToolbarItem
+Polhem.Markdown.MarkdownToolbarItem.Strikethrough = 2 -> Polhem.Markdown.MarkdownToolbarItem
+Polhem.Markdown.MarkdownToolbarItem.Table = 12 -> Polhem.Markdown.MarkdownToolbarItem
+Polhem.Markdown.MarkdownToolbarItem.TaskList = 9 -> Polhem.Markdown.MarkdownToolbarItem
+Polhem.Markdown.MarkdownToolbarItem.Undo = 14 -> Polhem.Markdown.MarkdownToolbarItem

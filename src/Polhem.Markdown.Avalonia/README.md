@@ -52,6 +52,7 @@ a `MarkdownViewer` beside it for a live preview:
 
 ```csharp
 Editor.ApplyFormat(MarkdownFormat.Bold);   // toggles bold on the selection, as Ctrl+B or Cmd+B does
+Editor.CycleHeading();                     // plain text, then #, ##, ###, then plain text again
 ```
 
 The editor brings the styles its AvaloniaEdit parts need, so it works under any theme. The gallery in the repository

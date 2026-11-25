@@ -14,7 +14,9 @@ public partial class MarkdownEditor
     /// <remarks>
     /// An inline format such as <see cref="MarkdownFormat.Bold"/> wraps the selection in its markers, or, with nothing
     /// selected, inserts a pair with the caret between. A line format such as <see cref="MarkdownFormat.BulletList"/>
-    /// applies to every line the selection touches. The command shortcut with B, I, K and E applies
+    /// applies to every line the selection touches. <see cref="MarkdownFormat.Table"/> and
+    /// <see cref="MarkdownFormat.HorizontalRule"/> insert a block below the selection instead, and are never removed. The
+    /// command shortcut with B, I, K and E applies
     /// <see cref="MarkdownFormat.Bold"/>, <see cref="MarkdownFormat.Italic"/>, <see cref="MarkdownFormat.Link"/> and
     /// <see cref="MarkdownFormat.InlineCode"/>: Ctrl, or Cmd on macOS.
     /// </remarks>
@@ -23,6 +25,20 @@ public partial class MarkdownEditor
         if (!IsReadOnly)
         {
             Apply(MarkdownFormatter.Apply(_editor.Text, _editor.SelectionStart, _editor.SelectionLength, format));
+        }
+    }
+
+    /// <summary>
+    /// Makes the lines the selection touches headings one level deeper than the first of them is, as one step to undo:
+    /// plain text becomes a level 1 heading, then level 2, then level 3, and a heading of level 3 or deeper becomes plain
+    /// text again. Nothing happens when the editor is read-only.
+    /// </summary>
+    /// <remarks>Lines without text are left as they are.</remarks>
+    public void CycleHeading()
+    {
+        if (!IsReadOnly)
+        {
+            Apply(MarkdownFormatter.CycleHeading(_editor.Text, _editor.SelectionStart, _editor.SelectionLength));
         }
     }
 

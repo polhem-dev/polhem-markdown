@@ -207,7 +207,9 @@ public class MarkdownEditor : ComponentBase, IAsyncDisposable
     /// </summary>
     /// <remarks>
     /// An inline format wraps the selection in its markers, or inserts a pair with the caret between them when nothing
-    /// is selected; a line format applies to every line the selection touches. The change is one step to undo. The
+    /// is selected; a line format applies to every line the selection touches. <see cref="MarkdownFormat.Table"/> and
+    /// <see cref="MarkdownFormat.HorizontalRule"/> insert a block below the selection instead, and are never removed.
+    /// The change is one step to undo. The
     /// shortcuts are Ctrl (Command on a Mac) with B for bold, I for italic, K for a link and E for inline code.
     /// </remarks>
     /// <param name="format">The format to apply or remove.</param>
