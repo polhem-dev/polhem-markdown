@@ -30,6 +30,32 @@ when it does.
 Both viewers render the same model, so a reply looks alike in a browser and in a desktop or mobile app. The picture
 shows the start of the sample text in each.
 
+### At a glance
+
+| Syntax or capability | Written as, or what it does | Avalonia | Blazor |
+|----------------------|-----------------------------|:--------:|:------:|
+| Headings, emphasis, quotes, lists, rules | CommonMark | ✓ | ✓ |
+| Strikethrough | `~~text~~` | ✓ | ✓ |
+| Task lists | `- [x] done` | ✓ | ✓ |
+| Tables with column alignment | `:--`, `:-:`, `--:` | ✓ | ✓ |
+| Footnotes | `text[^note]` | ✓ | ✓ |
+| GitHub alerts | `> [!NOTE]`, `[!TIP]`, `[!IMPORTANT]`, `[!WARNING]`, `[!CAUTION]` | ✓ | ✓ |
+| Emoji shortcodes | `:wave:` | ✓ | ✓ |
+| YAML front matter | Hidden | ✓ | ✓ |
+| Links to a heading | `[setup](#setup)` scrolls to it | ✓ | ✓ |
+| Code blocks | Language label, copy button, highlighting for common languages | ✓ | ✓ |
+| Mermaid diagrams | Flowcharts and sequence diagrams, drawn without a script | ✓ | ✓ |
+| Math | `$…$`, `$$…$$` and ` ```math `, laid out without a script | ✓ | ✓ |
+| HTML that README files use | `<div align>`, `<details>`, `<sup>`, `<kbd>`, `<img>`, `<picture>`; other HTML is dropped | ✓ | ✓ |
+| Link schemes | Only allowed schemes can be clicked (`http`, `https`, `mailto` by default) | ✓ | ✓ |
+| Image schemes | Only allowed schemes load (`https` by default) | ✓ | ✓ |
+| SVG images | | Trusted badge hosts | Every allowed image |
+| Streaming | Set the text again as a reply arrives | ✓ | ✓ |
+| Light and dark themes | | Brushes | CSS variables |
+| Source positions | For keeping an editor in step | ✓ | ✓ |
+
+The sections below and each viewer's README give the details.
+
 - **GitHub Flavored Markdown**: headings, emphasis, ~~strikethrough~~, lists and task lists, quotes, tables with
   column alignment, footnotes, emoji shortcodes such as `:wave:`, and GitHub alerts (`> [!NOTE]`, `> [!TIP]`,
   `> [!IMPORTANT]`, `> [!WARNING]`, `> [!CAUTION]`). YAML front matter is hidden, and a link to a heading of the same
