@@ -18,7 +18,8 @@ and versions follow [Semantic Versioning](https://semver.org/).
 - `MarkdownReader`, in both packages, scrolls a viewer in a centred column and offers a table of contents: a rail along
   its edge with a line for each heading, and a list that slides out over the text when the rail is pointed at or
   clicked, or is pinned beside it (`OutlinePinned`, which binds both ways), on the left or the right (`OutlineSide`).
-  The rail and the list mark the section being read. The Blazor list's background is `--pmd-outline-bg` (#79).
+  The pin on the list leans as an outline while the list floats and stands upright and solid while it is pinned. The
+  rail and the list mark the section being read. The Blazor list's background is `--pmd-outline-bg` (#79).
 - The Avalonia viewer keeps a heading or footnote it moves the focus to at the top of the view. The scroll viewer used
   to move it out of place again as it brought the focused text into view.
 - Both viewers can open an image at full size over the window, to zoom and pan (`ZoomImages`, off by default); a host

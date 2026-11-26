@@ -4,6 +4,7 @@ using Avalonia.Automation.Peers;
 using Avalonia.Controls;
 using Avalonia.Headless;
 using Avalonia.Input;
+using Avalonia.Media;
 using Avalonia.Threading;
 using static Polhem.Markdown.Avalonia.UnitTests.ViewerHost;
 
@@ -187,6 +188,25 @@ public class ReaderTests(HeadlessSession session)
         Click(window, reader.Outline.PinButton);
         Assert.False(reader.OutlinePinned);
         Assert.Equal([true, false], changes);
+    });
+
+    [Fact(DisplayName = "The pin leans as an outline while the list floats, and stands upright and solid while it is pinned")]
+    public Task Pin_IconShowsState() => session.RunAsync(() =>
+    {
+        var (_, reader, _) = ShowReader(s_document);
+        var icon = reader.Outline.PinIcon;
+
+        Assert.Null(icon.Fill);
+        Assert.NotNull(icon.Stroke);
+        Assert.Equal(45, Assert.IsType<RotateTransform>(icon.RenderTransform).Angle);
+
+        reader.OutlinePinned = true;
+        Assert.Same(icon.Stroke, icon.Fill);
+        Assert.Null(icon.RenderTransform);
+
+        reader.OutlinePinned = false;
+        Assert.Null(icon.Fill);
+        Assert.IsType<RotateTransform>(icon.RenderTransform);
     });
 
     [Fact(DisplayName = "On the right, the rail and the column are on the right")]

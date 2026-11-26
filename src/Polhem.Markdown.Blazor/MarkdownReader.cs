@@ -2,6 +2,7 @@ using System.Globalization;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Rendering;
 using Microsoft.AspNetCore.Components.Web;
+using Polhem.Markdown.Model;
 
 namespace Polhem.Markdown.Blazor;
 
@@ -20,9 +21,6 @@ public class MarkdownReader : ComponentBase
     private const string ClassAttribute = "class";
     private const string ButtonElement = "button";
     private const string TypeAttribute = "type";
-
-    /// <summary>A pin, upright, as on the Avalonia reader's pin button.</summary>
-    private const string PinIcon = "M9 2h6l-1 2v5l3 3v2h-4.25v6L12 22l-.75-2v-6H7v-2l3-3V4z";
 
     private MarkdownViewer? _viewer;
     private MarkdownHeading? _currentHeading;
@@ -274,8 +272,14 @@ public class MarkdownReader : ComponentBase
         builder.OpenElement(11, "svg");
         builder.AddAttribute(12, "viewBox", "0 0 24 24");
         builder.AddAttribute(13, "aria-hidden", "true");
-        builder.OpenElement(14, "path");
-        builder.AddAttribute(15, "d", PinIcon);
+        builder.AddAttribute(14, "stroke-width", OutlineGlyphs.PinStrokeWidth.ToString(CultureInfo.InvariantCulture));
+        builder.OpenElement(15, "path");
+        builder.AddAttribute(16, "d", OutlineGlyphs.PinPath);
+        if (!OutlinePinned)
+        {
+            builder.AddAttribute(17, "transform", FormattableString.Invariant($"rotate({OutlineGlyphs.UnpinnedAngle} 12 12)"));
+        }
+
         builder.CloseElement();
         builder.CloseElement();
         builder.CloseElement();

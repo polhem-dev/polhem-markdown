@@ -15,7 +15,8 @@ Polhem.Markdown 各套件值得注意的變更，每個版本只列幾項重點�
   區塊，編輯只渲染改到的區塊。過去每次變更都會重新渲染整份文字。
 - 兩個套件新增 `MarkdownReader`：捲動 viewer，把內文排在置中的欄位，並提供目錄。邊緣的細欄為每個標題畫一條短線，
   指向或點擊細欄時，標題清單會浮在文字上；釘選後成為文字旁的側欄（`OutlinePinned`，可雙向繫結），可放在左側或右側
-  （`OutlineSide`）。細欄與清單都會標示正在閱讀的章節。Blazor 清單的背景色為 `--pmd-outline-bg`（#79）。
+  （`OutlineSide`）。清單上的圖釘在浮動時是斜放的外框，釘選後直立並填滿。
+  細欄與清單都會標示正在閱讀的章節。Blazor 清單的背景色為 `--pmd-outline-bg`（#79）。
 - Avalonia 檢視器把焦點移到標題或註腳時，目標會留在畫面頂端。過去 ScrollViewer 為了讓取得焦點的文字可見，會再捲動一次，使目標偏離頂端。
 - 兩個檢視器都能把圖片以原尺寸蓋在視窗上顯示，可縮放與平移（`ZoomImages`，預設關閉）；宿主可透過 `ImageActivated`
   （Avalonia）或 `OnImageActivated`（Blazor）改用自己的方式顯示圖片。Blazor 對話框的背景色為 `--pmd-zoom-backdrop`（#72）。
