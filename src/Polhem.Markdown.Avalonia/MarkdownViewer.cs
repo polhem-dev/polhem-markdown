@@ -346,6 +346,7 @@ public partial class MarkdownViewer : Control
     protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
     {
         base.OnPropertyChanged(change);
+        OnOutlinePropertyChanged(change);
 
         // NOTE: a change of theme rebuilds only the blocks with a picture whose source depends on it, since the block key
         // holds the source shown.
@@ -365,14 +366,18 @@ public partial class MarkdownViewer : Control
     /// <inheritdoc/>
     protected override Size MeasureOverride(Size availableSize)
     {
-        _panel.Measure(availableSize);
-        return _panel.DesiredSize;
+        var inset = OutlineInset;
+        _panel.Measure(availableSize.WithWidth(Math.Max(0, availableSize.Width - inset)));
+        MeasureOutline(availableSize);
+        return _panel.DesiredSize.WithWidth(_panel.DesiredSize.Width + inset);
     }
 
     /// <inheritdoc/>
     protected override Size ArrangeOverride(Size finalSize)
     {
-        _panel.Arrange(new Rect(finalSize));
+        var inset = OutlineInset;
+        _panel.Arrange(new Rect(OutlineSide == OutlineSide.Left ? inset : 0, 0, Math.Max(0, finalSize.Width - inset), finalSize.Height));
+        ArrangeOutline(finalSize);
         return finalSize;
     }
 
@@ -397,16 +402,22 @@ public partial class MarkdownViewer : Control
         // viewer is shorter than the window, was aligned by its bottom edge when the view scrolled up, which left the
         // target above the view by the difference.
         var view = this.FindAncestorOfType<ScrollViewer>();
+
+        // NOTE: the focus goes to the target's first text, which takes it although it is no tab stop, as an element a
+        // browser moves to by its fragment takes it. A footnote's anchor is the panel of its content. The scroll viewer
+        // would bring the text into view by the least movement as it takes the focus, which moved a target above the
+        // view off its top, so it does not while the focus moves.
+        if (moveFocus && (target as MarkdownTextBlock ?? target.GetLogicalDescendants().OfType<MarkdownTextBlock>().FirstOrDefault()) is { } text)
+        {
+            var bringsIntoView = view?.BringIntoViewOnFocusChange ?? false;
+            view?.SetCurrentValue(ScrollViewer.BringIntoViewOnFocusChangeProperty, false);
+            text.Focus(NavigationMethod.Unspecified);
+            view?.SetCurrentValue(ScrollViewer.BringIntoViewOnFocusChangeProperty, bringsIntoView);
+        }
+
         var viewHeight = view is { Viewport.Height: > 0 } ? view.Viewport.Height : TopLevel.GetTopLevel(this)?.ClientSize.Height ?? 0;
         var height = Math.Max(target.Bounds.Height, viewHeight);
         target.BringIntoView(new Rect(0, 0, target.Bounds.Width, height));
-
-        // NOTE: the focus goes to the target's first text, which takes it although it is no tab stop, as an element a
-        // browser moves to by its fragment takes it. A footnote's anchor is the panel of its content.
-        if (moveFocus && (target as MarkdownTextBlock ?? target.GetLogicalDescendants().OfType<MarkdownTextBlock>().FirstOrDefault()) is { } text)
-        {
-            text.Focus(NavigationMethod.Unspecified);
-        }
         return true;
     }
 
@@ -496,6 +507,7 @@ public partial class MarkdownViewer : Control
             return;
         }
         Headings = document.Headings;
+        UpdateOutlineHeadings();
         HeadingsChanged?.Invoke(this, EventArgs.Empty);
     }
 

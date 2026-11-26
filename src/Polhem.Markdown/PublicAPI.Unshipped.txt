@@ -17,3 +17,6 @@ override Polhem.Markdown.MarkdownHeading.GetHashCode() -> int
 override Polhem.Markdown.MarkdownHeading.ToString() -> string!
 static Polhem.Markdown.MarkdownHeading.operator !=(Polhem.Markdown.MarkdownHeading? left, Polhem.Markdown.MarkdownHeading? right) -> bool
 static Polhem.Markdown.MarkdownHeading.operator ==(Polhem.Markdown.MarkdownHeading? left, Polhem.Markdown.MarkdownHeading? right) -> bool
+Polhem.Markdown.OutlineSide
+Polhem.Markdown.OutlineSide.Left = 0 -> Polhem.Markdown.OutlineSide
+Polhem.Markdown.OutlineSide.Right = 1 -> Polhem.Markdown.OutlineSide

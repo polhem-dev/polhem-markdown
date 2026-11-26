@@ -13,10 +13,10 @@ export function scrollToAnchor(target) {
 const viewers = new WeakMap();
 const isMac = /Mac|iPhone|iPad/.test(navigator.platform);
 
-export function watchSource(root, component, ranges, reportScroll, takeClicks) {
+export function watchSource(root, component, ranges, reportScroll, takeClicks, reportReading = false) {
   let viewer = viewers.get(root);
   if (!viewer) {
-    viewer = { root, frame: 0, last: -1 };
+    viewer = { root, frame: 0, last: -1, lastReading: -1 };
     viewer.scroller = scroller(root);
     viewer.onScroll = () => schedule(viewer);
     viewer.onClick = e => onClick(viewer, e);
@@ -25,8 +25,8 @@ export function watchSource(root, component, ranges, reportScroll, takeClicks) {
     root.addEventListener("click", viewer.onClick, true);
     viewers.set(root, viewer);
   }
-  Object.assign(viewer, { component, ranges, reportScroll, takeClicks });
-  if (reportScroll) schedule(viewer);
+  Object.assign(viewer, { component, ranges, reportScroll, takeClicks, reportReading });
+  if (reportScroll || reportReading) schedule(viewer);
 }
 
 export function unwatchSource(root) {
@@ -85,16 +85,38 @@ function offsetAt(blocks, y) {
 }
 
 function schedule(viewer) {
-  if (!viewer.reportScroll || viewer.frame) return;
+  if ((!viewer.reportScroll && !viewer.reportReading) || viewer.frame) return;
   viewer.frame = requestAnimationFrame(() => {
     viewer.frame = 0;
     const blocks = sourceBlocks(viewer);
     if (!blocks) return;
     const offset = offsetAt(blocks, viewTop(viewer.scroller));
-    if (offset === viewer.last) return;
-    viewer.last = offset;
-    viewer.component.invokeMethodAsync("FirstVisibleChanged", offset).catch(() => { /* The viewer is gone. */ });
+    if (viewer.reportScroll && offset !== viewer.last) {
+      viewer.last = offset;
+      viewer.component.invokeMethodAsync("FirstVisibleChanged", offset).catch(() => { /* The viewer is gone. */ });
+    }
+    if (viewer.reportReading) {
+      // At the end of the text the last headings cannot reach the top of the view, so there the bottom decides which
+      // section is being read, as in the Avalonia viewer.
+      // A heading just below the top counts as read, as the text moves a little when it reflows; the Avalonia viewer
+      // uses the same distance (MarkdownViewer.ReadingMargin).
+      const reading = offsetAt(blocks, atEnd(viewer.scroller) ? viewBottom(viewer.scroller) : viewTop(viewer.scroller) + ReadingMargin);
+      if (reading !== viewer.lastReading) {
+        viewer.lastReading = reading;
+        viewer.component.invokeMethodAsync("ReadingChanged", reading).catch(() => { /* The viewer is gone. */ });
+      }
+    }
   });
+}
+
+const ReadingMargin = 24;
+
+function atEnd(scroller) {
+  return scroller.scrollHeight - scroller.scrollTop - scroller.clientHeight <= 1;
+}
+
+function viewBottom(scroller) {
+  return scroller === document.scrollingElement ? window.innerHeight : scroller.getBoundingClientRect().bottom;
 }
 
 function onClick(viewer, e) {

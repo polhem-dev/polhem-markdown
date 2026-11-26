@@ -13,6 +13,7 @@ public partial class MarkdownViewer
     private int[]? _watchedRanges;
     private bool _watchedScroll;
     private bool _watchedClicks;
+    private bool _watchedReading;
 
     private ElementReference _root;
     private DotNetObjectReference<MarkdownViewerBridge>? _bridge;
@@ -92,7 +93,7 @@ public partial class MarkdownViewer
     /// <inheritdoc/>
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if ((OnSourceRequested.HasDelegate || FirstVisibleSourceOffsetChanged.HasDelegate) && RendererInfo.IsInteractive)
+        if ((OnSourceRequested.HasDelegate || FirstVisibleSourceOffsetChanged.HasDelegate || OutlineShown) && RendererInfo.IsInteractive)
         {
             await WatchSourceAsync(force: false);
         }
@@ -104,6 +105,7 @@ public partial class MarkdownViewer
         {
             await OpenZoomAsync();
         }
+        await FocusOutlineAsync();
     }
 
     /// <summary>
@@ -114,7 +116,9 @@ public partial class MarkdownViewer
     {
         var scroll = FirstVisibleSourceOffsetChanged.HasDelegate;
         var clicks = OnSourceRequested.HasDelegate;
-        if (!force && ReferenceEquals(_watchedRanges, _sourceRanges) && _watchedScroll == scroll && _watchedClicks == clicks)
+        var reading = OutlineShown;
+        if (!force && ReferenceEquals(_watchedRanges, _sourceRanges) && _watchedScroll == scroll && _watchedClicks == clicks
+            && _watchedReading == reading)
         {
             return null;
         }
@@ -123,8 +127,8 @@ public partial class MarkdownViewer
             _module ??= JS.InvokeAsync<IJSObjectReference>("import", ModulePath).AsTask();
             var module = await _module;
             _bridge ??= DotNetObjectReference.Create(new MarkdownViewerBridge(this));
-            await module.InvokeVoidAsync("watchSource", _root, _bridge, _sourceRanges, scroll, clicks);
-            (_watchedRanges, _watchedScroll, _watchedClicks) = (_sourceRanges, scroll, clicks);
+            await module.InvokeVoidAsync("watchSource", _root, _bridge, _sourceRanges, scroll, clicks, reading);
+            (_watchedRanges, _watchedScroll, _watchedClicks, _watchedReading) = (_sourceRanges, scroll, clicks, reading);
             return module;
         }
         catch (JSException)

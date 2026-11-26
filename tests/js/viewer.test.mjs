@@ -179,3 +179,21 @@ test("a link to an anchor scrolls the target to the top and focuses it without s
 
   assert.deepEqual(calls, [["scroll", { block: "start" }], ["focus", { preventScroll: true }]]);
 });
+
+test("for the table of contents, the section being read is reported: just below the top of the pane, and at its bottom once at the end", () => {
+  const pane = Object.assign(new Box(100, 100, null, "auto"), { clientHeight: 100, scrollHeight: 200 });
+  const root = new Box(100, 200, pane);
+  root.parentElement = pane;
+  root.children = [new Box(100, 50, pane), new Box(150, 100, pane), new Box(250, 50, pane)];
+  const component = new Component();
+  viewer.watchSource(root, component, [0, 10, 12, 40, 54, 6], false, false, true);
+  runFrames();
+
+  pane.scrollTop = 100;
+  pane.dispatch("scroll");
+  runFrames();
+
+  // 24 pixels into the first block, which is 50 tall with 10 characters of source.
+  assert.deepEqual(component.calls, [["ReadingChanged", 5], ["ReadingChanged", 60]]);
+  viewer.unwatchSource(root);
+});

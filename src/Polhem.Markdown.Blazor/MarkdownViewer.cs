@@ -105,6 +105,7 @@ public partial class MarkdownViewer : ComponentBase, IAsyncDisposable
             _parsedMarkdown = Markdown;
             _parsedOptions = Options;
             KeepSourceRanges();
+            KeepCurrentHeading();
             ForgetRemovedAnchors();
         }
     }
@@ -157,7 +158,27 @@ public partial class MarkdownViewer : ComponentBase, IAsyncDisposable
     protected override void BuildRenderTree(RenderTreeBuilder builder)
     {
         var tree = new MarkdownRenderTree(this, builder);
-        tree.Document(_document, Class);
+        if (OutlineShown)
+        {
+            // NOTE: the table of contents sits beside the root element, not in it: the root's children are the top-level
+            // blocks, which is how the script finds a block from its index in the source ranges.
+            builder.OpenRegion(0);
+            builder.OpenElement(0, "div");
+            builder.AddAttribute(1, "class", "pmd-outlined pmd-outline-" + (OutlineSide == OutlineSide.Right ? "right" : "left")
+                + (OutlinePinned ? " pmd-outline-pinned" : "") + (string.IsNullOrWhiteSpace(Class) ? "" : " " + Class));
+            tree.Outline(Headings);
+            builder.OpenRegion(2);
+            tree.Document(_document, Class);
+            builder.CloseRegion();
+            builder.CloseElement();
+            builder.CloseRegion();
+        }
+        else
+        {
+            builder.OpenRegion(1);
+            tree.Document(_document, Class);
+            builder.CloseRegion();
+        }
         if (_zoomed is { } zoomed)
         {
             tree.ZoomDialog(zoomed, Class);
