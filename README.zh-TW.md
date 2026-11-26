@@ -10,13 +10,13 @@
 [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=polhem-dev_polhem-markdown&metric=coverage)](https://sonarcloud.io/project/overview?id=polhem-dev_polhem-markdown)
 
 .NET 的 Markdown 檢視器，讓同一段文字在不同前端呈現一致，另有 Avalonia 與 Blazor 的 Markdown 原始碼編輯器。一個套件負責解析並套用安全政策，
-各 UI 框架的套件負責呈現結果與編輯原始碼。
+各 UI 框架的套件負責呈現結果、在外層提供附目錄的閱讀區，以及編輯原始碼。
 
 | 套件 | 用途 |
 |------|------|
 | `Polhem.Markdown` | 解析（使用 [Markdig](https://github.com/xoofx/markdig)），以及各檢視器共用的安全政策 |
-| `Polhem.Markdown.Avalonia` | Avalonia 的檢視器控制項與原始碼編輯器控制項 |
-| `Polhem.Markdown.Blazor` | Blazor 的檢視器元件，輸出以 CSS 變數設定樣式的語意化 HTML，另有原始碼編輯器元件 |
+| `Polhem.Markdown.Avalonia` | Avalonia 的檢視器控制項、附目錄的閱讀區控制項，以及原始碼編輯器控制項 |
+| `Polhem.Markdown.Blazor` | Blazor 的檢視器元件，輸出以 CSS 變數設定樣式的語意化 HTML，另有附目錄的閱讀區元件與原始碼編輯器元件 |
 
 套件發佈在 [nuget.org](https://www.nuget.org/packages?q=Polhem.Markdown)，各版變更見 [CHANGELOG](CHANGELOG.zh-TW.md)。
 目前是 0.x：minor 版仍可能變更 API，CHANGELOG 會寫明。
@@ -82,7 +82,13 @@
 
 - **安全**：只有允許的 scheme（預設 `http`、`https`、`mailto`）的連結可以點擊，只有允許的 scheme（預設 `https`）
   的圖片會載入。宿主可以加入自己的 scheme，並決定這類連結要做什麼。
-- **串流**：回覆陸續送達時可以反覆設定文字，範例的「重播」功能可看到效果。
+- **串流**：回覆陸續送達時可以反覆設定文字，只有變動到的區塊會重新呈現。設定 `IsStreaming` 時，回覆尚未結束的語法
+  （例如還沒收尾的強調、網址還在送達的連結）會先依完成後的樣子呈現，記號不會先出現再跳動。範例的「重播」功能可看到效果。
+- **閱讀**：可以像在瀏覽器裡一樣跨區塊選取與複製文字。`Headings` 列出標題供目錄使用，`MarkdownReader` 則直接提供目錄：
+  檢視器邊緣的細欄，以及可浮在文字上或釘選在旁邊的標題清單，並標示正在閱讀的章節。`ZoomImages` 讓圖片以原尺寸開啟，可縮放與平移。
+- **文件內搜尋**：Avalonia 檢視器按 Ctrl+F（⌘F）叫出搜尋列，Blazor 檢視器可用瀏覽器原生搜尋；兩邊都有相同的 API，
+  供宿主接上自己的搜尋框（Avalonia 為 `Find`，Blazor 為 `FindAsync`）。
+- **無障礙**：兩個檢視器都會讓螢幕閱讀器讀出標題與其層級、連結、清單、表格與警示，並可用 Tab 與 Enter 移到連結並開啟。
 
 各檢視器的用法見各套件的 README：
 [Avalonia](src/Polhem.Markdown.Avalonia/README.md)、[Blazor](src/Polhem.Markdown.Blazor/README.md)。
@@ -113,8 +119,8 @@
 
 ## 範例
 
-`samples/MarkdownGallery` 以 Semi 主題（亮色或暗色）展示每一種節點，並可「重播」：把文字分段打出來，模擬串流回覆。
-打開 Edit 開關，編輯器會出現在檢視器旁邊，兩邊同步捲動。
+`samples/MarkdownGallery` 以 Semi 主題（亮色或暗色）在附目錄的 `MarkdownReader` 中展示每一種節點，並可「重播」：
+把文字分段打出來，模擬串流回覆。圖片可點開成原尺寸，Ctrl+F（⌘F）可搜尋文字。打開 Edit 開關，編輯器會出現在檢視器旁邊，兩邊同步捲動。
 
 ```bash
 dotnet run --project samples/MarkdownGallery.Desktop
@@ -122,7 +128,7 @@ dotnet run --project samples/MarkdownGallery.Blazor
 dotnet run --project samples/MarkdownGallery.Wasm
 ```
 
-Blazor 版 Gallery 顯示同一份文字，方便兩個檢視器並排比對；它的 Edit 開關同樣會把 Blazor 編輯器放在檢視器旁邊。
+Blazor 版 Gallery 顯示同一份文字，方便兩個檢視器並排比對，並有一個使用檢視器搜尋 API 的搜尋框；它的 Edit 開關同樣會把 Blazor 編輯器放在檢視器旁邊。
 `MarkdownGallery.Blazor` 以 interactive server 渲染執行；`MarkdownGallery.Wasm` 是同一個頁面跑在獨立的 Blazor WebAssembly
 上，完全在瀏覽器裡執行、不需要伺服器。Build CI 會以裁剪（trimming）方式發佈它，Blazor 套件若有改動在裁剪後無法運作，建置就會失敗。
 

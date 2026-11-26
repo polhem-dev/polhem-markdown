@@ -814,9 +814,18 @@
   background: var(--pmd-code-bg, rgba(128, 128, 128, 0.12));
 }
 
+/* The pin's stroke width and, while unpinned, its lean come from the component, which shares them with the Avalonia
+   reader. Pinned, it is filled as well. */
 .pmd-reader-pin svg {
-  width: 14px;
-  height: 14px;
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.pmd-reader-pin[aria-pressed="true"] svg {
   fill: currentColor;
 }
 
