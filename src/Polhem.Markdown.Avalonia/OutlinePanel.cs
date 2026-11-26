@@ -6,6 +6,7 @@ using Avalonia.Controls.Primitives;
 using Avalonia.Input;
 using Avalonia.Layout;
 using Avalonia.Media;
+using Polhem.Markdown.Model;
 using Path = Avalonia.Controls.Shapes.Path;
 
 namespace Polhem.Markdown.Avalonia;
@@ -17,8 +18,7 @@ namespace Polhem.Markdown.Avalonia;
 /// </summary>
 internal sealed class OutlinePanel : Border
 {
-    /// <summary>A pin, upright.</summary>
-    private static readonly Geometry s_pinIcon = Geometry.Parse("M9 2h6l-1 2v5l3 3v2h-4.25v6L12 22l-.75-2v-6H7v-2l3-3V4z");
+    private static readonly Geometry s_pinIcon = Geometry.Parse(OutlineGlyphs.PinPath);
 
     private readonly MarkdownReader _reader;
     private readonly TextBlock _title;
@@ -33,10 +33,21 @@ internal sealed class OutlinePanel : Border
         Padding = new Thickness(8);
 
         _title = new TextBlock { FontWeight = FontWeight.SemiBold, VerticalAlignment = VerticalAlignment.Center };
-        _pinIconPath = new Path { Data = s_pinIcon, Width = 14, Height = 14, Stretch = Stretch.Uniform };
+        // NOTE: the path keeps the 24 by 24 grid of its data and a box scales it, so that the pin turns about the centre
+        // of that grid and is the same size upright or leaning, as in the Blazor reader's 24 by 24 view box.
+        _pinIconPath = new Path
+        {
+            Data = s_pinIcon,
+            Width = 24,
+            Height = 24,
+            Stretch = Stretch.None,
+            StrokeThickness = OutlineGlyphs.PinStrokeWidth,
+            StrokeLineCap = PenLineCap.Round,
+            StrokeJoin = PenLineJoin.Round,
+        };
         _pin = new ToggleButton
         {
-            Content = _pinIconPath,
+            Content = new Viewbox { Width = 16, Height = 16, Child = _pinIconPath },
             Padding = new Thickness(6),
             Background = Brushes.Transparent,
             BorderThickness = new Thickness(0),
@@ -77,6 +88,9 @@ internal sealed class OutlinePanel : Border
     /// <summary>The button that pins or unpins the panel, for tests.</summary>
     internal ToggleButton PinButton => _pin;
 
+    /// <summary>The pin's icon, for tests.</summary>
+    internal Path PinIcon => _pinIconPath;
+
     /// <summary>Occurs when a user picks a heading.</summary>
     public event EventHandler<MarkdownHeading>? HeadingPicked;
 
@@ -102,7 +116,10 @@ internal sealed class OutlinePanel : Border
         BoxShadow = pinned
             ? default
             : new BoxShadows(new BoxShadow { OffsetX = side == OutlineSide.Left ? 4 : -4, Blur = 16, Color = Color.FromArgb(0x30, 0, 0, 0) });
-        _pinIconPath.Fill = viewer?.GetValue(global::Avalonia.Controls.Documents.TextElement.ForegroundProperty) ?? Brushes.Gray;
+        var foreground = viewer?.GetValue(global::Avalonia.Controls.Documents.TextElement.ForegroundProperty) ?? Brushes.Gray;
+        _pinIconPath.Stroke = foreground;
+        _pinIconPath.Fill = pinned ? foreground : null;
+        _pinIconPath.RenderTransform = pinned ? null : new RotateTransform(OutlineGlyphs.UnpinnedAngle);
     }
 
     /// <summary>Lists <paramref name="headings"/>, marking <paramref name="current"/>.</summary>

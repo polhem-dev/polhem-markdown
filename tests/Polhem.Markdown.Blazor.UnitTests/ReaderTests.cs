@@ -133,6 +133,20 @@ public class ReaderTests : BunitContext
         Assert.Equal([false], changes);
     }
 
+    [Fact(DisplayName = "The pin leans while the list floats and stands upright while it is pinned")]
+    public void Pin_IconShowsState()
+    {
+        var reader = Show(Document);
+        var path = reader.Find("button.pmd-reader-pin path");
+        Assert.Equal("false", reader.Find("button.pmd-reader-pin").GetAttribute("aria-pressed"));
+        Assert.Equal("rotate(45 12 12)", path.GetAttribute("transform"));
+
+        reader.Find("button.pmd-reader-pin").Click();
+
+        Assert.Equal("true", reader.Find("button.pmd-reader-pin").GetAttribute("aria-pressed"));
+        Assert.Null(reader.Find("button.pmd-reader-pin path").GetAttribute("transform"));
+    }
+
     [Fact(DisplayName = "On the right, with the host's classes, labels translated and no limit on the text's width")]
     public void RightSide_Classes_Labels()
     {
