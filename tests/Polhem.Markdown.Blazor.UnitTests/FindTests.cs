@@ -1,5 +1,6 @@
 using Bunit;
 using Microsoft.AspNetCore.Components;
+using Microsoft.JSInterop;
 
 namespace Polhem.Markdown.Blazor.UnitTests;
 
@@ -32,7 +33,7 @@ public class FindTests : BunitContext
         var call = Assert.Single(_module.Invocations["find"]);
         Assert.IsType<ElementReference>(call.Arguments[0]);
         Assert.Equal("one", call.Arguments[1]);
-        Assert.Equal(true, call.Arguments[2]);
+        Assert.True((bool)call.Arguments[2]!);
     }
 
     [Fact(DisplayName = "Next and previous step through the matches by one, and clearing forgets them")]
@@ -63,5 +64,15 @@ public class FindTests : BunitContext
 
         Assert.Equal(0, await viewer.InvokeAsync(() => viewer.Instance.FindAsync("one")));
         Assert.Empty(JSInterop.Invocations);
+    }
+
+    [Fact(DisplayName = "When the text left the page before the script ran, find finds nothing instead of failing")]
+    public async Task ScriptFails_FindsNothing()
+    {
+        _module.Setup<int[]>("find", _ => true).SetException(new JSException("The element is gone."));
+        var viewer = Show();
+
+        Assert.Equal(0, await viewer.InvokeAsync(() => viewer.Instance.FindAsync("one")));
+        Assert.Equal(0, viewer.Instance.CurrentFindMatch);
     }
 }

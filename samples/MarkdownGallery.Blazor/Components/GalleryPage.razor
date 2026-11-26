@@ -9,7 +9,7 @@
         @* The browser's own find works on the viewer's text; this box shows the viewer's find API. *@
         <input type="search" placeholder="Find" aria-label="Find" @bind="_find" @bind:event="oninput" @bind:after="FindAsync"
                @onkeydown="FindKeyAsync" />
-        <span class="status">@(_viewer is { FindMatchCount: > 0 } v ? $"{v.CurrentFindMatch}/{v.FindMatchCount}" : _find.Length > 0 ? "0/0" : "")</span>
+        <span class="status">@FindStatus</span>
         <span class="status">@_status</span>
     </div>
     <div class="body">
@@ -120,6 +120,18 @@
 
     private CancellationTokenSource? _replay;
     private string _find = "";
+
+    private string FindStatus
+    {
+        get
+        {
+            if (_viewer is { FindMatchCount: > 0 } viewer)
+            {
+                return $"{viewer.CurrentFindMatch}/{viewer.FindMatchCount}";
+            }
+            return _find.Length > 0 ? "0/0" : "";
+        }
+    }
 
     private async Task FindAsync()
     {

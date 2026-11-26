@@ -326,19 +326,24 @@ function segmentsOf(root) {
   });
   for (let node = walker.nextNode(); node; node = walker.nextNode()) {
     let block = node.parentElement;
-    while (block && block !== root && inlineTags.has(block.localName.toUpperCase())) block = block.parentElement;
+    while (block !== root && block?.localName && inlineTags.has(block.localName.toUpperCase())) block = block.parentElement;
     if (!current || current.block !== block) {
       current = { block, text: "", pieces: [] };
       segments.push(current);
     }
-    const text = node.nodeType === Node.TEXT_NODE ? node.data
-      : node.localName === "img" ? node.alt || ""
-      : "$" + (node.querySelector("annotation")?.textContent ?? "") + "$";
+    const text = pieceText(node);
     current.pieces.push({ node, start: current.text.length, end: current.text.length + text.length });
     current.text += text;
     if (node.nodeType === Node.ELEMENT_NODE) walker.currentNode = lastDescendant(node);
   }
   return segments;
+}
+
+// What a piece reads as: a text node's text, an image's alternative text, or a formula's LaTeX between dollars.
+function pieceText(node) {
+  if (node.nodeType === Node.TEXT_NODE) return node.data;
+  if (node.localName === "img") return node.alt || "";
+  return "$" + (node.querySelector("annotation")?.textContent ?? "") + "$";
 }
 
 function lastDescendant(node) {

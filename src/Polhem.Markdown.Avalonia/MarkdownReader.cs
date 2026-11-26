@@ -422,7 +422,17 @@ public class MarkdownReader : Control
     }
 
     /// <summary>The room the rail and a pinned list take beside the text.</summary>
-    private double Inset => Viewer is null ? 0 : OutlineRail.Size + (HasHeadings && OutlinePinned ? OutlinePanel.PanelWidth : 0);
+    private double Inset
+    {
+        get
+        {
+            if (Viewer is null)
+            {
+                return 0;
+            }
+            return HasHeadings && OutlinePinned ? OutlineRail.Size + OutlinePanel.PanelWidth : OutlineRail.Size;
+        }
+    }
 
     /// <summary>How tall the search button at the top of the rail is.</summary>
     private const double FindButtonHeight = 36;

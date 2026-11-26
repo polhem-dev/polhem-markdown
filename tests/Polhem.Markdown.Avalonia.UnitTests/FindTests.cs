@@ -193,4 +193,56 @@ public class FindTests(HeadlessSession session)
 
         Assert.True(viewer.IsFindOpen);
     });
+
+    [Fact(DisplayName = "Labels and colors changed while the bar is open apply at once; closing a bar never opened does nothing")]
+    public Task Changes_ApplyWhileOpen() => session.RunAsync(() =>
+    {
+        var (window, _, viewer) = ShowScrolling("one");
+        viewer.CloseFind();
+        Assert.False(viewer.IsFindOpen);
+
+        viewer.OpenFind("one");
+        viewer.FindBarLabels = item => item == MarkdownFindBarItem.Close ? "關閉" : null;
+        viewer.FindMatchBrush = global::Avalonia.Media.Brushes.LightGreen;
+        window.RequestedThemeVariant = global::Avalonia.Styling.ThemeVariant.Dark;
+        Dispatcher.UIThread.RunJobs();
+
+        var close = viewer.FindBarControl!.GetVisualDescendants().OfType<Button>().Last();
+        Assert.Equal("關閉", AutomationProperties.GetName(close));
+        Assert.Equal(1, viewer.FindMatchCount);
+        Assert.False(viewer.FindNext() && viewer.CurrentFindMatch != 1);
+    });
+
+    [Fact(DisplayName = "Ctrl+F in the reader's table of contents opens the viewer's find bar")]
+    public Task Reader_CtrlF() => session.RunAsync(() =>
+    {
+        var viewer = new MarkdownViewer { ImageLoader = NoImages, Markdown = "# One\n\ntext" };
+        var reader = new MarkdownReader { Viewer = viewer, OutlinePinned = true };
+        var window = new Window { Width = 800, Height = 600, Content = reader };
+        window.Show();
+        Dispatcher.UIThread.RunJobs();
+        reader.Outline.Entries.First().Focus(NavigationMethod.Tab);
+
+        var command = Application.Current!.PlatformSettings!.HotkeyConfiguration.CommandModifiers == KeyModifiers.Meta
+            ? RawInputModifiers.Meta
+            : RawInputModifiers.Control;
+        window.KeyPressQwerty(PhysicalKey.F, command);
+
+        Assert.True(viewer.IsFindOpen);
+    });
+
+    [Fact(DisplayName = "F3 with no find does nothing, and Shift+F3 goes back")]
+    public Task F3_WithoutFind() => session.RunAsync(() =>
+    {
+        var (window, _, viewer) = ShowScrolling("one\n\none");
+        FocusText(window, viewer);
+        window.KeyPressQwerty(PhysicalKey.F3, RawInputModifiers.None);
+        Assert.Equal(0, viewer.CurrentFindMatch);
+
+        viewer.Find("one");
+        FocusText(window, viewer);
+        window.KeyPressQwerty(PhysicalKey.F3, RawInputModifiers.Shift);
+        Assert.Equal(2, viewer.CurrentFindMatch);
+        Assert.False(viewer.FindPrevious() && viewer.CurrentFindMatch != 1);
+    });
 }
