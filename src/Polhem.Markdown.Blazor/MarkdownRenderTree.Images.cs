@@ -54,17 +54,46 @@ internal sealed partial class MarkdownRenderTree
         _builder.OpenRegion(4);
         Picture(image, zoomed: true);
         _builder.CloseRegion();
-        _builder.OpenElement(5, ButtonElement);
-        _builder.AddAttribute(6, TypeAttribute, ButtonElement);
-        _builder.AddAttribute(7, ClassAttribute, "pmd-zoom-close");
-        _builder.AddAttribute(8, "aria-label", MarkdownViewer.ZoomCloseLabel);
-        _builder.AddAttribute(9, "title", MarkdownViewer.ZoomCloseLabel);
-        _builder.OpenElement(10, "svg");
-        _builder.AddAttribute(11, "viewBox", "0 0 24 24");
-        _builder.AddAttribute(12, "aria-hidden", "true");
-        _builder.OpenElement(13, "path");
-        _builder.AddAttribute(14, "d", "M6 6 18 18M18 6 6 18");
+        _builder.OpenElement(5, "div");
+        _builder.AddAttribute(6, ClassAttribute, "pmd-zoom-toolbar");
+        _builder.OpenRegion(7);
+        ZoomSaveButton(image);
+        _builder.CloseRegion();
+        _builder.OpenElement(8, ButtonElement);
+        _builder.AddAttribute(9, TypeAttribute, ButtonElement);
+        _builder.AddAttribute(10, ClassAttribute, "pmd-zoom-close");
+        _builder.AddAttribute(11, "aria-label", MarkdownViewer.ZoomCloseLabel);
+        _builder.AddAttribute(12, "title", MarkdownViewer.ZoomCloseLabel);
+        _builder.OpenElement(13, "svg");
+        _builder.AddAttribute(14, "viewBox", "0 0 20 20");
+        _builder.AddAttribute(15, "aria-hidden", "true");
+        _builder.OpenElement(16, "path");
+        _builder.AddAttribute(17, "d", CloseIconPath);
         _builder.CloseElement();
+        _builder.CloseElement();
+        _builder.CloseElement();
+        _builder.CloseElement();
+        _builder.CloseElement();
+    }
+
+    // NOTE: The icons are drawn on a 20 by 20 grid, the same paths as the Avalonia overlay's in ImageZoomOverlay.cs.
+    private const string CloseIconPath = "M5.5 5.5 14.5 14.5M14.5 5.5 5.5 14.5";
+    private const string SaveIconPath = "M10 3.5v9M6 9l4 4 4-4M3.5 13.5v1.5a1.5 1.5 0 0 0 1.5 1.5h10a1.5 1.5 0 0 0 1.5-1.5v-1.5";
+
+    /// <summary>The button beside the close button that saves the image: a download arrow onto a tray.</summary>
+    private void ZoomSaveButton(ImageNode image)
+    {
+        _builder.OpenElement(0, ButtonElement);
+        _builder.AddAttribute(1, TypeAttribute, ButtonElement);
+        _builder.AddAttribute(2, ClassAttribute, "pmd-zoom-save");
+        _builder.AddAttribute(3, "aria-label", MarkdownViewer.ZoomSaveLabel);
+        _builder.AddAttribute(4, "title", MarkdownViewer.ZoomSaveLabel);
+        _builder.AddAttribute(5, OnClickAttribute, EventCallback.Factory.Create<MouseEventArgs>(_viewer, () => _viewer.SaveZoomedImageAsync(image)));
+        _builder.OpenElement(6, "svg");
+        _builder.AddAttribute(7, "viewBox", "0 0 20 20");
+        _builder.AddAttribute(8, "aria-hidden", "true");
+        _builder.OpenElement(9, "path");
+        _builder.AddAttribute(10, "d", SaveIconPath);
         _builder.CloseElement();
         _builder.CloseElement();
         _builder.CloseElement();

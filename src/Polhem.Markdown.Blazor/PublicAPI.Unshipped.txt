@@ -42,3 +42,9 @@ Polhem.Markdown.Blazor.MarkdownViewer.FindAsync(string! text, bool matchCase = f
 Polhem.Markdown.Blazor.MarkdownViewer.FindMatchCount.get -> int
 Polhem.Markdown.Blazor.MarkdownViewer.FindNextAsync() -> System.Threading.Tasks.Task<bool>!
 Polhem.Markdown.Blazor.MarkdownViewer.FindPreviousAsync() -> System.Threading.Tasks.Task<bool>!
+Polhem.Markdown.Blazor.MarkdownImageSaveRequestedEventArgs
+Polhem.Markdown.Blazor.MarkdownImageSaveRequestedEventArgs.AlternativeText.get -> string!
+Polhem.Markdown.Blazor.MarkdownImageSaveRequestedEventArgs.MarkdownImageSaveRequestedEventArgs(System.Uri! uri, string! alternativeText) -> void
+Polhem.Markdown.Blazor.MarkdownImageSaveRequestedEventArgs.Uri.get -> System.Uri!
+Polhem.Markdown.Blazor.MarkdownViewer.OnImageSaveRequested.get -> Microsoft.AspNetCore.Components.EventCallback<Polhem.Markdown.Blazor.MarkdownImageSaveRequestedEventArgs!>
+Polhem.Markdown.Blazor.MarkdownViewer.OnImageSaveRequested.set -> void

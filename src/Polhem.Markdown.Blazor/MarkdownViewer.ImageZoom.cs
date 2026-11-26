@@ -24,8 +24,43 @@ public partial class MarkdownViewer
     [Parameter]
     public EventCallback<MarkdownImageActivatedEventArgs> OnImageActivated { get; set; }
 
+    /// <summary>
+    /// Gets or sets what happens when a user asks to save the image open at full size. When it is set, the host saves
+    /// the image its own way; when it is not, the browser fetches the image and downloads it, or, when the image's host
+    /// does not let the page read it, opens it in a new tab to be saved from there.
+    /// </summary>
+    [Parameter]
+    public EventCallback<MarkdownImageSaveRequestedEventArgs> OnImageSaveRequested { get; set; }
+
     /// <summary>The accessible name and tooltip of the button that closes an image opened at full size.</summary>
     internal const string ZoomCloseLabel = "Close";
+
+    /// <summary>The accessible name and tooltip of the button that saves an image opened at full size.</summary>
+    internal const string ZoomSaveLabel = "Save image";
+
+    internal async Task SaveZoomedImageAsync(ImageNode image)
+    {
+        if (OnImageSaveRequested.HasDelegate)
+        {
+            await OnImageSaveRequested.InvokeAsync(new MarkdownImageSaveRequestedEventArgs(image.Source, image.AlternativeText));
+            return;
+        }
+        try
+        {
+            _module ??= JS.InvokeAsync<IJSObjectReference>("import", ModulePath).AsTask();
+            var module = await _module;
+            await module.InvokeVoidAsync("saveImage", _zoomDialog, ImageFileName.Suggest(image.Source, []));
+        }
+        catch (JSException)
+        {
+            // The dialog closed before the script ran, or the module could not load. Nothing is saved.
+            ForgetFailedImport();
+        }
+        catch (TaskCanceledException)
+        {
+            ForgetFailedImport();
+        }
+    }
 
     /// <summary>The image open at full size, for tests.</summary>
     internal ImageNode? ZoomedImage => _zoomed;

@@ -49,17 +49,22 @@ class Element {
   constructor(classes = "") { this.classes = classes; this.listeners = {}; this.style = {}; }
   addEventListener(type, handler) { (this.listeners[type] ||= []).push(handler); }
   removeEventListener(type, handler) { this.listeners[type] = (this.listeners[type] || []).filter(h => h !== handler); }
-  closest(selector) { return this.classes.split(" ").includes(selector.slice(1)) ? this : null; }
+  closest(selectors) {
+    const classes = this.classes.split(" ");
+    return selectors.split(",").some(selector => classes.includes(selector.trim().slice(1))) ? this : null;
+  }
 }
 
 function openDialog() {
   const image = new Element("pmd-zoom-image");
   Object.assign(image, { complete: true, naturalWidth: natural.width, naturalHeight: natural.height });
   const close = new Element("pmd-zoom-close");
+  const save = new Element("pmd-zoom-save");
   const dialog = new Element("pmd-zoom");
   Object.assign(dialog, {
     clientWidth: room.width, clientHeight: room.height, open: false,
     querySelector: selector => (selector === ".pmd-zoom-image" ? image : close),
+    save,
     getBoundingClientRect: () => ({ left: 0, top: 0 }),
     showModal() { this.open = true; },
     close() { this.open = false; this.fire("close", { target: this }); },
@@ -135,4 +140,38 @@ test("An image that cannot be loaded closes the dialog", () => {
   for (const handler of image.listeners.error || []) handler({ type: "error" });
   assert.equal(dialog.open, false);
   assert.deepEqual(calls, ["ZoomClosed"]);
+});
+
+test("A press on the save button is the button's: it neither drags nor closes the image", () => {
+  const { dialog } = openDialog();
+  dialog.fire("pointerdown", { target: dialog.save, clientX: 5, clientY: 5 });
+  dialog.fire("pointerup", { target: dialog.save, clientX: 5, clientY: 5 });
+  assert.equal(dialog.open, true);
+});
+
+test("A name without an extension gets the one of the image's type", () => {
+  assert.equal(viewer.withExtension("build-passing", "image/svg+xml"), "build-passing.svg");
+  assert.equal(viewer.withExtension("chart.png", "image/jpeg"), "chart.png");
+  assert.equal(viewer.withExtension("image", "application/octet-stream"), "image");
+});
+
+test("Saving downloads the image under its name, or opens it in a new tab when its host does not let the page read it", async () => {
+  const image = { currentSrc: "https://example.org/chart", src: "https://example.org/chart" };
+  const dialog = { querySelector: () => image };
+  const clicked = [];
+  const opened = [];
+  globalThis.document = { createElement: () => ({ click() { clicked.push(this.download); } }) };
+  globalThis.URL.createObjectURL = () => "blob:chart";
+  globalThis.URL.revokeObjectURL = () => {};
+  globalThis.window.open = url => opened.push(url);
+
+  globalThis.fetch = async () => ({ ok: true, blob: async () => ({ type: "image/png" }) });
+  await viewer.saveImage(dialog, "chart");
+  assert.deepEqual(clicked, ["chart.png"]);
+
+  globalThis.fetch = async () => { throw new TypeError("Failed to fetch"); };
+  await viewer.saveImage(dialog, "chart");
+  globalThis.fetch = async () => ({ ok: false, status: 403 });
+  await viewer.saveImage(dialog, "chart");
+  assert.deepEqual(opened, ["https://example.org/chart", "https://example.org/chart"]);
 });
