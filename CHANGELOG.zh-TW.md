@@ -9,36 +9,16 @@ Polhem.Markdown 各套件值得注意的變更，每個版本只列幾項重點�
 
 ## [Unreleased]
 
-- 檢視器以原尺寸開啟的圖片，在右上角的工具列中、關閉按鈕旁多了儲存按鈕，儲存的是原始檔：Avalonia 透過存檔對話框，Blazor
-  則直接下載；圖片的伺服器不允許頁面讀取時，改在新分頁開啟。宿主可透過 `ImageSaveRequested`（Avalonia）或
-  `OnImageSaveRequested`（Blazor）改用自己的方式儲存（#88）。
-- 文件內搜尋：在 Avalonia 檢視器按 Ctrl+F（⌘F）會叫出搜尋列並反白所有符合處，`MarkdownReader` 的細欄上有放大鏡按鈕。
-  兩個檢視器有相同的 API（Avalonia 的 `Find`、`FindNext`、`FindPrevious`；Blazor 的 `FindAsync` 等），Blazor 上瀏覽器原生的
-  搜尋也能用（#85）。
-- 兩個檢視器都能把仍在送達的回覆依完成後的樣子呈現（`IsStreaming`）：最後一個區塊尚未結束的語法會先補齊或暫不顯示，
-  不再先露出記號、半截網址或一整行管線再跳動（#69）。
-- Blazor 檢視器只重新渲染文字變更影響到的頂層區塊，與 Avalonia 檢視器只重建這些區塊的做法相同：逐步增長的回覆只渲染最後幾個
-  區塊，編輯只渲染改到的區塊。過去每次變更都會重新渲染整份文字。
-- 兩個套件新增 `MarkdownReader`：捲動 viewer，把內文排在置中的欄位，並提供目錄。邊緣的細欄為每個標題畫一條短線，
-  指向或點擊細欄時，標題清單會浮在文字上；釘選後成為文字旁的側欄（`OutlinePinned`，可雙向繫結），可放在左側或右側
-  （`OutlineSide`）。清單上的圖釘在浮動時是斜放的外框，釘選後直立並填滿。
-  細欄與清單都會標示正在閱讀的章節。Blazor 清單的背景色為 `--pmd-outline-bg`（#79）。
-- Avalonia 檢視器把焦點移到標題或註腳時，目標會留在畫面頂端。過去 ScrollViewer 為了讓取得焦點的文字可見，會再捲動一次，使目標偏離頂端。
-- 兩個檢視器都能把圖片以原尺寸蓋在視窗上顯示，可縮放與平移（`ZoomImages`，預設關閉）；宿主可透過 `ImageActivated`
-  （Avalonia）或 `OnImageActivated`（Blazor）改用自己的方式顯示圖片。Blazor 對話框的背景色為 `--pmd-zoom-backdrop`（#72）。
-- Avalonia 檢視器中，點選連結裡的圖片會開啟該連結。過去點了沒有反應。
-- Avalonia 檢視器提供給螢幕閱讀器的資訊與 Blazor 檢視器的 HTML 相同：標題與其層級、連結、清單與清單項目、表格、以替代文字
-  命名的圖片，以及具名群組形式的警示、引言與可收合區段。Tab 依文字順序在連結與按鈕之間移動，Enter 開啟連結（#70）。
-- Avalonia 檢視器中沒有連結的段落不再是 Tab 停駐點；點選後仍會取得焦點，以便選取與複製。Blazor 檢視器的警示加上
-  `role="note"`。
-- 兩個檢視器都會列出文字中的標題，供目錄或大綱使用（`Headings`；Avalonia 以 `HeadingsChanged`、Blazor 以 `OnHeadingsChanged`
-  通知變更），並可把某個標題捲到畫面頂端（`ScrollToHeading`、`ScrollToHeadingAsync`）。`MarkdownHeading` 提供每個標題的層級、
-  文字、id 與原文位置（#71）。
-- Avalonia 檢視器往上捲到標題或腳註時，會正確停在畫面頂端。過去捲動區域比視窗矮時，往上捲會讓目標超出畫面上緣，超出的距離就是兩者的高度差。
-- Avalonia 的 `MarkdownViewer` 可以像瀏覽器一樣跨區塊選取文字：拖曳可以從一個段落、清單項目、表格儲存格或程式碼區塊延伸到下一個，
-  拖到視窗邊緣時會自動捲動；Ctrl+A（Cmd+A）全選整份文字，複製時依文件順序產生純文字（#1）。
-- Avalonia 的 `MarkdownViewer` 複製時，圖片會換成替代文字、公式會換成 LaTeX（`$…$`）。在 Avalonia 12.0 上，含圖片或公式的段落
-  複製時不再遺漏或錯位字元，點三下也能選到段落結尾。
+## [0.4.0] - 2026-11-26
+
+詳細內容：[docs/zh-TW/changelogs/0.4.0.md](docs/zh-TW/changelogs/0.4.0.md)
+
+- 兩個套件新增 `MarkdownReader`：把 viewer 排在置中的欄位中捲動，邊緣附目錄，可浮在文字上或釘選在旁邊。兩個檢視器都會列出
+  文字中的標題（`Headings`），並能捲動到指定標題（`ScrollToHeading`、`ScrollToHeadingAsync`）。
+- 文件內搜尋：Avalonia 有搜尋列（Ctrl+F、⌘F），兩個檢視器有相同的搜尋 API。
+- 圖片可用原尺寸開啟、縮放與平移（`ZoomImages`），並有儲存原始檔的按鈕。
+- 兩個檢視器會把仍在送達的回覆依完成後的樣子呈現（`IsStreaming`），Blazor 檢視器只重新渲染變更影響到的區塊。
+- Avalonia 檢視器可跨區塊選取與複製文字，並告訴螢幕閱讀器文字各部分是什麼。沒有連結的段落不再是 Tab 停駐點。
 
 ## [0.3.1] - 2026-11-25
 
@@ -92,7 +72,8 @@ Polhem.Markdown 各套件值得注意的變更，每個版本只列幾項重點�
 - `Polhem.Markdown.Blazor` 新增 `MarkdownViewer` 元件，把 Markdown 文字呈現為語意化 HTML：連結以 `OnLinkActivated`
   交給宿主、程式碼區塊附複製鈕，樣式以 `--pmd-*` CSS 變數設定。
 
-[Unreleased]: https://github.com/polhem-dev/polhem-markdown/compare/v0.3.1...HEAD
+[Unreleased]: https://github.com/polhem-dev/polhem-markdown/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/polhem-dev/polhem-markdown/compare/v0.3.1...v0.4.0
 [0.3.1]: https://github.com/polhem-dev/polhem-markdown/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/polhem-dev/polhem-markdown/compare/v0.2.1...v0.3.0
 [0.2.1]: https://github.com/polhem-dev/polhem-markdown/compare/v0.2.0...v0.2.1

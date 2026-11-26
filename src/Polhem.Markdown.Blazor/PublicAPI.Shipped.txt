@@ -30,36 +30,85 @@ Polhem.Markdown.Blazor.MarkdownEditor.ToolbarLabels.set -> void
 Polhem.Markdown.Blazor.MarkdownEditor.UndoAsync() -> System.Threading.Tasks.Task<bool>!
 Polhem.Markdown.Blazor.MarkdownEditor.WordWrap.get -> bool
 Polhem.Markdown.Blazor.MarkdownEditor.WordWrap.set -> void
+Polhem.Markdown.Blazor.MarkdownImageActivatedEventArgs
+Polhem.Markdown.Blazor.MarkdownImageActivatedEventArgs.AlternativeText.get -> string!
+Polhem.Markdown.Blazor.MarkdownImageActivatedEventArgs.MarkdownImageActivatedEventArgs(System.Uri! uri, string! alternativeText) -> void
+Polhem.Markdown.Blazor.MarkdownImageActivatedEventArgs.Uri.get -> System.Uri!
+Polhem.Markdown.Blazor.MarkdownImageSaveRequestedEventArgs
+Polhem.Markdown.Blazor.MarkdownImageSaveRequestedEventArgs.AlternativeText.get -> string!
+Polhem.Markdown.Blazor.MarkdownImageSaveRequestedEventArgs.MarkdownImageSaveRequestedEventArgs(System.Uri! uri, string! alternativeText) -> void
+Polhem.Markdown.Blazor.MarkdownImageSaveRequestedEventArgs.Uri.get -> System.Uri!
 Polhem.Markdown.Blazor.MarkdownLinkActivatedEventArgs
 Polhem.Markdown.Blazor.MarkdownLinkActivatedEventArgs.MarkdownLinkActivatedEventArgs(System.Uri! uri) -> void
 Polhem.Markdown.Blazor.MarkdownLinkActivatedEventArgs.Uri.get -> System.Uri!
+Polhem.Markdown.Blazor.MarkdownReader
+Polhem.Markdown.Blazor.MarkdownReader.ChildContent.get -> Microsoft.AspNetCore.Components.RenderFragment?
+Polhem.Markdown.Blazor.MarkdownReader.ChildContent.set -> void
+Polhem.Markdown.Blazor.MarkdownReader.Class.get -> string?
+Polhem.Markdown.Blazor.MarkdownReader.Class.set -> void
+Polhem.Markdown.Blazor.MarkdownReader.MarkdownReader() -> void
+Polhem.Markdown.Blazor.MarkdownReader.OutlineLabel.get -> string!
+Polhem.Markdown.Blazor.MarkdownReader.OutlineLabel.set -> void
+Polhem.Markdown.Blazor.MarkdownReader.OutlinePinned.get -> bool
+Polhem.Markdown.Blazor.MarkdownReader.OutlinePinned.set -> void
+Polhem.Markdown.Blazor.MarkdownReader.OutlinePinnedChanged.get -> Microsoft.AspNetCore.Components.EventCallback<bool>
+Polhem.Markdown.Blazor.MarkdownReader.OutlinePinnedChanged.set -> void
+Polhem.Markdown.Blazor.MarkdownReader.OutlineSide.get -> Polhem.Markdown.OutlineSide
+Polhem.Markdown.Blazor.MarkdownReader.OutlineSide.set -> void
+Polhem.Markdown.Blazor.MarkdownReader.PinOutlineLabel.get -> string!
+Polhem.Markdown.Blazor.MarkdownReader.PinOutlineLabel.set -> void
+Polhem.Markdown.Blazor.MarkdownReader.TextMaxWidth.get -> int?
+Polhem.Markdown.Blazor.MarkdownReader.TextMaxWidth.set -> void
+Polhem.Markdown.Blazor.MarkdownReader.UnpinOutlineLabel.get -> string!
+Polhem.Markdown.Blazor.MarkdownReader.UnpinOutlineLabel.set -> void
 Polhem.Markdown.Blazor.MarkdownSourceRequestedEventArgs
 Polhem.Markdown.Blazor.MarkdownSourceRequestedEventArgs.MarkdownSourceRequestedEventArgs(int sourceOffset) -> void
 Polhem.Markdown.Blazor.MarkdownSourceRequestedEventArgs.SourceOffset.get -> int
 Polhem.Markdown.Blazor.MarkdownViewer
 Polhem.Markdown.Blazor.MarkdownViewer.Class.get -> string?
 Polhem.Markdown.Blazor.MarkdownViewer.Class.set -> void
+Polhem.Markdown.Blazor.MarkdownViewer.ClearFindAsync() -> System.Threading.Tasks.Task!
 Polhem.Markdown.Blazor.MarkdownViewer.CopyCodeLabel.get -> string!
 Polhem.Markdown.Blazor.MarkdownViewer.CopyCodeLabel.set -> void
+Polhem.Markdown.Blazor.MarkdownViewer.CurrentFindMatch.get -> int
 Polhem.Markdown.Blazor.MarkdownViewer.DisposeAsync() -> System.Threading.Tasks.ValueTask
+Polhem.Markdown.Blazor.MarkdownViewer.FindAsync(string! text, bool matchCase = false) -> System.Threading.Tasks.Task<int>!
+Polhem.Markdown.Blazor.MarkdownViewer.FindMatchCount.get -> int
+Polhem.Markdown.Blazor.MarkdownViewer.FindNextAsync() -> System.Threading.Tasks.Task<bool>!
+Polhem.Markdown.Blazor.MarkdownViewer.FindPreviousAsync() -> System.Threading.Tasks.Task<bool>!
 Polhem.Markdown.Blazor.MarkdownViewer.FirstVisibleSourceOffset.get -> int
 Polhem.Markdown.Blazor.MarkdownViewer.FirstVisibleSourceOffsetChanged.get -> Microsoft.AspNetCore.Components.EventCallback<int>
 Polhem.Markdown.Blazor.MarkdownViewer.FirstVisibleSourceOffsetChanged.set -> void
+Polhem.Markdown.Blazor.MarkdownViewer.Headings.get -> System.Collections.Generic.IReadOnlyList<Polhem.Markdown.MarkdownHeading!>!
+Polhem.Markdown.Blazor.MarkdownViewer.IsStreaming.get -> bool
+Polhem.Markdown.Blazor.MarkdownViewer.IsStreaming.set -> void
 Polhem.Markdown.Blazor.MarkdownViewer.Markdown.get -> string?
 Polhem.Markdown.Blazor.MarkdownViewer.Markdown.set -> void
 Polhem.Markdown.Blazor.MarkdownViewer.MarkdownViewer() -> void
+Polhem.Markdown.Blazor.MarkdownViewer.OnHeadingsChanged.get -> Microsoft.AspNetCore.Components.EventCallback<System.Collections.Generic.IReadOnlyList<Polhem.Markdown.MarkdownHeading!>!>
+Polhem.Markdown.Blazor.MarkdownViewer.OnHeadingsChanged.set -> void
+Polhem.Markdown.Blazor.MarkdownViewer.OnImageActivated.get -> Microsoft.AspNetCore.Components.EventCallback<Polhem.Markdown.Blazor.MarkdownImageActivatedEventArgs!>
+Polhem.Markdown.Blazor.MarkdownViewer.OnImageActivated.set -> void
+Polhem.Markdown.Blazor.MarkdownViewer.OnImageSaveRequested.get -> Microsoft.AspNetCore.Components.EventCallback<Polhem.Markdown.Blazor.MarkdownImageSaveRequestedEventArgs!>
+Polhem.Markdown.Blazor.MarkdownViewer.OnImageSaveRequested.set -> void
 Polhem.Markdown.Blazor.MarkdownViewer.OnLinkActivated.get -> Microsoft.AspNetCore.Components.EventCallback<Polhem.Markdown.Blazor.MarkdownLinkActivatedEventArgs!>
 Polhem.Markdown.Blazor.MarkdownViewer.OnLinkActivated.set -> void
 Polhem.Markdown.Blazor.MarkdownViewer.OnSourceRequested.get -> Microsoft.AspNetCore.Components.EventCallback<Polhem.Markdown.Blazor.MarkdownSourceRequestedEventArgs!>
 Polhem.Markdown.Blazor.MarkdownViewer.OnSourceRequested.set -> void
 Polhem.Markdown.Blazor.MarkdownViewer.Options.get -> Polhem.Markdown.MarkdownOptions?
 Polhem.Markdown.Blazor.MarkdownViewer.Options.set -> void
+Polhem.Markdown.Blazor.MarkdownViewer.ScrollToHeadingAsync(string! id) -> System.Threading.Tasks.Task<bool>!
 Polhem.Markdown.Blazor.MarkdownViewer.ScrollToSourceOffsetAsync(int sourceOffset) -> System.Threading.Tasks.Task!
+Polhem.Markdown.Blazor.MarkdownViewer.ZoomImages.get -> bool
+Polhem.Markdown.Blazor.MarkdownViewer.ZoomImages.set -> void
 override Polhem.Markdown.Blazor.MarkdownEditor.BuildRenderTree(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder! builder) -> void
 override Polhem.Markdown.Blazor.MarkdownEditor.OnAfterRenderAsync(bool firstRender) -> System.Threading.Tasks.Task!
 override Polhem.Markdown.Blazor.MarkdownEditor.OnParametersSetAsync() -> System.Threading.Tasks.Task!
+override Polhem.Markdown.Blazor.MarkdownReader.BuildRenderTree(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder! builder) -> void
+override Polhem.Markdown.Blazor.MarkdownReader.OnAfterRenderAsync(bool firstRender) -> System.Threading.Tasks.Task!
 override Polhem.Markdown.Blazor.MarkdownViewer.BuildRenderTree(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder! builder) -> void
 override Polhem.Markdown.Blazor.MarkdownViewer.OnAfterRenderAsync(bool firstRender) -> System.Threading.Tasks.Task!
 override Polhem.Markdown.Blazor.MarkdownViewer.OnParametersSet() -> void
+override Polhem.Markdown.Blazor.MarkdownViewer.OnParametersSetAsync() -> System.Threading.Tasks.Task!
 virtual Polhem.Markdown.Blazor.MarkdownEditor.DisposeAsyncCore() -> System.Threading.Tasks.ValueTask
 virtual Polhem.Markdown.Blazor.MarkdownViewer.DisposeAsyncCore() -> System.Threading.Tasks.ValueTask
