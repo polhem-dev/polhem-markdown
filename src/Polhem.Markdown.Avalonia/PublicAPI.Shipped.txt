@@ -53,9 +53,40 @@ Polhem.Markdown.Avalonia.MarkdownEditor.UrlBrush.get -> Avalonia.Media.IBrush!
 Polhem.Markdown.Avalonia.MarkdownEditor.UrlBrush.set -> void
 Polhem.Markdown.Avalonia.MarkdownEditor.WordWrap.get -> bool
 Polhem.Markdown.Avalonia.MarkdownEditor.WordWrap.set -> void
+Polhem.Markdown.Avalonia.MarkdownFindBarItem
+Polhem.Markdown.Avalonia.MarkdownFindBarItem.Close = 4 -> Polhem.Markdown.Avalonia.MarkdownFindBarItem
+Polhem.Markdown.Avalonia.MarkdownFindBarItem.Field = 0 -> Polhem.Markdown.Avalonia.MarkdownFindBarItem
+Polhem.Markdown.Avalonia.MarkdownFindBarItem.MatchCase = 1 -> Polhem.Markdown.Avalonia.MarkdownFindBarItem
+Polhem.Markdown.Avalonia.MarkdownFindBarItem.Next = 3 -> Polhem.Markdown.Avalonia.MarkdownFindBarItem
+Polhem.Markdown.Avalonia.MarkdownFindBarItem.Previous = 2 -> Polhem.Markdown.Avalonia.MarkdownFindBarItem
+Polhem.Markdown.Avalonia.MarkdownImageActivatedEventArgs
+Polhem.Markdown.Avalonia.MarkdownImageActivatedEventArgs.AlternativeText.get -> string!
+Polhem.Markdown.Avalonia.MarkdownImageActivatedEventArgs.MarkdownImageActivatedEventArgs(System.Uri! uri, string! alternativeText) -> void
+Polhem.Markdown.Avalonia.MarkdownImageActivatedEventArgs.Uri.get -> System.Uri!
+Polhem.Markdown.Avalonia.MarkdownImageSaveRequestedEventArgs
+Polhem.Markdown.Avalonia.MarkdownImageSaveRequestedEventArgs.AlternativeText.get -> string!
+Polhem.Markdown.Avalonia.MarkdownImageSaveRequestedEventArgs.MarkdownImageSaveRequestedEventArgs(System.Uri! uri, string! alternativeText) -> void
+Polhem.Markdown.Avalonia.MarkdownImageSaveRequestedEventArgs.Uri.get -> System.Uri!
 Polhem.Markdown.Avalonia.MarkdownLinkActivatedEventArgs
 Polhem.Markdown.Avalonia.MarkdownLinkActivatedEventArgs.MarkdownLinkActivatedEventArgs(System.Uri! uri) -> void
 Polhem.Markdown.Avalonia.MarkdownLinkActivatedEventArgs.Uri.get -> System.Uri!
+Polhem.Markdown.Avalonia.MarkdownReader
+Polhem.Markdown.Avalonia.MarkdownReader.MarkdownReader() -> void
+Polhem.Markdown.Avalonia.MarkdownReader.OutlineLabel.get -> string!
+Polhem.Markdown.Avalonia.MarkdownReader.OutlineLabel.set -> void
+Polhem.Markdown.Avalonia.MarkdownReader.OutlinePinned.get -> bool
+Polhem.Markdown.Avalonia.MarkdownReader.OutlinePinned.set -> void
+Polhem.Markdown.Avalonia.MarkdownReader.OutlineSide.get -> Polhem.Markdown.OutlineSide
+Polhem.Markdown.Avalonia.MarkdownReader.OutlineSide.set -> void
+Polhem.Markdown.Avalonia.MarkdownReader.PinOutlineLabel.get -> string!
+Polhem.Markdown.Avalonia.MarkdownReader.PinOutlineLabel.set -> void
+Polhem.Markdown.Avalonia.MarkdownReader.ScrollViewer.get -> Avalonia.Controls.ScrollViewer!
+Polhem.Markdown.Avalonia.MarkdownReader.TextMaxWidth.get -> double
+Polhem.Markdown.Avalonia.MarkdownReader.TextMaxWidth.set -> void
+Polhem.Markdown.Avalonia.MarkdownReader.UnpinOutlineLabel.get -> string!
+Polhem.Markdown.Avalonia.MarkdownReader.UnpinOutlineLabel.set -> void
+Polhem.Markdown.Avalonia.MarkdownReader.Viewer.get -> Polhem.Markdown.Avalonia.MarkdownViewer?
+Polhem.Markdown.Avalonia.MarkdownReader.Viewer.set -> void
 Polhem.Markdown.Avalonia.MarkdownSourceRequestedEventArgs
 Polhem.Markdown.Avalonia.MarkdownSourceRequestedEventArgs.MarkdownSourceRequestedEventArgs(int sourceOffset) -> void
 Polhem.Markdown.Avalonia.MarkdownSourceRequestedEventArgs.SourceOffset.get -> int
@@ -72,6 +103,7 @@ Polhem.Markdown.Avalonia.MarkdownViewer.AlertWarningBrush.get -> Avalonia.Media.
 Polhem.Markdown.Avalonia.MarkdownViewer.AlertWarningBrush.set -> void
 Polhem.Markdown.Avalonia.MarkdownViewer.CjkFontFamily.get -> Avalonia.Media.FontFamily?
 Polhem.Markdown.Avalonia.MarkdownViewer.CjkFontFamily.set -> void
+Polhem.Markdown.Avalonia.MarkdownViewer.CloseFind() -> void
 Polhem.Markdown.Avalonia.MarkdownViewer.CodeBackground.get -> Avalonia.Media.IBrush!
 Polhem.Markdown.Avalonia.MarkdownViewer.CodeBackground.set -> void
 Polhem.Markdown.Avalonia.MarkdownViewer.CodeCommentBrush.get -> Avalonia.Media.IBrush!
@@ -90,28 +122,58 @@ Polhem.Markdown.Avalonia.MarkdownViewer.CodeTagBrush.get -> Avalonia.Media.IBrus
 Polhem.Markdown.Avalonia.MarkdownViewer.CodeTagBrush.set -> void
 Polhem.Markdown.Avalonia.MarkdownViewer.CopyCodeLabel.get -> string!
 Polhem.Markdown.Avalonia.MarkdownViewer.CopyCodeLabel.set -> void
+Polhem.Markdown.Avalonia.MarkdownViewer.CurrentFindMatch.get -> int
+Polhem.Markdown.Avalonia.MarkdownViewer.Find(string! text, bool matchCase = false) -> int
+Polhem.Markdown.Avalonia.MarkdownViewer.FindBarLabels.get -> System.Func<Polhem.Markdown.Avalonia.MarkdownFindBarItem, string?>?
+Polhem.Markdown.Avalonia.MarkdownViewer.FindBarLabels.set -> void
+Polhem.Markdown.Avalonia.MarkdownViewer.FindCurrentMatchBrush.get -> Avalonia.Media.IBrush!
+Polhem.Markdown.Avalonia.MarkdownViewer.FindCurrentMatchBrush.set -> void
+Polhem.Markdown.Avalonia.MarkdownViewer.FindMatchBrush.get -> Avalonia.Media.IBrush!
+Polhem.Markdown.Avalonia.MarkdownViewer.FindMatchBrush.set -> void
+Polhem.Markdown.Avalonia.MarkdownViewer.FindMatchCount.get -> int
+Polhem.Markdown.Avalonia.MarkdownViewer.FindNext() -> bool
+Polhem.Markdown.Avalonia.MarkdownViewer.FindPrevious() -> bool
 Polhem.Markdown.Avalonia.MarkdownViewer.GetSourceOffset(double verticalOffset) -> int?
 Polhem.Markdown.Avalonia.MarkdownViewer.GetVerticalOffset(int sourceOffset) -> double?
+Polhem.Markdown.Avalonia.MarkdownViewer.Headings.get -> System.Collections.Generic.IReadOnlyList<Polhem.Markdown.MarkdownHeading!>!
+Polhem.Markdown.Avalonia.MarkdownViewer.HeadingsChanged -> System.EventHandler?
+Polhem.Markdown.Avalonia.MarkdownViewer.ImageActivated -> System.EventHandler<Polhem.Markdown.Avalonia.MarkdownImageActivatedEventArgs!>?
 Polhem.Markdown.Avalonia.MarkdownViewer.ImageLoader.get -> System.Func<System.Uri!, System.Threading.CancellationToken, System.Threading.Tasks.Task<System.IO.Stream?>!>?
 Polhem.Markdown.Avalonia.MarkdownViewer.ImageLoader.set -> void
+Polhem.Markdown.Avalonia.MarkdownViewer.ImageSaveRequested -> System.EventHandler<Polhem.Markdown.Avalonia.MarkdownImageSaveRequestedEventArgs!>?
+Polhem.Markdown.Avalonia.MarkdownViewer.IsFindOpen.get -> bool
+Polhem.Markdown.Avalonia.MarkdownViewer.IsStreaming.get -> bool
+Polhem.Markdown.Avalonia.MarkdownViewer.IsStreaming.set -> void
 Polhem.Markdown.Avalonia.MarkdownViewer.LinkActivated -> System.EventHandler<Polhem.Markdown.Avalonia.MarkdownLinkActivatedEventArgs!>?
 Polhem.Markdown.Avalonia.MarkdownViewer.LinkForeground.get -> Avalonia.Media.IBrush!
 Polhem.Markdown.Avalonia.MarkdownViewer.LinkForeground.set -> void
 Polhem.Markdown.Avalonia.MarkdownViewer.Markdown.get -> string?
 Polhem.Markdown.Avalonia.MarkdownViewer.Markdown.set -> void
 Polhem.Markdown.Avalonia.MarkdownViewer.MarkdownViewer() -> void
+Polhem.Markdown.Avalonia.MarkdownViewer.OpenFind(string? text = null) -> void
 Polhem.Markdown.Avalonia.MarkdownViewer.Options.get -> Polhem.Markdown.MarkdownOptions?
 Polhem.Markdown.Avalonia.MarkdownViewer.Options.set -> void
 Polhem.Markdown.Avalonia.MarkdownViewer.RuleBrush.get -> Avalonia.Media.IBrush!
 Polhem.Markdown.Avalonia.MarkdownViewer.RuleBrush.set -> void
+Polhem.Markdown.Avalonia.MarkdownViewer.ScrollToHeading(string! id) -> bool
 Polhem.Markdown.Avalonia.MarkdownViewer.SourceRequested -> System.EventHandler<Polhem.Markdown.Avalonia.MarkdownSourceRequestedEventArgs!>?
 Polhem.Markdown.Avalonia.MarkdownViewer.TrustedSvgHosts.get -> System.Collections.Generic.ISet<string!>!
+Polhem.Markdown.Avalonia.MarkdownViewer.ZoomImages.get -> bool
+Polhem.Markdown.Avalonia.MarkdownViewer.ZoomImages.set -> void
 override Polhem.Markdown.Avalonia.MarkdownEditor.ArrangeOverride(Avalonia.Size finalSize) -> Avalonia.Size
 override Polhem.Markdown.Avalonia.MarkdownEditor.MeasureOverride(Avalonia.Size availableSize) -> Avalonia.Size
 override Polhem.Markdown.Avalonia.MarkdownEditor.OnGotFocus(Avalonia.Input.FocusChangedEventArgs! e) -> void
 override Polhem.Markdown.Avalonia.MarkdownEditor.OnPropertyChanged(Avalonia.AvaloniaPropertyChangedEventArgs! change) -> void
+override Polhem.Markdown.Avalonia.MarkdownReader.ArrangeOverride(Avalonia.Size finalSize) -> Avalonia.Size
+override Polhem.Markdown.Avalonia.MarkdownReader.MeasureOverride(Avalonia.Size availableSize) -> Avalonia.Size
+override Polhem.Markdown.Avalonia.MarkdownReader.OnAttachedToVisualTree(Avalonia.VisualTreeAttachmentEventArgs! e) -> void
+override Polhem.Markdown.Avalonia.MarkdownReader.OnDetachedFromVisualTree(Avalonia.VisualTreeAttachmentEventArgs! e) -> void
+override Polhem.Markdown.Avalonia.MarkdownReader.OnKeyDown(Avalonia.Input.KeyEventArgs! e) -> void
+override Polhem.Markdown.Avalonia.MarkdownReader.OnPropertyChanged(Avalonia.AvaloniaPropertyChangedEventArgs! change) -> void
 override Polhem.Markdown.Avalonia.MarkdownViewer.ArrangeOverride(Avalonia.Size finalSize) -> Avalonia.Size
 override Polhem.Markdown.Avalonia.MarkdownViewer.MeasureOverride(Avalonia.Size availableSize) -> Avalonia.Size
+override Polhem.Markdown.Avalonia.MarkdownViewer.OnAttachedToVisualTree(Avalonia.VisualTreeAttachmentEventArgs! e) -> void
+override Polhem.Markdown.Avalonia.MarkdownViewer.OnDetachedFromVisualTree(Avalonia.VisualTreeAttachmentEventArgs! e) -> void
 override Polhem.Markdown.Avalonia.MarkdownViewer.OnPropertyChanged(Avalonia.AvaloniaPropertyChangedEventArgs! change) -> void
 static readonly Polhem.Markdown.Avalonia.MarkdownEditor.CodeBrushProperty -> Avalonia.StyledProperty<Avalonia.Media.IBrush!>!
 static readonly Polhem.Markdown.Avalonia.MarkdownEditor.CodeCommentBrushProperty -> Avalonia.StyledProperty<Avalonia.Media.IBrush!>!
@@ -136,6 +198,13 @@ static readonly Polhem.Markdown.Avalonia.MarkdownEditor.ToolbarBorderBrushProper
 static readonly Polhem.Markdown.Avalonia.MarkdownEditor.ToolbarLabelsProperty -> Avalonia.StyledProperty<System.Func<Polhem.Markdown.MarkdownToolbarItem, string?>?>!
 static readonly Polhem.Markdown.Avalonia.MarkdownEditor.UrlBrushProperty -> Avalonia.StyledProperty<Avalonia.Media.IBrush!>!
 static readonly Polhem.Markdown.Avalonia.MarkdownEditor.WordWrapProperty -> Avalonia.StyledProperty<bool>!
+static readonly Polhem.Markdown.Avalonia.MarkdownReader.OutlineLabelProperty -> Avalonia.StyledProperty<string!>!
+static readonly Polhem.Markdown.Avalonia.MarkdownReader.OutlinePinnedProperty -> Avalonia.StyledProperty<bool>!
+static readonly Polhem.Markdown.Avalonia.MarkdownReader.OutlineSideProperty -> Avalonia.StyledProperty<Polhem.Markdown.OutlineSide>!
+static readonly Polhem.Markdown.Avalonia.MarkdownReader.PinOutlineLabelProperty -> Avalonia.StyledProperty<string!>!
+static readonly Polhem.Markdown.Avalonia.MarkdownReader.TextMaxWidthProperty -> Avalonia.StyledProperty<double>!
+static readonly Polhem.Markdown.Avalonia.MarkdownReader.UnpinOutlineLabelProperty -> Avalonia.StyledProperty<string!>!
+static readonly Polhem.Markdown.Avalonia.MarkdownReader.ViewerProperty -> Avalonia.StyledProperty<Polhem.Markdown.Avalonia.MarkdownViewer?>!
 static readonly Polhem.Markdown.Avalonia.MarkdownViewer.AlertCautionBrushProperty -> Avalonia.StyledProperty<Avalonia.Media.IBrush!>!
 static readonly Polhem.Markdown.Avalonia.MarkdownViewer.AlertImportantBrushProperty -> Avalonia.StyledProperty<Avalonia.Media.IBrush!>!
 static readonly Polhem.Markdown.Avalonia.MarkdownViewer.AlertNoteBrushProperty -> Avalonia.StyledProperty<Avalonia.Media.IBrush!>!
@@ -151,9 +220,16 @@ static readonly Polhem.Markdown.Avalonia.MarkdownViewer.CodePropertyBrushPropert
 static readonly Polhem.Markdown.Avalonia.MarkdownViewer.CodeStringBrushProperty -> Avalonia.StyledProperty<Avalonia.Media.IBrush!>!
 static readonly Polhem.Markdown.Avalonia.MarkdownViewer.CodeTagBrushProperty -> Avalonia.StyledProperty<Avalonia.Media.IBrush!>!
 static readonly Polhem.Markdown.Avalonia.MarkdownViewer.CopyCodeLabelProperty -> Avalonia.StyledProperty<string!>!
+static readonly Polhem.Markdown.Avalonia.MarkdownViewer.FindBarLabelsProperty -> Avalonia.StyledProperty<System.Func<Polhem.Markdown.Avalonia.MarkdownFindBarItem, string?>?>!
+static readonly Polhem.Markdown.Avalonia.MarkdownViewer.FindCurrentMatchBrushProperty -> Avalonia.StyledProperty<Avalonia.Media.IBrush!>!
+static readonly Polhem.Markdown.Avalonia.MarkdownViewer.FindMatchBrushProperty -> Avalonia.StyledProperty<Avalonia.Media.IBrush!>!
+static readonly Polhem.Markdown.Avalonia.MarkdownViewer.ImageActivatedEvent -> Avalonia.Interactivity.RoutedEvent<Polhem.Markdown.Avalonia.MarkdownImageActivatedEventArgs!>!
+static readonly Polhem.Markdown.Avalonia.MarkdownViewer.ImageSaveRequestedEvent -> Avalonia.Interactivity.RoutedEvent<Polhem.Markdown.Avalonia.MarkdownImageSaveRequestedEventArgs!>!
+static readonly Polhem.Markdown.Avalonia.MarkdownViewer.IsStreamingProperty -> Avalonia.StyledProperty<bool>!
 static readonly Polhem.Markdown.Avalonia.MarkdownViewer.LinkActivatedEvent -> Avalonia.Interactivity.RoutedEvent<Polhem.Markdown.Avalonia.MarkdownLinkActivatedEventArgs!>!
 static readonly Polhem.Markdown.Avalonia.MarkdownViewer.LinkForegroundProperty -> Avalonia.StyledProperty<Avalonia.Media.IBrush!>!
 static readonly Polhem.Markdown.Avalonia.MarkdownViewer.MarkdownProperty -> Avalonia.StyledProperty<string?>!
 static readonly Polhem.Markdown.Avalonia.MarkdownViewer.OptionsProperty -> Avalonia.StyledProperty<Polhem.Markdown.MarkdownOptions?>!
 static readonly Polhem.Markdown.Avalonia.MarkdownViewer.RuleBrushProperty -> Avalonia.StyledProperty<Avalonia.Media.IBrush!>!
 static readonly Polhem.Markdown.Avalonia.MarkdownViewer.SourceRequestedEvent -> Avalonia.Interactivity.RoutedEvent<Polhem.Markdown.Avalonia.MarkdownSourceRequestedEventArgs!>!
+static readonly Polhem.Markdown.Avalonia.MarkdownViewer.ZoomImagesProperty -> Avalonia.StyledProperty<bool>!

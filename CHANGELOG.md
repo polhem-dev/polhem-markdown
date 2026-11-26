@@ -9,46 +9,19 @@ and versions follow [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
-- The image a viewer opens at full size has a save button beside its close button, in a toolbar at its top right. It
-  saves the original file: Avalonia through a save dialog, Blazor as a download, or in a new tab when the image's
-  server does not let the page read it. A host saves images its own way with `ImageSaveRequested` (Avalonia) or
-  `OnImageSaveRequested` (Blazor) (#88).
-- Finding text: Ctrl+F (⌘F) in the Avalonia viewer opens a find bar that highlights every match, and a
-  `MarkdownReader` has a search button on its rail. Both viewers have the same API (`Find`, `FindNext`,
-  `FindPrevious` on Avalonia; `FindAsync` and the like on Blazor), where the browser's own find also works (#85).
-- Both viewers show a reply that is still arriving as it will look once complete (`IsStreaming`): the syntax its last
-  block leaves open is closed or held back, so markers, partial addresses and lines of pipes no longer show and then
-  jump (#69).
-- The Blazor viewer renders only the top-level blocks a change of the text affects, as the Avalonia viewer rebuilds
-  only those: a reply that grows renders its last blocks, and an edit renders the blocks it touches. It used to render
-  the whole text on every change.
-- `MarkdownReader`, in both packages, scrolls a viewer in a centred column and offers a table of contents: a rail along
-  its edge with a line for each heading, and a list that slides out over the text when the rail is pointed at or
-  clicked, or is pinned beside it (`OutlinePinned`, which binds both ways), on the left or the right (`OutlineSide`).
-  The pin on the list leans as an outline while the list floats and stands upright and solid while it is pinned. The
-  rail and the list mark the section being read. The Blazor list's background is `--pmd-outline-bg` (#79).
-- The Avalonia viewer keeps a heading or footnote it moves the focus to at the top of the view. The scroll viewer used
-  to move it out of place again as it brought the focused text into view.
-- Both viewers can open an image at full size over the window, to zoom and pan (`ZoomImages`, off by default); a host
-  shows images its own way with `ImageActivated` (Avalonia) or `OnImageActivated` (Blazor). The Blazor dialog's
-  backdrop is `--pmd-zoom-backdrop` (#72).
-- In the Avalonia viewer, a click on an image inside a link opens the link. It used to do nothing.
-- The Avalonia viewer tells screen readers what the Blazor viewer's HTML does: headings with their level, links,
-  lists and list items, tables, images by their alternative text, and alerts, quotes and collapsible sections as named
-  groups. Tab moves through links and buttons in the order of the text, and Enter follows a link (#70).
-- In the Avalonia viewer, a paragraph without links is no longer a Tab stop; a click still gives it the focus for
-  selecting and copying. The Blazor viewer marks an alert with `role="note"`.
-- Both viewers list the text's headings for a table of contents or an outline (`Headings`, with `HeadingsChanged` on
-  Avalonia and `OnHeadingsChanged` on Blazor) and scroll one to the top of the view (`ScrollToHeading`,
-  `ScrollToHeadingAsync`). `MarkdownHeading` gives each heading's level, text, id and source offset (#71).
-- The Avalonia viewer scrolls a heading or a footnote it moves to back up to the top of the view. When the scroll
-  viewer was shorter than the window, moving up left the target above the view by the difference.
-- The Avalonia `MarkdownViewer` selects text across blocks, as a browser does: a drag runs from one paragraph, list
-  item, table cell or code block into the next and scrolls at the edge of the view, Ctrl+A (Cmd+A) selects the whole
-  text, and copying gives plain text in document order (#1).
-- The Avalonia `MarkdownViewer` copies an image as its alternative text and a formula as its LaTeX (`$…$`). On
-  Avalonia 12.0, copied text no longer loses or shifts characters after an image or a formula, and a triple click
-  selects such a paragraph to its end.
+## [0.4.0] - 2026-11-26
+
+Details: [docs/en/changelogs/0.4.0.md](docs/en/changelogs/0.4.0.md)
+
+- `MarkdownReader`, in both packages, scrolls a viewer in a centred column with a table of contents along its edge,
+  which slides out over the text or is pinned beside it. Both viewers list the text's headings (`Headings`) and scroll
+  to one (`ScrollToHeading`, `ScrollToHeadingAsync`).
+- Finding text: a find bar on Avalonia (Ctrl+F, ⌘F), and the same find API on both viewers.
+- Images open at full size to zoom and pan (`ZoomImages`), with a button that saves the original file.
+- Both viewers show a reply that is still arriving as it will look once complete (`IsStreaming`), and the Blazor
+  viewer renders only the blocks a change affects.
+- The Avalonia viewer selects and copies text across blocks, and tells screen readers what each part of the text is.
+  A paragraph without links is no longer a Tab stop.
 
 ## [0.3.1] - 2026-11-25
 
@@ -105,7 +78,8 @@ Details: [docs/en/changelogs/0.2.0.md](docs/en/changelogs/0.2.0.md)
 - `Polhem.Markdown.Blazor` adds `MarkdownViewer`, a component that renders a Markdown text as semantic HTML, with
   `OnLinkActivated` for links, code blocks with a copy button, and a stylesheet set through `--pmd-*` CSS variables.
 
-[Unreleased]: https://github.com/polhem-dev/polhem-markdown/compare/v0.3.1...HEAD
+[Unreleased]: https://github.com/polhem-dev/polhem-markdown/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/polhem-dev/polhem-markdown/compare/v0.3.1...v0.4.0
 [0.3.1]: https://github.com/polhem-dev/polhem-markdown/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/polhem-dev/polhem-markdown/compare/v0.2.1...v0.3.0
 [0.2.1]: https://github.com/polhem-dev/polhem-markdown/compare/v0.2.0...v0.2.1
