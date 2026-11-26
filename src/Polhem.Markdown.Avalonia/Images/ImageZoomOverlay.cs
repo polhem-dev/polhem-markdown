@@ -126,9 +126,17 @@ internal sealed class ImageZoomOverlay : Panel
             Template = new FuncControlTemplate<Button>((_, _) => frame),
             Cursor = new Cursor(StandardCursorType.Hand),
         };
-        void Paint() => frame.Background = button.IsPressed ? s_pressedBrush
-            : button.IsPointerOver ? s_hoverBrush
-            : Brushes.Transparent;
+        void Paint()
+        {
+            if (button.IsPressed)
+            {
+                frame.Background = s_pressedBrush;
+            }
+            else
+            {
+                frame.Background = button.IsPointerOver ? s_hoverBrush : Brushes.Transparent;
+            }
+        }
         button.PropertyChanged += (_, e) =>
         {
             if (e.Property == InputElement.IsPointerOverProperty || e.Property == Button.IsPressedProperty)
