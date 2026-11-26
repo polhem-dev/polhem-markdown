@@ -6,6 +6,10 @@
         <label><input type="checkbox" @bind="_dark" /> Dark</label>
         <label><input type="checkbox" @bind="_edit" /> Edit</label>
         <button type="button" @onclick="Replay">Replay</button>
+        @* The browser's own find works on the viewer's text; this box shows the viewer's find API. *@
+        <input type="search" placeholder="Find" aria-label="Find" @bind="_find" @bind:event="oninput" @bind:after="FindAsync"
+               @onkeydown="FindKeyAsync" />
+        <span class="status">@(_viewer is { FindMatchCount: > 0 } v ? $"{v.CurrentFindMatch}/{v.FindMatchCount}" : _find.Length > 0 ? "0/0" : "")</span>
         <span class="status">@_status</span>
     </div>
     <div class="body">
@@ -115,6 +119,24 @@
     }
 
     private CancellationTokenSource? _replay;
+    private string _find = "";
+
+    private async Task FindAsync()
+    {
+        if (_viewer is not null)
+        {
+            await _viewer.FindAsync(_find);
+        }
+    }
+
+    // Enter goes to the next match, Shift+Enter to the previous one.
+    private async Task FindKeyAsync(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter" && _viewer is not null)
+        {
+            await (e.ShiftKey ? _viewer.FindPreviousAsync() : _viewer.FindNextAsync());
+        }
+    }
     private bool _streaming;
 
     private static MarkdownOptions CreateOptions()

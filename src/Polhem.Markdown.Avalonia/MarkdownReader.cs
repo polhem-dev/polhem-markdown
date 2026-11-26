@@ -64,6 +64,7 @@ public class MarkdownReader : Control
     private readonly ScrollViewer _scroller;
     private readonly Border _column;
     private readonly OutlineRail _rail;
+    private readonly Button _findButton;
     private readonly OutlinePanel _panel;
     private MarkdownHeading? _currentHeading;
     private bool _open;
@@ -87,6 +88,29 @@ public class MarkdownReader : Control
         };
         _scroller.ScrollChanged += (_, _) => UpdateCurrentHeading();
 
+        // The search button tops the rail: on a phone or a tablet, with no Ctrl+F, it is how a reader finds text.
+        _findButton = new Button
+        {
+            Content = new global::Avalonia.Controls.Shapes.Path
+            {
+                Data = global::Avalonia.Media.Geometry.Parse("M10.5 4a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13zM15.3 15.3 20 20"),
+                Width = 16,
+                Height = 16,
+                Stretch = global::Avalonia.Media.Stretch.Uniform,
+                StrokeThickness = 2,
+                StrokeLineCap = global::Avalonia.Media.PenLineCap.Round,
+                Stroke = global::Avalonia.Media.Brushes.Gray,
+            },
+            Width = OutlineRail.Size,
+            Height = FindButtonHeight,
+            Padding = new Thickness(0),
+            HorizontalContentAlignment = HorizontalAlignment.Center,
+            VerticalContentAlignment = VerticalAlignment.Center,
+            Background = global::Avalonia.Media.Brushes.Transparent,
+            BorderThickness = new Thickness(0),
+        };
+        _findButton.Click += (_, _) => Viewer?.OpenFind();
+
         _rail = new OutlineRail(this);
         _rail.Activated += (_, _) => ToggleFromRail();
         _rail.PointerEntered += (_, _) => OpenByPointer();
@@ -100,7 +124,7 @@ public class MarkdownReader : Control
 
         // NOTE: the rail and the list come before the text, so Tab and a screen reader reach them first, as the Blazor
         // reader's navigation comes before its text; drawn on top, the floating list covers the text.
-        foreach (var child in new Control[] { _rail, _panel, _scroller })
+        foreach (var child in new Control[] { _findButton, _rail, _panel, _scroller })
         {
             LogicalChildren.Add(child);
             VisualChildren.Add(child);
@@ -228,6 +252,9 @@ public class MarkdownReader : Control
         global::Avalonia.Automation.AutomationProperties.SetName(_rail, OutlineLabel);
         ToolTip.SetTip(_rail, OutlineLabel);
         _rail.IsVisible = HasHeadings;
+        _findButton.IsVisible = Viewer is not null;
+        global::Avalonia.Automation.AutomationProperties.SetName(_findButton, FindLabel);
+        ToolTip.SetTip(_findButton, FindLabel);
         _panel.IsVisible = HasHeadings && (OutlinePinned || _open);
     }
 
@@ -352,6 +379,20 @@ public class MarkdownReader : Control
         }
     }
 
+    /// <summary>Ctrl+F (⌘F on macOS) anywhere in the reader, as in its table of contents, opens the viewer's find bar.</summary>
+    /// <inheritdoc/>
+    protected override void OnKeyDown(KeyEventArgs e)
+    {
+        var command = Application.Current?.PlatformSettings?.HotkeyConfiguration.CommandModifiers ?? KeyModifiers.Control;
+        if (e.Key == Key.F && e.KeyModifiers == command && Viewer is { } viewer)
+        {
+            viewer.OpenFind();
+            e.Handled = true;
+            return;
+        }
+        base.OnKeyDown(e);
+    }
+
     /// <summary>A press outside the floating list closes it, as a click beside a menu does.</summary>
     private void OnPointerPressedAnywhere(object? sender, PointerPressedEventArgs e)
     {
@@ -381,7 +422,13 @@ public class MarkdownReader : Control
     }
 
     /// <summary>The room the rail and a pinned list take beside the text.</summary>
-    private double Inset => !HasHeadings ? 0 : OutlineRail.Size + (OutlinePinned ? OutlinePanel.PanelWidth : 0);
+    private double Inset => Viewer is null ? 0 : OutlineRail.Size + (HasHeadings && OutlinePinned ? OutlinePanel.PanelWidth : 0);
+
+    /// <summary>How tall the search button at the top of the rail is.</summary>
+    private const double FindButtonHeight = 36;
+
+    /// <summary>The search button's accessible name and tooltip: the find bar's own label for its text box.</summary>
+    private string FindLabel => Viewer?.FindBarLabels?.Invoke(MarkdownFindBarItem.Field) ?? "Find";
 
     /// <inheritdoc/>
     protected override Size MeasureOverride(Size availableSize)
@@ -389,6 +436,7 @@ public class MarkdownReader : Control
         var inset = Inset;
         _scroller.Measure(availableSize.WithWidth(Math.Max(0, availableSize.Width - inset)));
         _rail.Measure(availableSize);
+        _findButton.Measure(availableSize);
         _panel.Measure(availableSize);
         var height = double.IsFinite(availableSize.Height) ? availableSize.Height : _scroller.DesiredSize.Height;
         return new Size(_scroller.DesiredSize.Width + inset, height);
@@ -401,11 +449,17 @@ public class MarkdownReader : Control
         var inset = Inset;
         var width = finalSize.Width;
         _scroller.Arrange(new Rect(left ? inset : 0, 0, Math.Max(0, width - inset), finalSize.Height));
+        if (Viewer is null)
+        {
+            return finalSize;
+        }
+        var railX = left ? 0 : width - OutlineRail.Size;
+        _findButton.Arrange(new Rect(railX, 0, OutlineRail.Size, FindButtonHeight));
         if (!HasHeadings)
         {
             return finalSize;
         }
-        _rail.Arrange(new Rect(left ? 0 : width - OutlineRail.Size, 0, OutlineRail.Size, finalSize.Height));
+        _rail.Arrange(new Rect(railX, FindButtonHeight, OutlineRail.Size, Math.Max(0, finalSize.Height - FindButtonHeight)));
         var panelWidth = Math.Min(OutlinePanel.PanelWidth, Math.Max(0, width - OutlineRail.Size));
         _panel.Arrange(new Rect(left ? OutlineRail.Size : width - OutlineRail.Size - panelWidth, 0, panelWidth, finalSize.Height));
         return finalSize;
