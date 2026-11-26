@@ -506,21 +506,14 @@ public partial class MarkdownViewer : Control
     }
 
     /// <summary>
-    /// The source of a top-level block, followed by what inside it depends on the rest of the text: heading ids, resolved
-    /// links to headings, footnote numbers and ids, and image sources. A heading or a footnote definition that arrives later turns
-    /// earlier text into a link, a heading added above another of the same name changes that one's id, and a reference
-    /// added earlier renumbers the notes, all without the block's own source changing.
+    /// The source of a top-level block, followed by what inside it depends on the rest of the text: what
+    /// <see cref="NodeTree.TextDependentKey"/> names, image sources, and the keys of collapsible sections.
     /// </summary>
     private string BlockKey(string source, BlockNode block)
     {
         var anchors = NodeTree.SelfAndDescendants(block)
-            .Select(node => node switch
+            .Select(node => NodeTree.TextDependentKey(node) ?? node switch
             {
-                HeadingNode heading => "#" + heading.Id,
-                AnchorLinkNode link => ">" + link.Id,
-                FootnoteReferenceNode reference => "^" + reference.Id + ">" + reference.NoteId + "=" + reference.Number,
-                FootnoteNode note => "[" + note.Id + "=" + note.Number,
-                FootnoteBackLinkNode back => "<" + back.ReferenceId + "=" + back.Position,
                 // An image written by reference (`![a][r]`) takes its source from a definition elsewhere in the text.
                 // A picture shows the source for the viewer's theme.
                 ImageNode image => "!" + image.SourceFor(IsDarkTheme).AbsoluteUri,

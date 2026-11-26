@@ -12,6 +12,9 @@ and versions follow [Semantic Versioning](https://semver.org/).
 - Both viewers show a reply that is still arriving as it will look once complete (`IsStreaming`): the syntax its last
   block leaves open is closed or held back, so markers, partial addresses and lines of pipes no longer show and then
   jump (#69).
+- The Blazor viewer renders only the top-level blocks a change of the text affects, as the Avalonia viewer rebuilds
+  only those: a reply that grows renders its last blocks, and an edit renders the blocks it touches. It used to render
+  the whole text on every change.
 - `MarkdownReader`, in both packages, scrolls a viewer in a centred column and offers a table of contents: a rail along
   its edge with a line for each heading, and a list that slides out over the text when the rail is pointed at or
   clicked, or is pinned beside it (`OutlinePinned`, which binds both ways), on the left or the right (`OutlineSide`).
