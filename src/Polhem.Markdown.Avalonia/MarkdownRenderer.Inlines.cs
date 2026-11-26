@@ -72,11 +72,14 @@ internal sealed partial class MarkdownRenderer
 
             case ImageNode image:
                 // NOTE: an embedded control takes one character of the text, which keeps link ranges after it in step.
+                owner.AddEmbeddedText(offset, image.AlternativeText);
                 offset += EmbeddedControlLength;
                 return new InlineUIContainer(new ImageView(_viewer, image)) { BaselineAlignment = BaselineAlignment.Center };
 
             case MathNode math:
-                // NOTE: like an image, an embedded formula takes one character of the text.
+                // NOTE: like an image, an embedded formula takes one character of the text. It is copied as its LaTeX,
+                // written as in the Markdown, as the Blazor viewer's formula carries its LaTeX as an annotation.
+                owner.AddEmbeddedText(offset, "$" + math.Source + "$");
                 offset += EmbeddedControlLength;
                 return new InlineUIContainer(new FormulaView(math.Formula, display: false, _renderedFormulas, owner));
 
