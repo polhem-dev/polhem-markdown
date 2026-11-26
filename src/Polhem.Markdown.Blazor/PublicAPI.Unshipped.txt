@@ -1,1 +1,6 @@
 #nullable enable
+Polhem.Markdown.Blazor.MarkdownViewer.Headings.get -> System.Collections.Generic.IReadOnlyList<Polhem.Markdown.MarkdownHeading!>!
+Polhem.Markdown.Blazor.MarkdownViewer.OnHeadingsChanged.get -> Microsoft.AspNetCore.Components.EventCallback<System.Collections.Generic.IReadOnlyList<Polhem.Markdown.MarkdownHeading!>!>
+Polhem.Markdown.Blazor.MarkdownViewer.OnHeadingsChanged.set -> void
+Polhem.Markdown.Blazor.MarkdownViewer.ScrollToHeadingAsync(string! id) -> System.Threading.Tasks.Task<bool>!
+override Polhem.Markdown.Blazor.MarkdownViewer.OnParametersSetAsync() -> System.Threading.Tasks.Task!

@@ -9,6 +9,11 @@ and versions follow [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+- Both viewers list the text's headings for a table of contents or an outline (`Headings`, with `HeadingsChanged` on
+  Avalonia and `OnHeadingsChanged` on Blazor) and scroll one to the top of the view (`ScrollToHeading`,
+  `ScrollToHeadingAsync`). `MarkdownHeading` gives each heading's level, text, id and source offset (#71).
+- The Avalonia viewer scrolls a heading or a footnote it moves to back up to the top of the view. When the scroll
+  viewer was shorter than the window, moving up left the target above the view by the difference.
 - The Avalonia `MarkdownViewer` selects text across blocks, as a browser does: a drag runs from one paragraph, list
   item, table cell or code block into the next and scrolls at the edge of the view, Ctrl+A (Cmd+A) selects the whole
   text, and copying gives plain text in document order (#1).

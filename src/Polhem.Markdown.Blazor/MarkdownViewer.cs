@@ -30,6 +30,7 @@ public partial class MarkdownViewer : ComponentBase, IAsyncDisposable
     // Keyed by anchor id; string keys compare ordinally by default.
     private readonly Dictionary<string, ElementReference> _anchors = [];
     private Task<IJSObjectReference>? _module;
+    private bool _headingsChanged;
 
     /// <summary>Gets or sets the Markdown text to show.</summary>
     [Parameter]
@@ -56,6 +57,24 @@ public partial class MarkdownViewer : ComponentBase, IAsyncDisposable
     [Parameter]
     public string CopyCodeLabel { get; set; } = "Copy";
 
+    /// <summary>
+    /// Gets or sets what happens when <see cref="Headings"/> changes: a heading is added, removed, renamed or moved. It
+    /// receives the new headings.
+    /// </summary>
+    [Parameter]
+    public EventCallback<IReadOnlyList<MarkdownHeading>> OnHeadingsChanged { get; set; }
+
+    /// <summary>
+    /// Gets the headings of the text, in document order, for a table of contents or an outline. It changes when
+    /// <see cref="Markdown"/> or <see cref="Options"/> changes, which <see cref="OnHeadingsChanged"/> reports.
+    /// </summary>
+    /// <remarks>
+    /// To follow the reader through the outline, compare each <see cref="MarkdownHeading.SourceOffset"/> with
+    /// <see cref="FirstVisibleSourceOffset"/>: the section at the top of the view is that of the last heading that starts at
+    /// or before it. Near the end of the text, the last headings may not reach the top of the view.
+    /// </remarks>
+    public IReadOnlyList<MarkdownHeading> Headings => _document.Headings;
+
     /// <summary>Gets or sets further CSS classes for the outer element.</summary>
     [Parameter]
     public string? Class { get; set; }
@@ -80,12 +99,37 @@ public partial class MarkdownViewer : ComponentBase, IAsyncDisposable
     {
         if (!string.Equals(Markdown, _parsedMarkdown, StringComparison.Ordinal) || !ReferenceEquals(Options, _parsedOptions))
         {
+            var headings = _document.Headings;
             _document = string.IsNullOrEmpty(Markdown) ? s_empty : MarkdownModelBuilder.Build(Markdown, Options ?? new MarkdownOptions());
+            _headingsChanged |= !headings.SequenceEqual(_document.Headings);
             _parsedMarkdown = Markdown;
             _parsedOptions = Options;
             KeepSourceRanges();
             ForgetRemovedAnchors();
         }
+    }
+
+    /// <inheritdoc/>
+    protected override async Task OnParametersSetAsync()
+    {
+        if (_headingsChanged)
+        {
+            _headingsChanged = false;
+            await OnHeadingsChanged.InvokeAsync(Headings);
+        }
+    }
+
+    /// <summary>
+    /// Scrolls the heading with <paramref name="id"/> to the top of the view and moves focus to it, as following a link to
+    /// it does. Returns whether it did: <see langword="false"/> when the text has no such heading, or when the viewer is
+    /// rendered statically or has not rendered yet.
+    /// </summary>
+    /// <param name="id">A heading's <see cref="MarkdownHeading.Id"/>.</param>
+    /// <returns>A task that completes when the view has scrolled.</returns>
+    public async Task<bool> ScrollToHeadingAsync(string id)
+    {
+        ArgumentNullException.ThrowIfNull(id);
+        return Headings.Any(heading => string.Equals(heading.Id, id, StringComparison.Ordinal)) && await MoveToAnchorAsync(id);
     }
 
     /// <summary>
@@ -160,13 +204,13 @@ public partial class MarkdownViewer : ComponentBase, IAsyncDisposable
 
     /// <summary>
     /// Scrolls the anchor with <paramref name="id"/> to the top of the view, as GitHub does and as the Avalonia viewer
-    /// does, and moves focus to it so a screen reader follows.
+    /// does, and moves focus to it so a screen reader follows. Returns whether it did.
     /// </summary>
-    internal async Task MoveToAnchorAsync(string id)
+    internal async Task<bool> MoveToAnchorAsync(string id)
     {
         if (!_anchors.TryGetValue(id, out var element))
         {
-            return;
+            return false;
         }
         try
         {
@@ -177,17 +221,20 @@ public partial class MarkdownViewer : ComponentBase, IAsyncDisposable
             _module ??= JS.InvokeAsync<IJSObjectReference>("import", ModulePath).AsTask();
             var module = await _module;
             await module.InvokeVoidAsync("scrollToAnchor", element);
+            return true;
         }
         catch (JSException)
         {
             // The heading left the page between the click and the call, as a text that is still arriving is
             // re-rendered, or the module could not load. The click then does nothing.
             ForgetFailedImport();
+            return false;
         }
         catch (TaskCanceledException)
         {
             // The call timed out on a slow connection. Left unhandled, it would end the circuit over a click.
             ForgetFailedImport();
+            return false;
         }
     }
 

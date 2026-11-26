@@ -46,6 +46,31 @@ and defaults are at the top of `polhem-markdown.css`:
 }
 ```
 
+`Headings` lists the text's headings for a table of contents, `OnHeadingsChanged` reports a change in them, and
+`ScrollToHeadingAsync` scrolls one to the top of the view and focuses it:
+
+```razor
+<MarkdownViewer @ref="viewer" Markdown="@reply" OnHeadingsChanged="h => headings = h"
+                FirstVisibleSourceOffsetChanged="Follow" />
+
+<nav>
+    @foreach (var heading in headings)
+    {
+        <button class="@(heading == current ? "current" : "")"
+                @onclick="() => viewer!.ScrollToHeadingAsync(heading.Id)">@heading.Text</button>
+    }
+</nav>
+
+@code {
+    private MarkdownViewer? viewer;
+    private IReadOnlyList<MarkdownHeading> headings = [];
+    private MarkdownHeading? current;
+
+    // The section being read: the last heading that starts at or before the text at the top of the view.
+    private void Follow(int offset) => current = headings.LastOrDefault(heading => heading.SourceOffset <= offset);
+}
+```
+
 ## MarkdownEditor
 
 Edits Markdown as source in a native `<textarea>`, colored the way the viewer reads it, with a toolbar, line numbers,

@@ -4,6 +4,7 @@ using Avalonia.Controls.Documents;
 using Avalonia.Interactivity;
 using Avalonia.LogicalTree;
 using Avalonia.Media;
+using Avalonia.VisualTree;
 using Polhem.Markdown.Model;
 
 namespace Polhem.Markdown.Avalonia;
@@ -303,6 +304,31 @@ public partial class MarkdownViewer : Control
         remove => RemoveHandler(LinkActivatedEvent, value);
     }
 
+    /// <summary>
+    /// Gets the headings of the text, in document order, for a table of contents or an outline. It changes when
+    /// <see cref="Markdown"/> or <see cref="Options"/> changes, which <see cref="HeadingsChanged"/> reports.
+    /// </summary>
+    /// <remarks>
+    /// To follow the reader through the outline, compare each <see cref="MarkdownHeading.SourceOffset"/> with
+    /// <see cref="GetSourceOffset"/> at the top of the view: the section at the top is that of the last heading that
+    /// starts at or before it. Near the end of the text, the last headings may not reach the top of the view.
+    /// </remarks>
+    public IReadOnlyList<MarkdownHeading> Headings { get; private set; } = [];
+
+    /// <summary>Occurs when <see cref="Headings"/> changes: a heading is added, removed, renamed or moved.</summary>
+    public event EventHandler? HeadingsChanged;
+
+    /// <summary>
+    /// Scrolls the nearest scroll viewer so the heading with <paramref name="id"/> is at the top, or as near the top as the
+    /// content allows, as following a link to it does. Returns whether the text has such a heading.
+    /// </summary>
+    /// <param name="id">A heading's <see cref="MarkdownHeading.Id"/>.</param>
+    public bool ScrollToHeading(string id)
+    {
+        ArgumentNullException.ThrowIfNull(id);
+        return Headings.Any(heading => string.Equals(heading.Id, id, StringComparison.Ordinal)) && ScrollToAnchor(id);
+    }
+
     /// <summary>The node types the last full or partial rebuild rendered, for the node coverage test.</summary>
     internal IReadOnlySet<Type> RenderedNodeTypes { get; private set; } = new HashSet<Type>();
 
@@ -364,9 +390,13 @@ public partial class MarkdownViewer : Control
         }
 
         // NOTE: a scroll viewer brings a rectangle into view by the least movement, which leaves a target below the view
-        // at the bottom. A rectangle as tall as the window starts at the target and cannot fit, and the scroll viewer
-        // then aligns its top edge.
-        var height = Math.Max(target.Bounds.Height, TopLevel.GetTopLevel(this)?.ClientSize.Height ?? 0);
+        // at the bottom. A rectangle as tall as the view starts at the target and fits only with its top at the top of the
+        // view, whichever way the view scrolls. One taller than the view, such as the window's height when the scroll
+        // viewer is shorter than the window, was aligned by its bottom edge when the view scrolled up, which left the
+        // target above the view by the difference.
+        var view = this.FindAncestorOfType<ScrollViewer>();
+        var viewHeight = view is { Viewport.Height: > 0 } ? view.Viewport.Height : TopLevel.GetTopLevel(this)?.ClientSize.Height ?? 0;
+        var height = Math.Max(target.Bounds.Height, viewHeight);
         target.BringIntoView(new Rect(0, 0, target.Bounds.Width, height));
         return true;
     }
@@ -439,6 +469,7 @@ public partial class MarkdownViewer : Control
 
         KeepRanges(document);
         KeepSelection();
+        KeepHeadings(document);
         ForgetImagesNotIn(document);
         _hasThemedImages = document.Blocks.SelectMany(NodeTree.SelfAndDescendants)
             .Any(node => node is ImageNode { DarkSource: not null } or ImageNode { LightSource: not null });
@@ -446,6 +477,17 @@ public partial class MarkdownViewer : Control
         RenderedShapeTypes = renderer.RenderedShapeTypes;
         RenderedFormulaTypes = renderer.RenderedFormulaTypes;
         LastBuiltBlockCount = built;
+    }
+
+    /// <summary>Keeps the headings of a rebuilt text, and reports a change in them.</summary>
+    private void KeepHeadings(DocumentNode document)
+    {
+        if (Headings.SequenceEqual(document.Headings))
+        {
+            return;
+        }
+        Headings = document.Headings;
+        HeadingsChanged?.Invoke(this, EventArgs.Empty);
     }
 
     /// <summary>
