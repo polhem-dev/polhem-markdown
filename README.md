@@ -54,6 +54,7 @@ shows the start of the sample text in each.
 | Streaming | Set the text again as a reply arrives | ✓ | ✓ |
 | Light and dark themes | | Brushes | CSS variables |
 | Source positions | For keeping an editor in step | ✓ | ✓ |
+| Headings | Listed for a table of contents, and scrolled to by id | ✓ | ✓ |
 
 The sections below and each viewer's README give the details.
 

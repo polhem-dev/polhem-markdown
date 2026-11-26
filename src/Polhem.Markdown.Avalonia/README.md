@@ -45,6 +45,24 @@ when it reaches its edge. Shift-click extends the selection, Ctrl+A (Cmd+A) sele
 (Cmd+C) copies it as plain text, with an empty line between blocks, a line break between list items and table rows,
 and a tab between table cells. The text of a closed `<details>` section is left out.
 
+`Headings` lists the text's headings for a table of contents, `HeadingsChanged` reports a change in them, and
+`ScrollToHeading` scrolls one to the top of the view:
+
+```csharp
+outline.ItemsSource = viewer.Headings;   // each with Level, Text, Id and SourceOffset
+viewer.HeadingsChanged += (_, _) => outline.ItemsSource = viewer.Headings;
+outline.SelectionChanged += (_, _) =>
+{
+    if (outline.SelectedItem is MarkdownHeading heading)
+    {
+        viewer.ScrollToHeading(heading.Id);
+    }
+};
+```
+
+To mark the section being read, take the last heading whose `SourceOffset` is at or before `GetSourceOffset` at the
+top of the view.
+
 ## MarkdownEditor
 
 Edits Markdown as source on AvaloniaEdit, colored the way the viewer reads it, with a toolbar, format commands and list

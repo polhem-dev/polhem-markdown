@@ -35,6 +35,7 @@ internal sealed partial class MarkdownModelBuilder
     private readonly string _markdown;
     private readonly MarkdownOptions _options;
     private readonly Dictionary<HeadingBlock, string> _headingIds = [];
+    private readonly List<MarkdownHeading> _headings = [];
     private readonly HashSet<string> _ids = [];
     private readonly Dictionary<Footnote, int> _noteNumbers = [];
     private readonly Dictionary<int, int> _backLinkPositions = [];
@@ -67,7 +68,7 @@ internal sealed partial class MarkdownModelBuilder
         }
         builder.AssignHeadingIds(document);
         builder.NumberFootnotes(document);
-        return new DocumentNode(builder.Blocks(document));
+        return new DocumentNode(builder.Blocks(document)) { Headings = builder._headings };
     }
 
     private ParagraphNode WholeTextAsParagraph()
@@ -124,11 +125,13 @@ internal sealed partial class MarkdownModelBuilder
         var slugger = new HeadingSlugger();
         foreach (var heading in document.Descendants<HeadingBlock>())
         {
-            var id = slugger.Next(heading.Inline is null ? "" : PlainText(heading.Inline));
+            var text = heading.Inline is null ? "" : PlainText(heading.Inline);
+            var id = slugger.Next(text);
             _headingIds[heading] = id;
             if (id.Length > 0)
             {
                 _ids.Add(id);
+                _headings.Add(new MarkdownHeading(heading.Level, text.Trim(), id, Range(heading).Start));
             }
         }
     }

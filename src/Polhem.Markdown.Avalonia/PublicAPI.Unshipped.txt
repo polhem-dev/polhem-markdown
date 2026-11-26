@@ -1,1 +1,4 @@
 #nullable enable
+Polhem.Markdown.Avalonia.MarkdownViewer.Headings.get -> System.Collections.Generic.IReadOnlyList<Polhem.Markdown.MarkdownHeading!>!
+Polhem.Markdown.Avalonia.MarkdownViewer.HeadingsChanged -> System.EventHandler?
+Polhem.Markdown.Avalonia.MarkdownViewer.ScrollToHeading(string! id) -> bool

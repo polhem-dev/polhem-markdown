@@ -9,4 +9,9 @@
 .split > .source { display: flex; min-height: 0; }
 .split > .source ::deep .pmd-editor { flex: 1; }
 .split > .preview { overflow: auto; }
+.body.with-outline { display: grid; grid-template-columns: 220px 1fr; gap: 16px; align-items: start; }
+.outline { position: sticky; top: 8px; max-height: calc(100vh - 64px); overflow: auto; padding: 4px 0; }
+.outline button { display: block; width: 100%; border: 0; background: none; color: inherit; font: inherit; text-align: left; padding: 3px 8px; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.outline button:hover { background: rgba(128, 128, 128, 0.12); }
+.outline button.current { background: rgba(59, 130, 246, 0.15); font-weight: 600; }
 @media (max-width: 760px) { .split { grid-template-columns: 1fr; grid-template-rows: 1fr 1fr; } }

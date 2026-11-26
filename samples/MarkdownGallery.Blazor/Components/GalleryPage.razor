@@ -5,9 +5,23 @@
     <div class="bar">
         <label><input type="checkbox" @bind="_dark" /> Dark</label>
         <label><input type="checkbox" @bind="_edit" /> Edit</label>
+        <label><input type="checkbox" @bind="_showOutline" /> Outline</label>
         <button type="button" @onclick="Replay">Replay</button>
         <span class="status">@_status</span>
     </div>
+    <div class="body @(_showOutline ? "with-outline" : "")">
+    @if (_showOutline)
+    {
+        @* The outline lists the shown viewer's headings, scrolls it to the one picked, and marks the one in view: the last
+           heading that starts at or before the source at the top of the view. *@
+        <nav class="frame outline" aria-label="Outline">
+            @foreach (var heading in _headings)
+            {
+                <button type="button" class="@(heading == _currentHeading ? "current" : "")" style="padding-left: @((heading.Level - 1) * 12 + 8)px"
+                        @onclick="() => GoToHeading(heading)">@heading.Text</button>
+            }
+        </nav>
+    }
     @if (_edit)
     {
         @* The side under the pointer or with the focus leads the scrolling, so the other one, scrolled to match, does not
@@ -19,16 +33,19 @@
             </div>
             <div class="frame viewer-frame preview" @onpointerenter="() => _leader = Pane.Viewer" @onfocusin="() => _leader = Pane.Viewer">
                 <MarkdownViewer @ref="_viewer" Markdown="@_preview" Options="_options" OnLinkActivated="OnLinkActivated"
-                                FirstVisibleSourceOffsetChanged="ViewerScrolled" OnSourceRequested="GoToSource" />
+                                FirstVisibleSourceOffsetChanged="ViewerScrolled" OnSourceRequested="GoToSource"
+                                OnHeadingsChanged="HeadingsChanged" />
             </div>
         </div>
     }
     else
     {
         <div class="frame viewer-frame">
-            <MarkdownViewer Markdown="@_markdown" Options="_options" OnLinkActivated="OnLinkActivated" />
+            <MarkdownViewer @ref="_viewer" Markdown="@_markdown" Options="_options" OnLinkActivated="OnLinkActivated"
+                            FirstVisibleSourceOffsetChanged="FollowScroll" OnHeadingsChanged="HeadingsChanged" />
         </div>
     }
+    </div>
 </div>
 
 @code {
@@ -47,6 +64,42 @@
     private MarkdownEditor? _editor;
     private MarkdownViewer? _viewer;
     private Pane _leader = Pane.Editor;
+    private bool _showOutline;
+    private IReadOnlyList<MarkdownHeading> _headings = [];
+    private MarkdownHeading? _currentHeading;
+
+    // Until the view scrolls, the top of the text is in view.
+    private void HeadingsChanged(IReadOnlyList<MarkdownHeading> headings)
+    {
+        _headings = headings;
+        if (_currentHeading is null || !headings.Contains(_currentHeading))
+        {
+            _currentHeading = headings.FirstOrDefault();
+        }
+    }
+
+    // At the end of the text the last headings cannot reach the top of the view, so the heading at the top would replace
+    // one just picked there at once; a picked heading stays marked until the next scroll after the one it caused.
+    private DateTime _pickedAt;
+
+    private void FollowScroll(int offset)
+    {
+        if (DateTime.UtcNow - _pickedAt > TimeSpan.FromMilliseconds(300))
+        {
+            _currentHeading = _headings.LastOrDefault(heading => heading.SourceOffset <= offset);
+        }
+    }
+
+    private async Task GoToHeading(MarkdownHeading heading)
+    {
+        if (_viewer is not null)
+        {
+            _leader = Pane.Viewer;
+            _currentHeading = heading;
+            _pickedAt = DateTime.UtcNow;
+            await _viewer.ScrollToHeadingAsync(heading.Id);
+        }
+    }
 
     private enum Pane
     {
@@ -64,6 +117,7 @@
 
     private async Task ViewerScrolled(int offset)
     {
+        FollowScroll(offset);
         if (_leader == Pane.Viewer && _editor is not null)
         {
             await _editor.ScrollToSourceOffsetAsync(offset);

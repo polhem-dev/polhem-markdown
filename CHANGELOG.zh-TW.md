@@ -9,6 +9,10 @@ Polhem.Markdown 各套件值得注意的變更，每個版本只列幾項重點�
 
 ## [Unreleased]
 
+- 兩個檢視器都會列出文字中的標題，供目錄或大綱使用（`Headings`；Avalonia 以 `HeadingsChanged`、Blazor 以 `OnHeadingsChanged`
+  通知變更），並可把某個標題捲到畫面頂端（`ScrollToHeading`、`ScrollToHeadingAsync`）。`MarkdownHeading` 提供每個標題的層級、
+  文字、id 與原文位置（#71）。
+- Avalonia 檢視器往上捲到標題或腳註時，會正確停在畫面頂端。過去捲動區域比視窗矮時，往上捲會讓目標超出畫面上緣，超出的距離就是兩者的高度差。
 - Avalonia 的 `MarkdownViewer` 可以像瀏覽器一樣跨區塊選取文字：拖曳可以從一個段落、清單項目、表格儲存格或程式碼區塊延伸到下一個，
   拖到視窗邊緣時會自動捲動；Ctrl+A（Cmd+A）全選整份文字，複製時依文件順序產生純文字（#1）。
 - Avalonia 的 `MarkdownViewer` 複製時，圖片會換成替代文字、公式會換成 LaTeX（`$…$`）。在 Avalonia 12.0 上，含圖片或公式的段落
