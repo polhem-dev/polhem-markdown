@@ -81,7 +81,7 @@ internal sealed partial class MarkdownRenderer
                 // written as in the Markdown, as the Blazor viewer's formula carries its LaTeX as an annotation.
                 owner.AddEmbeddedText(offset, "$" + math.Source + "$");
                 offset += EmbeddedControlLength;
-                return new InlineUIContainer(new FormulaView(math.Formula, display: false, _renderedFormulas, owner));
+                return new InlineUIContainer(Named(new FormulaView(math.Formula, display: false, _renderedFormulas, owner), math.Source));
 
             case FootnoteReferenceNode reference:
                 var number = reference.Number.ToString(System.Globalization.CultureInfo.InvariantCulture);
@@ -102,7 +102,9 @@ internal sealed partial class MarkdownRenderer
                 var arrow = back.Position > 1
                     ? BackArrow + back.Position.ToString(System.Globalization.CultureInfo.InvariantCulture)
                     : BackArrow;
-                owner.AddAnchorLink(offset, arrow.Length, back.ReferenceId);
+                // The arrow is named as the Blazor viewer's back link is.
+                owner.AddAnchorLink(offset, arrow.Length, back.ReferenceId,
+                    back.Position > 1 ? BackLinkName + " " + back.Position.ToString(System.Globalization.CultureInfo.InvariantCulture) : BackLinkName);
                 offset += arrow.Length;
                 var arrowRun = new Run(arrow);
                 arrowRun.Bind(TextElement.ForegroundProperty, _viewer.GetObservable(MarkdownViewer.LinkForegroundProperty));
@@ -196,6 +198,7 @@ internal sealed partial class MarkdownRenderer
     internal const int EmbeddedControlLength = 1;
 
     private const string BackArrow = "\u21A9";
+    private const string BackLinkName = "Back to reference";
     private const double SuperscriptScale = 0.75;
     private const double FootnoteScale = 0.875;
 }

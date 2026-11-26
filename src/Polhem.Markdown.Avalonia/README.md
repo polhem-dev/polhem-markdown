@@ -63,6 +63,11 @@ outline.SelectionChanged += (_, _) =>
 To mark the section being read, take the last heading whose `SourceOffset` is at or before `GetSourceOffset` at the
 top of the view.
 
+Screen readers hear what the Blazor viewer's HTML tells them: headings with their level, links, lists and list items
+with the task state, tables, images by their alternative text, and alerts and quotes as groups. Tab moves through the
+links and buttons in the order of the text, passing over text without links, and Enter follows a link; following a
+link to a footnote or a heading moves the focus there.
+
 ## MarkdownEditor
 
 Edits Markdown as source on AvaloniaEdit, colored the way the viewer reads it, with a toolbar, format commands and list

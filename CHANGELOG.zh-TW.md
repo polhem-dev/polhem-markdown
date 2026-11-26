@@ -9,6 +9,10 @@ Polhem.Markdown 各套件值得注意的變更，每個版本只列幾項重點�
 
 ## [Unreleased]
 
+- Avalonia 檢視器提供給螢幕閱讀器的資訊與 Blazor 檢視器的 HTML 相同：標題與其層級、連結、清單與清單項目、表格、以替代文字
+  命名的圖片，以及具名群組形式的警示、引言與可收合區段。Tab 依文字順序在連結與按鈕之間移動，Enter 開啟連結（#70）。
+- Avalonia 檢視器中沒有連結的段落不再是 Tab 停駐點；點選後仍會取得焦點，以便選取與複製。Blazor 檢視器的警示加上
+  `role="note"`。
 - 兩個檢視器都會列出文字中的標題，供目錄或大綱使用（`Headings`；Avalonia 以 `HeadingsChanged`、Blazor 以 `OnHeadingsChanged`
   通知變更），並可把某個標題捲到畫面頂端（`ScrollToHeading`、`ScrollToHeadingAsync`）。`MarkdownHeading` 提供每個標題的層級、
   文字、id 與原文位置（#71）。

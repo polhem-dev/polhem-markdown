@@ -29,7 +29,7 @@ public class HtmlTests(HeadlessSession session)
         var centered = Assert.IsType<StackPanel>(Blocks(viewer).First());
         Assert.Equal(TextAlignment.Center, Assert.IsType<MarkdownTextBlock>(Assert.Single(centered.Children)).TextAlignment);
         var right = Assert.IsType<StackPanel>(Blocks(viewer).Last());
-        Assert.Equal(HorizontalAlignment.Right, Assert.IsType<Grid>(Assert.Single(right.Children)).HorizontalAlignment);
+        Assert.Equal(HorizontalAlignment.Right, Assert.IsType<StackPanel>(Assert.Single(right.Children)).HorizontalAlignment);
     });
 
     [Fact(DisplayName = "A details section is an expander with its summary, closed unless the text opens it")]
