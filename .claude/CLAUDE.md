@@ -30,8 +30,9 @@ reasons kept are ADRs under `maintainers/adr/` (English only).
   `Markdig` or `AvaloniaEdit` namespace. The model is `internal`, exposed to the viewers through `InternalsVisibleTo`.
 - **Both viewers render every node of the model.** A node one viewer does not handle is a difference between the
   front ends, which is what these packages exist to prevent.
-- **Avalonia version**: the viewer references the lowest Avalonia version it supports, kept on the line Semi.Avalonia
-  supports, because that version becomes the minimum for every consumer.
+- **Avalonia version**: the Avalonia package references the lowest Avalonia version it supports, because that version
+  becomes the minimum for every consumer. It depends on no theme: the gallery sample uses Semi.Avalonia, the package
+  does not.
 - **Downstream**: the Polhem framework (`polhem-dev/polhem`) uses the viewers in DefineEditor and maps the Blazor
   viewer's `--pmd-*` CSS variables to its MudBlazor and Fluent UI themes. Renaming a variable or changing what the
   viewers expose changes what it sees; say so in the pull request.
