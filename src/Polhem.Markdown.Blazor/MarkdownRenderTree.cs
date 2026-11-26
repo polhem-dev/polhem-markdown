@@ -37,17 +37,36 @@ internal sealed partial class MarkdownRenderTree
 
     public IReadOnlySet<Type> RenderedShapeTypes => _renderedShapes;
 
-    public void Document(DocumentNode document, string? extraClass)
+    public void Document(DocumentNode document, IReadOnlyList<(string Key, int Occurrence)> keys, int generation, CodeBlockNode? copied, string? extraClass)
     {
         _builder.OpenElement(0, "div");
         _builder.AddAttribute(1, ClassAttribute, string.IsNullOrWhiteSpace(extraClass) ? "pmd" : "pmd " + extraClass);
         _builder.AddElementReferenceCapture(2, _viewer.SetRootElement);
 
         // NOTE: each top-level block is one element, a child of this one, which is how the script finds the element of a
-        // block from its index in the source ranges the viewer gives it (MarkdownViewer.Source.cs).
-        Blocks(3, document.Blocks);
+        // block from its index in the source ranges the viewer gives it (MarkdownViewer.Source.cs). A component renders
+        // its element in place, with no element of its own around it.
+        //
+        // Each block is a component keyed by its source and what it shows from the rest of the text, so Blazor keeps a
+        // block whose key is unchanged, wherever it moved, and renders only the blocks between (see MarkdownBlock).
+        _builder.OpenRegion(3);
+        for (var index = 0; index < document.Blocks.Count; index++)
+        {
+            _builder.OpenComponent<MarkdownBlock>(0);
+            _builder.SetKey(keys[index]);
+            _builder.AddComponentParameter(1, nameof(MarkdownBlock.Viewer), _viewer);
+            _builder.AddComponentParameter(2, nameof(MarkdownBlock.Block), document.Blocks[index]);
+            _builder.AddComponentParameter(3, nameof(MarkdownBlock.Key), keys[index].Key);
+            _builder.AddComponentParameter(4, nameof(MarkdownBlock.Generation), generation);
+            _builder.AddComponentParameter(5, nameof(MarkdownBlock.Copied), copied);
+            _builder.CloseComponent();
+        }
+        _builder.CloseRegion();
         _builder.CloseElement();
     }
+
+    /// <summary>Writes a top-level block, for the <see cref="MarkdownBlock"/> that shows it.</summary>
+    public void TopLevelBlock(BlockNode block) => Block(block);
 
     private void Block(BlockNode block)
     {

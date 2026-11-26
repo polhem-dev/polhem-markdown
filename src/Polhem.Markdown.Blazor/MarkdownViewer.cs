@@ -79,15 +79,6 @@ public partial class MarkdownViewer : ComponentBase, IAsyncDisposable
     [Parameter]
     public string? Class { get; set; }
 
-    /// <summary>The node types the last render drew, for the node coverage test.</summary>
-    internal IReadOnlySet<Type> RenderedNodeTypes { get; private set; } = new HashSet<Type>();
-
-    /// <summary>The diagram shape types the last render drew, for the shape coverage test.</summary>
-    internal IReadOnlySet<Type> RenderedShapeTypes { get; private set; } = new HashSet<Type>();
-
-    /// <summary>The formula part types the last render wrote, for the formula coverage test.</summary>
-    internal IReadOnlySet<Type> RenderedFormulaTypes { get; private set; } = new HashSet<Type>();
-
     [Inject]
     private IJSRuntime JS { get; set; } = default!;
 
@@ -101,11 +92,13 @@ public partial class MarkdownViewer : ComponentBase, IAsyncDisposable
             || IsStreaming != _parsedStreaming)
         {
             var headings = _document.Headings;
-            _document = string.IsNullOrEmpty(Markdown) ? s_empty : MarkdownModelBuilder.Build(TextToParse, Options ?? new MarkdownOptions());
+            var text = TextToParse;
+            _document = string.IsNullOrEmpty(Markdown) ? s_empty : MarkdownModelBuilder.Build(text, Options ?? new MarkdownOptions());
             _parsedStreaming = IsStreaming;
             _headingsChanged |= !headings.SequenceEqual(_document.Headings);
             _parsedMarkdown = Markdown;
             _parsedOptions = Options;
+            _blockKeys = BlockKeys(text, _document);
             KeepSourceRanges();
             ForgetRemovedAnchors();
         }
@@ -165,14 +158,11 @@ public partial class MarkdownViewer : ComponentBase, IAsyncDisposable
     protected override void BuildRenderTree(RenderTreeBuilder builder)
     {
         var tree = new MarkdownRenderTree(this, builder);
-        tree.Document(_document, Class);
+        tree.Document(_document, _blockKeys, BlockGeneration(), _copiedBlock, Class);
         if (_zoomed is { } zoomed)
         {
             tree.ZoomDialog(zoomed, Class);
         }
-        RenderedNodeTypes = tree.RenderedNodeTypes;
-        RenderedShapeTypes = tree.RenderedShapeTypes;
-        RenderedFormulaTypes = tree.RenderedFormulaTypes;
     }
 
     internal bool HandlesLinks => OnLinkActivated.HasDelegate;
