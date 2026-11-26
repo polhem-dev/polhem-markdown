@@ -11,13 +11,13 @@
 
 Markdown viewers for .NET that show the same text the same way on different front ends, and Markdown source editors for
 Avalonia and Blazor. One package parses the text and applies the safety policy; a package for each UI framework renders
-the result and edits the source.
+the result, adds a reader with a table of contents around it, and edits the source.
 
 | Package | For |
 |---------|-----|
 | `Polhem.Markdown` | Parsing (with [Markdig](https://github.com/xoofx/markdig)) and the safety policy shared by the viewers |
-| `Polhem.Markdown.Avalonia` | A viewer control and a source editor control for Avalonia |
-| `Polhem.Markdown.Blazor` | A viewer component for Blazor, rendering semantic HTML styled with CSS variables, and a source editor component |
+| `Polhem.Markdown.Avalonia` | A viewer control, a reader control with a table of contents, and a source editor control for Avalonia |
+| `Polhem.Markdown.Blazor` | A viewer component for Blazor, rendering semantic HTML styled with CSS variables, a reader component with a table of contents, and a source editor component |
 
 The packages are published on [nuget.org](https://www.nuget.org/packages?q=Polhem.Markdown); the changes of each release
 are in the [CHANGELOG](CHANGELOG.md). They are at 0.x: a minor version may still change the API, and the CHANGELOG says
@@ -89,7 +89,18 @@ The sections below and each viewer's README give the details.
 - **Safety**: only links with an allowed scheme (by default `http`, `https` and `mailto`) can be clicked, and only
   images from an allowed scheme (by default `https`) load. A host can add a scheme of its own and decide what such a
   link does.
-- **Streaming**: the text can be set again as a reply arrives; the gallery's replay shows it.
+- **Streaming**: the text can be set again as a reply arrives, and only the blocks it changes are rendered again. With
+  `IsStreaming` set, the syntax the reply leaves open, such as an unclosed emphasis or a link whose address is still
+  arriving, shows as it will once the reply is complete, so markers do not show and then jump. The gallery's replay
+  shows it.
+- **Reading**: text is selected and copied across blocks as in a browser. `Headings` lists the headings for a table of
+  contents, and `MarkdownReader` shows one itself: a rail along the viewer's edge, with a list that slides out over the
+  text or is pinned beside it and marks the section being read. `ZoomImages` opens an image at full size to zoom and
+  pan.
+- **Finding text**: Ctrl+F (⌘F) opens a find bar in the Avalonia viewer, the browser's own find works in the Blazor
+  one, and both have the same API for a host's own search box (`Find` on Avalonia, `FindAsync` on Blazor).
+- **Accessibility**: screen readers hear headings with their level, links, lists, tables and alerts in both viewers,
+  and Tab and Enter reach and follow links.
 
 Each package's README shows how to use its viewer:
 [Avalonia](src/Polhem.Markdown.Avalonia/README.md), [Blazor](src/Polhem.Markdown.Blazor/README.md).
@@ -124,8 +135,9 @@ Each package's README shows how to use its editor: [Avalonia](src/Polhem.Markdow
 
 ## Samples
 
-`samples/MarkdownGallery` shows every kind of node on a Semi theme, light or dark, with a replay that types the text in
-chunks as a streamed reply arrives. Its Edit switch puts the editor beside the viewer, scrolling together.
+`samples/MarkdownGallery` shows every kind of node on a Semi theme, light or dark, in a `MarkdownReader` with its table
+of contents, with a replay that types the text in chunks as a streamed reply arrives. Images open at full size, and
+Ctrl+F (⌘F) finds text. Its Edit switch puts the editor beside the viewer, scrolling together.
 
 ```bash
 dotnet run --project samples/MarkdownGallery.Desktop
@@ -133,8 +145,8 @@ dotnet run --project samples/MarkdownGallery.Blazor
 dotnet run --project samples/MarkdownGallery.Wasm
 ```
 
-The Blazor gallery shows the same text, so the two viewers can be compared side by side. Its Edit switch puts the Blazor
-editor beside the viewer in the same way. `MarkdownGallery.Blazor` runs with interactive server rendering;
+The Blazor gallery shows the same text, so the two viewers can be compared side by side, with a find box that uses the
+viewer's find API. Its Edit switch puts the Blazor editor beside the viewer in the same way. `MarkdownGallery.Blazor` runs with interactive server rendering;
 `MarkdownGallery.Wasm` runs the same page on standalone Blazor WebAssembly, in the browser with no server. Build CI
 publishes it trimmed, so a change that breaks the Blazor package under trimming fails the build.
 
