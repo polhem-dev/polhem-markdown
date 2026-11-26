@@ -20,7 +20,7 @@
             </div>
             <div class="frame preview" @onpointerenter="() => _leader = Pane.Viewer" @onfocusin="() => _leader = Pane.Viewer">
                 <MarkdownReader @bind-OutlinePinned="_outlinePinned">
-                    <MarkdownViewer @ref="_viewer" Markdown="@_preview" Options="_options" ZoomImages="true"
+                    <MarkdownViewer @ref="_viewer" Markdown="@_preview" Options="_options" ZoomImages="true" IsStreaming="_streaming"
                                     OnLinkActivated="OnLinkActivated" FirstVisibleSourceOffsetChanged="ViewerScrolled"
                                     OnSourceRequested="GoToSource" />
                 </MarkdownReader>
@@ -32,7 +32,7 @@
         @* The reader scrolls the viewer and offers the table of contents along its edge. *@
         <div class="frame reader-frame">
             <MarkdownReader @bind-OutlinePinned="_outlinePinned">
-                <MarkdownViewer @ref="_viewer" Markdown="@_markdown" Options="_options" ZoomImages="true"
+                <MarkdownViewer @ref="_viewer" Markdown="@_markdown" Options="_options" ZoomImages="true" IsStreaming="_streaming"
                                 OnLinkActivated="OnLinkActivated" />
             </MarkdownReader>
         </div>
@@ -115,6 +115,7 @@
     }
 
     private CancellationTokenSource? _replay;
+    private bool _streaming;
 
     private static MarkdownOptions CreateOptions()
     {
@@ -131,6 +132,9 @@
         _replay = new CancellationTokenSource();
         var token = _replay.Token;
         var text = MarkdownGallery.SampleText.Markdown;
+
+        // While the reply arrives, the viewer closes the syntax it leaves open; at its end, the text shows as written.
+        _streaming = true;
         for (var shown = 0; shown < text.Length && !token.IsCancellationRequested;)
         {
             shown = Math.Min(shown + ReplayChunk, text.Length);
@@ -138,6 +142,7 @@
             StateHasChanged();
             await Task.Delay(30, CancellationToken.None);
         }
+        _streaming = false;
     }
 
     // The loop of an earlier replay may still be running; reading the token of a disposed source is safe and reports it

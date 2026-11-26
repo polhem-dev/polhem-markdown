@@ -51,7 +51,7 @@ shows the start of the sample text in each.
 | Image schemes | Only allowed schemes load (`https` by default) | ✓ | ✓ |
 | SVG images | | Trusted badge hosts | Every allowed image |
 | Selecting text | A drag runs across blocks; copying gives plain text, with tabs between table cells | ✓ | ✓ |
-| Streaming | Set the text again as a reply arrives | ✓ | ✓ |
+| Streaming | Set the text again as a reply arrives; with `IsStreaming`, syntax the reply leaves open shows as it will once complete | ✓ | ✓ |
 | Light and dark themes | | Brushes | CSS variables |
 | Source positions | For keeping an editor in step | ✓ | ✓ |
 | Headings | Listed for a table of contents, and scrolled to by id | ✓ | ✓ |

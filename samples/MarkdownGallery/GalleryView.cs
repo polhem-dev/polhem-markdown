@@ -121,11 +121,15 @@ public sealed class GalleryView : UserControl
         _replay?.Stop();
         var shown = 0;
         _viewer.Markdown = "";
+
+        // While the reply arrives, the viewer closes the syntax it leaves open; at its end, the text shows as written.
+        _viewer.IsStreaming = true;
         _replay = DispatcherTimer.Run(() =>
         {
             shown = Math.Min(shown + ReplayChunk, SampleText.Markdown.Length);
             _viewer.Markdown = SampleText.Markdown[..shown];
-            return shown < SampleText.Markdown.Length;
+            _viewer.IsStreaming = shown < SampleText.Markdown.Length;
+            return _viewer.IsStreaming;
         }, TimeSpan.FromMilliseconds(30)) as DispatcherTimer;
     }
 }
