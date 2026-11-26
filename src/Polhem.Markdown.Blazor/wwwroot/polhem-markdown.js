@@ -189,7 +189,7 @@ export function openZoom(dialog, component) {
     && point.x <= view.x + natural().width * view.scale && point.y <= view.y + natural().height * view.scale;
   const center = () => ({ x: dialog.clientWidth / 2, y: dialog.clientHeight / 2 });
   const zoom = (scale, anchor) => { zoomTo(view, scale, anchor, natural(), room()); apply(); };
-  const isClose = e => e.target.closest && e.target.closest(".pmd-zoom-close");
+  const isClose = e => e.target.closest?.(".pmd-zoom-close");
 
   // Pointers down on the dialog: one drags, two pinch.
   const pointers = new Map();

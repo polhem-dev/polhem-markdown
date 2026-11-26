@@ -23,8 +23,8 @@ internal sealed partial class MarkdownRenderTree
         _builder.AddAttribute(2, "aria-label", _viewer.OutlineLabel);
         if (!pinned)
         {
-            _builder.OpenElement(3, "button");
-            _builder.AddAttribute(4, "type", "button");
+            _builder.OpenElement(3, ButtonElement);
+            _builder.AddAttribute(4, TypeAttribute, ButtonElement);
             _builder.AddAttribute(5, ClassAttribute, "pmd-outline-toggle");
             _builder.AddAttribute(6, "aria-label", _viewer.OutlineLabel);
             _builder.AddAttribute(7, "title", _viewer.OutlineLabel);
@@ -70,8 +70,8 @@ internal sealed partial class MarkdownRenderTree
         _builder.AddContent(3, _viewer.OutlineLabel);
         _builder.CloseElement();
         var label = pinned ? _viewer.UnpinOutlineLabel : _viewer.PinOutlineLabel;
-        _builder.OpenElement(4, "button");
-        _builder.AddAttribute(5, "type", "button");
+        _builder.OpenElement(4, ButtonElement);
+        _builder.AddAttribute(5, TypeAttribute, ButtonElement);
         _builder.AddAttribute(6, ClassAttribute, "pmd-outline-pin");
         _builder.AddAttribute(7, "aria-label", label);
         _builder.AddAttribute(8, "title", label);

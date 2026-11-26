@@ -22,8 +22,8 @@ internal sealed partial class MarkdownRenderTree
         {
             // NOTE: a button, rather than handlers on the image, gives the keyboard and screen readers the image as
             // something to press, named by its alternative text.
-            _builder.OpenElement(0, "button");
-            _builder.AddAttribute(1, "type", "button");
+            _builder.OpenElement(0, ButtonElement);
+            _builder.AddAttribute(1, TypeAttribute, ButtonElement);
             _builder.AddAttribute(2, ClassAttribute, "pmd-image-button");
             _builder.AddAttribute(3, OnClickAttribute, EventCallback.Factory.Create<MouseEventArgs>(_viewer, () => _viewer.ActivateImageAsync(image)));
             _builder.OpenRegion(4);
@@ -54,8 +54,8 @@ internal sealed partial class MarkdownRenderTree
         _builder.OpenRegion(4);
         Picture(image, zoomed: true);
         _builder.CloseRegion();
-        _builder.OpenElement(5, "button");
-        _builder.AddAttribute(6, "type", "button");
+        _builder.OpenElement(5, ButtonElement);
+        _builder.AddAttribute(6, TypeAttribute, ButtonElement);
         _builder.AddAttribute(7, ClassAttribute, "pmd-zoom-close");
         _builder.AddAttribute(8, "aria-label", MarkdownViewer.ZoomCloseLabel);
         _builder.AddAttribute(9, "title", MarkdownViewer.ZoomCloseLabel);
