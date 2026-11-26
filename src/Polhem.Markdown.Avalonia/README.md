@@ -82,6 +82,20 @@ await foreach (var token in reply)
 viewer.IsStreaming = false;
 ```
 
+Ctrl+F (⌘F on macOS) in the viewer opens a find bar at the top right of the view, which highlights every match and
+goes through them with Enter, Shift+Enter, F3 and Shift+F3; Escape closes it. A match runs across emphasis and links,
+and finds an image by its alternative text and a formula by its LaTeX. On a phone or a tablet, or from a host's own
+toolbar or menu, open it with the API, which also finds without the bar. A `MarkdownReader` puts a search button at
+the top of its rail.
+
+```csharp
+viewer.OpenFind();                    // the find bar, with the focus in it
+var count = viewer.Find("order");     // highlights the matches and goes to the first
+viewer.FindNext();                    // FindPrevious, FindMatchCount, CurrentFindMatch, CloseFind
+```
+
+`FindMatchBrush` and `FindCurrentMatchBrush` color the highlights, and `FindBarLabels` translates the bar's labels.
+
 Set `ZoomImages` to open an image at full size over the window with a click or Enter, where the wheel, a pinch or
 + and - zoom it, a drag pans it, a double click switches between fitting the window and the image's own size, and
 Escape or a click beside it closes it. An image inside a link opens the link instead. To show images your own way,

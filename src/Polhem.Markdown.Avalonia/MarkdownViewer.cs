@@ -128,6 +128,7 @@ public partial class MarkdownViewer : Control
         AddHandler(PointerReleasedEvent, OnPointerReleasedForSelection, RoutingStrategies.Bubble, handledEventsToo: true);
         AddHandler(PointerCaptureLostEvent, OnPointerCaptureLostForSelection, RoutingStrategies.Bubble, handledEventsToo: true);
         AddHandler(KeyDownEvent, OnKeyDownForSelection, RoutingStrategies.Tunnel);
+        AddHandler(KeyDownEvent, OnKeyDownForFind, RoutingStrategies.Tunnel);
         AddHandler(SelectableTextBlock.CopyingToClipboardEvent, OnCopyingToClipboard, RoutingStrategies.Bubble);
     }
 
@@ -346,6 +347,7 @@ public partial class MarkdownViewer : Control
     protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
     {
         base.OnPropertyChanged(change);
+        OnFindPropertyChanged(change);
 
         // NOTE: a change of theme rebuilds only the blocks with a picture whose source depends on it, since the block key
         // holds the source shown.
@@ -366,6 +368,7 @@ public partial class MarkdownViewer : Control
     protected override Size MeasureOverride(Size availableSize)
     {
         _panel.Measure(availableSize);
+        MeasureFindBar();
         return _panel.DesiredSize;
     }
 
@@ -373,6 +376,7 @@ public partial class MarkdownViewer : Control
     protected override Size ArrangeOverride(Size finalSize)
     {
         _panel.Arrange(new Rect(finalSize));
+        ArrangeFindBar(finalSize);
         return finalSize;
     }
 
@@ -485,6 +489,7 @@ public partial class MarkdownViewer : Control
         KeepRanges(document);
         KeepSelection();
         KeepHeadings(document);
+        KeepFind();
         ForgetImagesNotIn(document);
         _hasThemedImages = document.Blocks.SelectMany(NodeTree.SelfAndDescendants)
             .Any(node => node is ImageNode { DarkSource: not null } or ImageNode { LightSource: not null });

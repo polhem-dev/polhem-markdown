@@ -36,3 +36,9 @@ override Polhem.Markdown.Blazor.MarkdownReader.BuildRenderTree(Microsoft.AspNetC
 override Polhem.Markdown.Blazor.MarkdownReader.OnAfterRenderAsync(bool firstRender) -> System.Threading.Tasks.Task!
 Polhem.Markdown.Blazor.MarkdownViewer.IsStreaming.get -> bool
 Polhem.Markdown.Blazor.MarkdownViewer.IsStreaming.set -> void
+Polhem.Markdown.Blazor.MarkdownViewer.ClearFindAsync() -> System.Threading.Tasks.Task!
+Polhem.Markdown.Blazor.MarkdownViewer.CurrentFindMatch.get -> int
+Polhem.Markdown.Blazor.MarkdownViewer.FindAsync(string! text, bool matchCase = false) -> System.Threading.Tasks.Task<int>!
+Polhem.Markdown.Blazor.MarkdownViewer.FindMatchCount.get -> int
+Polhem.Markdown.Blazor.MarkdownViewer.FindNextAsync() -> System.Threading.Tasks.Task<bool>!
+Polhem.Markdown.Blazor.MarkdownViewer.FindPreviousAsync() -> System.Threading.Tasks.Task<bool>!

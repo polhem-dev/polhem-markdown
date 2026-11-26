@@ -9,6 +9,9 @@ Polhem.Markdown 各套件值得注意的變更，每個版本只列幾項重點�
 
 ## [Unreleased]
 
+- 文件內搜尋：在 Avalonia 檢視器按 Ctrl+F（⌘F）會叫出搜尋列並反白所有符合處，`MarkdownReader` 的細欄上有放大鏡按鈕。
+  兩個檢視器有相同的 API（Avalonia 的 `Find`、`FindNext`、`FindPrevious`；Blazor 的 `FindAsync` 等），Blazor 上瀏覽器原生的
+  搜尋也能用（#85）。
 - 兩個檢視器都能把仍在送達的回覆依完成後的樣子呈現（`IsStreaming`）：最後一個區塊尚未結束的語法會先補齊或暫不顯示，
   不再先露出記號、半截網址或一整行管線再跳動（#69）。
 - Blazor 檢視器只重新渲染文字變更影響到的頂層區塊，與 Avalonia 檢視器只重建這些區塊的做法相同：逐步增長的回覆只渲染最後幾個
