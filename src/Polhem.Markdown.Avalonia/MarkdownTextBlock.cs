@@ -318,6 +318,19 @@ internal sealed class MarkdownTextBlock : SelectableTextBlock
         {
             return;
         }
+
+        // NOTE: the text captures the pointer when it is pressed, so the release of a click on an image comes here, not
+        // to the image. The text layout does not place the pointer inside an image, so a link around one is found by the
+        // position the image takes in the text.
+        if (this.InputHitTest(e.GetPosition(this)) is Visual hit
+            && hit.FindAncestorOfType<Images.ImageView>(includeSelf: true) is { } image)
+        {
+            if (!image.TakeClick(e) && LinkRangeAt(image.TextOffset) is { } imageLink)
+            {
+                ActivateLink(_links.IndexOf(imageLink), moveFocus: false);
+            }
+            return;
+        }
         if (LinkUnder(e) is { } link)
         {
             ActivateLink(_links.IndexOf(link), moveFocus: false);

@@ -9,6 +9,9 @@ namespace Polhem.Markdown.Avalonia;
 
 internal sealed partial class MarkdownRenderer
 {
+    /// <summary>How many links the inline being drawn is inside.</summary>
+    private int _linkDepth;
+
     /// <summary>Builds selectable text from inlines, recording where each link lies in the text.</summary>
     public MarkdownTextBlock Text(IReadOnlyList<InlineNode> inlines)
     {
@@ -73,8 +76,9 @@ internal sealed partial class MarkdownRenderer
             case ImageNode image:
                 // NOTE: an embedded control takes one character of the text, which keeps link ranges after it in step.
                 owner.AddEmbeddedText(offset, image.AlternativeText);
+                var view = new ImageView(_viewer, image, opens: _viewer.ZoomImages && _linkDepth == 0) { TextOffset = offset };
                 offset += EmbeddedControlLength;
-                return new InlineUIContainer(new ImageView(_viewer, image)) { BaselineAlignment = BaselineAlignment.Center };
+                return new InlineUIContainer(view) { BaselineAlignment = BaselineAlignment.Center };
 
             case MathNode math:
                 // NOTE: like an image, an embedded formula takes one character of the text. It is copied as its LaTeX,
@@ -177,10 +181,14 @@ internal sealed partial class MarkdownRenderer
     {
         var span = new Span { TextDecorations = TextDecorations.Underline };
         span.Bind(TextElement.ForegroundProperty, _viewer.GetObservable(MarkdownViewer.LinkForegroundProperty));
+
+        // An image inside a link opens the link, not the image.
+        _linkDepth++;
         foreach (var child in inlines)
         {
             span.Inlines.Add(Inline(child, owner, ref offset));
         }
+        _linkDepth--;
         return span;
     }
 

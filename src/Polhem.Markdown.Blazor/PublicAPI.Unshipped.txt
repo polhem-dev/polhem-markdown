@@ -4,3 +4,11 @@ Polhem.Markdown.Blazor.MarkdownViewer.OnHeadingsChanged.get -> Microsoft.AspNetC
 Polhem.Markdown.Blazor.MarkdownViewer.OnHeadingsChanged.set -> void
 Polhem.Markdown.Blazor.MarkdownViewer.ScrollToHeadingAsync(string! id) -> System.Threading.Tasks.Task<bool>!
 override Polhem.Markdown.Blazor.MarkdownViewer.OnParametersSetAsync() -> System.Threading.Tasks.Task!
+Polhem.Markdown.Blazor.MarkdownImageActivatedEventArgs
+Polhem.Markdown.Blazor.MarkdownImageActivatedEventArgs.AlternativeText.get -> string!
+Polhem.Markdown.Blazor.MarkdownImageActivatedEventArgs.MarkdownImageActivatedEventArgs(System.Uri! uri, string! alternativeText) -> void
+Polhem.Markdown.Blazor.MarkdownImageActivatedEventArgs.Uri.get -> System.Uri!
+Polhem.Markdown.Blazor.MarkdownViewer.OnImageActivated.get -> Microsoft.AspNetCore.Components.EventCallback<Polhem.Markdown.Blazor.MarkdownImageActivatedEventArgs!>
+Polhem.Markdown.Blazor.MarkdownViewer.OnImageActivated.set -> void
+Polhem.Markdown.Blazor.MarkdownViewer.ZoomImages.get -> bool
+Polhem.Markdown.Blazor.MarkdownViewer.ZoomImages.set -> void

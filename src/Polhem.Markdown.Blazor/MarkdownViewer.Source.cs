@@ -100,6 +100,10 @@ public partial class MarkdownViewer
         {
             await StopWatchingSourceAsync();
         }
+        if (_zoomPending)
+        {
+            await OpenZoomAsync();
+        }
     }
 
     /// <summary>

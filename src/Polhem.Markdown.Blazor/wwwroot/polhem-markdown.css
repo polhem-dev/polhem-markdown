@@ -13,6 +13,8 @@
     --pmd-code-keyword, --pmd-code-string, --pmd-code-comment, --pmd-code-constant, --pmd-code-tag,
     --pmd-code-property
                      colors of the kinds of token in a highlighted code block, in the viewer and the editor
+    --pmd-zoom-backdrop
+                     behind an image opened at full size (MarkdownViewer.ZoomImages)
 
   The editor also uses --pmd-code-font for its text, --pmd-link for the text of links, and:
 
@@ -552,3 +554,77 @@
 .pmd-editor .pmd-sx-bold { font-weight: bold; }
 .pmd-editor .pmd-sx-italic { font-style: italic; }
 .pmd-editor .pmd-sx-strike { text-decoration: line-through; }
+
+/* An image that opens at full size: a button that looks like the image. */
+.pmd .pmd-image-button {
+  display: inline;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  color: inherit;
+  cursor: zoom-in;
+  vertical-align: baseline;
+}
+
+.pmd .pmd-image-button:focus-visible {
+  outline: 2px solid var(--pmd-link, #3b82f6);
+  outline-offset: 2px;
+}
+
+/* The image at full size, over the whole page. The script places and scales the image; the dialog itself is the
+   backdrop, so a click on it beside the image closes it. */
+.pmd-zoom {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  max-width: none;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+  background: var(--pmd-zoom-backdrop, rgba(16, 16, 16, 0.9));
+  cursor: move;
+  touch-action: none;
+  user-select: none;
+}
+
+.pmd-zoom::backdrop {
+  background: transparent;
+}
+
+.pmd-zoom .pmd-zoom-image {
+  position: absolute;
+  left: 0;
+  top: 0;
+  max-width: none;
+  max-height: none;
+  transform-origin: 0 0;
+  opacity: 0;
+  -webkit-user-drag: none;
+}
+
+.pmd-zoom .pmd-zoom-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  display: flex;
+  padding: 10px;
+  border: 0;
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.4);
+  color: #fff;
+  cursor: pointer;
+}
+
+.pmd-zoom .pmd-zoom-close svg {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+}

@@ -103,6 +103,12 @@ internal static class SampleText
             "South" : 58
         ```
 
+        ## Images
+
+        A screenshot shown smaller than it is opens at full size with a click, where it zooms and pans:
+
+        ![The viewer drawing diagrams](https://raw.githubusercontent.com/polhem-dev/polhem-markdown/main/docs/images/viewer-diagrams.png)
+
         ## Math
 
         Euler's identity $e^{i\pi} + 1 = 0$ sits in a line, prices such as $5 and $10 stay text, and a formula can stand on

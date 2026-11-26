@@ -9,6 +9,9 @@ Polhem.Markdown 各套件值得注意的變更，每個版本只列幾項重點�
 
 ## [Unreleased]
 
+- 兩個檢視器都能把圖片以原尺寸蓋在視窗上顯示，可縮放與平移（`ZoomImages`，預設關閉）；宿主可透過 `ImageActivated`
+  （Avalonia）或 `OnImageActivated`（Blazor）改用自己的方式顯示圖片。Blazor 對話框的背景色為 `--pmd-zoom-backdrop`（#72）。
+- Avalonia 檢視器中，點選連結裡的圖片會開啟該連結。過去點了沒有反應。
 - Avalonia 檢視器提供給螢幕閱讀器的資訊與 Blazor 檢視器的 HTML 相同：標題與其層級、連結、清單與清單項目、表格、以替代文字
   命名的圖片，以及具名群組形式的警示、引言與可收合區段。Tab 依文字順序在連結與按鈕之間移動，Enter 開啟連結（#70）。
 - Avalonia 檢視器中沒有連結的段落不再是 Tab 停駐點；點選後仍會取得焦點，以便選取與複製。Blazor 檢視器的警示加上

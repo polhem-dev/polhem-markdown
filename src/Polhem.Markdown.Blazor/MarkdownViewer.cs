@@ -158,6 +158,10 @@ public partial class MarkdownViewer : ComponentBase, IAsyncDisposable
     {
         var tree = new MarkdownRenderTree(this, builder);
         tree.Document(_document, Class);
+        if (_zoomed is { } zoomed)
+        {
+            tree.ZoomDialog(zoomed, Class);
+        }
         RenderedNodeTypes = tree.RenderedNodeTypes;
         RenderedShapeTypes = tree.RenderedShapeTypes;
         RenderedFormulaTypes = tree.RenderedFormulaTypes;

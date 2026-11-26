@@ -31,7 +31,7 @@ public sealed class GalleryView : UserControl
     {
         var options = new MarkdownOptions();
         options.AllowedLinkSchemes.Add("polhem");
-        _viewer = new MarkdownViewer { Options = options, Markdown = SampleText.Markdown };
+        _viewer = new MarkdownViewer { Options = options, Markdown = SampleText.Markdown, ZoomImages = true };
         _viewer.LinkActivated += OnLinkActivated;
 
         var dark = new ToggleSwitch { OnContent = "Dark", OffContent = "Light", VerticalAlignment = VerticalAlignment.Center };

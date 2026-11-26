@@ -46,6 +46,16 @@ and defaults are at the top of `polhem-markdown.css`:
 }
 ```
 
+Set `ZoomImages` to open an image at full size over the page with a click or Enter, in a dialog where the wheel, a
+pinch or + and - zoom it, a drag pans it, a double click switches between fitting the window and the image's own
+size, and Escape or a click beside it closes it. An image inside a link opens the link instead. With
+`OnImageActivated` set, the host shows the image its own way and the viewer opens nothing. The dialog's backdrop is
+`--pmd-zoom-backdrop`.
+
+```razor
+<MarkdownViewer Markdown="@reply" ZoomImages="true" />
+```
+
 `Headings` lists the text's headings for a table of contents, `OnHeadingsChanged` reports a change in them, and
 `ScrollToHeadingAsync` scrolls one to the top of the view and focuses it:
 

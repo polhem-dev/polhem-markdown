@@ -9,6 +9,10 @@ and versions follow [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+- Both viewers can open an image at full size over the window, to zoom and pan (`ZoomImages`, off by default); a host
+  shows images its own way with `ImageActivated` (Avalonia) or `OnImageActivated` (Blazor). The Blazor dialog's
+  backdrop is `--pmd-zoom-backdrop` (#72).
+- In the Avalonia viewer, a click on an image inside a link opens the link. It used to do nothing.
 - The Avalonia viewer tells screen readers what the Blazor viewer's HTML does: headings with their level, links,
   lists and list items, tables, images by their alternative text, and alerts, quotes and collapsible sections as named
   groups. Tab moves through links and buttons in the order of the text, and Enter follows a link (#70).
