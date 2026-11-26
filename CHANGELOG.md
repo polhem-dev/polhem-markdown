@@ -9,6 +9,9 @@ and versions follow [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+- Finding text: Ctrl+F (⌘F) in the Avalonia viewer opens a find bar that highlights every match, and a
+  `MarkdownReader` has a search button on its rail. Both viewers have the same API (`Find`, `FindNext`,
+  `FindPrevious` on Avalonia; `FindAsync` and the like on Blazor), where the browser's own find also works (#85).
 - Both viewers show a reply that is still arriving as it will look once complete (`IsStreaming`): the syntax its last
   block leaves open is closed or held back, so markers, partial addresses and lines of pipes no longer show and then
   jump (#69).

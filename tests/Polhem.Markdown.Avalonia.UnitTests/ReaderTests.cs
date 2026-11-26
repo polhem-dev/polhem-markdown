@@ -47,7 +47,7 @@ public class ReaderTests(HeadlessSession session)
     {
         var (_, reader, viewer) = ShowReader(s_document);
 
-        Assert.Equal(new Rect(0, 0, OutlineRail.Size, 600), reader.Rail.Bounds);
+        Assert.Equal(new Rect(0, 36, OutlineRail.Size, 564), reader.Rail.Bounds);
         Assert.True(reader.Rail.IsVisible);
         Assert.False(reader.Outline.IsVisible);
         Assert.Equal(OutlineRail.Size, reader.Scroller.Bounds.X);
@@ -58,13 +58,13 @@ public class ReaderTests(HeadlessSession session)
         Assert.True(reader.Scroller.Extent.Height > reader.Scroller.Viewport.Height);
     });
 
-    [Fact(DisplayName = "A text without headings has no rail, and the text takes the room")]
+    [Fact(DisplayName = "A text without headings has no lines on the rail, only the search button")]
     public Task NoHeadings_NoRail() => session.RunAsync(() =>
     {
         var (_, reader, _) = ShowReader("Just text.");
 
         Assert.False(reader.Rail.IsVisible);
-        Assert.Equal(0, reader.Scroller.Bounds.X);
+        Assert.Equal(OutlineRail.Size, reader.Scroller.Bounds.X);
     });
 
     [Fact(DisplayName = "Pointing at the rail slides the list out over the text, flush with the rail and as tall as the reader")]
@@ -98,11 +98,13 @@ public class ReaderTests(HeadlessSession session)
         Assert.True(reader.Rail.IsFocused);
     });
 
-    [Fact(DisplayName = "Tab reaches the rail before the text's links, and Enter on it opens the list")]
+    [Fact(DisplayName = "Tab reaches the search button and the rail before the text's links, and Enter on the rail opens the list")]
     public Task Keyboard_RailFirst() => session.RunAsync(() =>
     {
         var (window, reader, _) = ShowReader("# Guide\n\nSee [the docs](https://example.org).");
 
+        // The search button tops the rail, so Tab reaches it first.
+        window.KeyPressQwerty(PhysicalKey.Tab, RawInputModifiers.None);
         window.KeyPressQwerty(PhysicalKey.Tab, RawInputModifiers.None);
         Assert.True(reader.Rail.IsFocused);
         window.KeyPressQwerty(PhysicalKey.Enter, RawInputModifiers.None);

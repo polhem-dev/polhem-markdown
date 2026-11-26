@@ -280,3 +280,137 @@ export function openZoom(dialog, component) {
   // The viewer cannot tell an image that failed in the text from one that loaded, so one that fails here closes.
   image.addEventListener("error", () => dialog.close(), { once: true });
 }
+
+// Finding text in the viewer (MarkdownViewer.FindAsync, polhem-dev/polhem-markdown#85). The text is taken block by block,
+// as the Avalonia viewer's text blocks are, so a match never spans two blocks but runs across emphasis and links; an
+// image counts as its alternative text and an inline formula as its LaTeX, as when they are copied. Text the Avalonia
+// viewer does not show as selectable text is left out: an alert's title, a code block's language, and diagrams.
+const finds = new WeakMap();
+const inlineTags = new Set(["A", "ABBR", "B", "BR", "BUTTON", "CODE", "DEL", "EM", "I", "IMG", "INS", "KBD", "MARK", "MATH", "PICTURE",
+  "S", "SMALL", "SPAN", "STRONG", "SUB", "SUP", "U"]);
+const skipped = ".pmd-alert-title, .pmd-code-lang, .pmd-copy, svg, math[display=block]";
+
+// The places `query` occurs in each segment's text, from the start and not overlapping, as [segment, start, end].
+export function findInSegments(segments, query, matchCase) {
+  const matches = [];
+  if (!query) return matches;
+  const needle = matchCase ? query : query.toLowerCase();
+  segments.forEach((segment, index) => {
+    const text = matchCase ? segment.text : segment.text.toLowerCase();
+    // NOTE: lower-casing may change the length of a few characters; then the case is matched as written.
+    const haystack = text.length === segment.text.length ? text : segment.text;
+    let at = haystack.indexOf(needle);
+    while (at >= 0) {
+      matches.push([index, at, at + query.length]);
+      at = haystack.indexOf(needle, at + query.length);
+    }
+  });
+  return matches;
+}
+
+// The root's text as segments, one for each block, each with the pieces it is made of: a text node, or an image or a
+// formula taken whole.
+function segmentsOf(root) {
+  const segments = [];
+  let current = null;
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT | NodeFilter.SHOW_ELEMENT, {
+    acceptNode: node => {
+      if (node.nodeType === Node.ELEMENT_NODE) {
+        if (node.matches(skipped)) return NodeFilter.FILTER_REJECT;
+        // NOTE: a MathML element's tag name keeps its case, `math`, where an HTML one's is upper case.
+        if (node.localName === "img" || node.localName === "math") return NodeFilter.FILTER_ACCEPT;
+        return NodeFilter.FILTER_SKIP;
+      }
+      return node.parentElement?.closest("math") ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT;
+    },
+  });
+  for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+    let block = node.parentElement;
+    while (block !== root && block?.localName && inlineTags.has(block.localName.toUpperCase())) block = block.parentElement;
+    if (!current || current.block !== block) {
+      current = { block, text: "", pieces: [] };
+      segments.push(current);
+    }
+    const text = pieceText(node);
+    current.pieces.push({ node, start: current.text.length, end: current.text.length + text.length });
+    current.text += text;
+    if (node.nodeType === Node.ELEMENT_NODE) walker.currentNode = lastDescendant(node);
+  }
+  return segments;
+}
+
+// What a piece reads as: a text node's text, an image's alternative text, or a formula's LaTeX between dollars.
+function pieceText(node) {
+  if (node.nodeType === Node.TEXT_NODE) return node.data;
+  if (node.localName === "img") return node.alt || "";
+  return "$" + (node.querySelector("annotation")?.textContent ?? "") + "$";
+}
+
+function lastDescendant(node) {
+  while (node.lastChild) node = node.lastChild;
+  return node;
+}
+
+// A range over a match: from its first piece to its last, an image or a formula taken whole.
+function rangeOf(segment, start, end) {
+  const range = document.createRange();
+  const first = segment.pieces.find(piece => piece.end > start);
+  const last = [...segment.pieces].reverse().find(piece => piece.start < end);
+  if (first.node.nodeType === Node.TEXT_NODE) range.setStart(first.node, start - first.start);
+  else range.setStartBefore(first.node);
+  if (last.node.nodeType === Node.TEXT_NODE) range.setEnd(last.node, end - last.start);
+  else range.setEndAfter(last.node);
+  return range;
+}
+
+// Finds `query` in the viewer, highlights every match, and goes to the first one. Returns [count, current].
+export function find(root, query, matchCase) {
+  const state = { query, matchCase, current: 0 };
+  finds.set(root, state);
+  return show(root, state);
+}
+
+// Goes `delta` matches on, wrapping round, finding again first, as the text may have changed. Returns [count, current].
+export function findStep(root, delta) {
+  const state = finds.get(root);
+  if (!state) return [0, 0];
+  state.current += delta;
+  return show(root, state);
+}
+
+export function clearFind(root) {
+  finds.delete(root);
+  globalThis.CSS?.highlights?.delete("pmd-find");
+  globalThis.CSS?.highlights?.delete("pmd-find-current");
+}
+
+function show(root, state) {
+  const segments = segmentsOf(root);
+  const ranges = findInSegments(segments, state.query, state.matchCase)
+    .map(([segment, start, end]) => rangeOf(segments[segment], start, end));
+  if (ranges.length === 0) {
+    clearHighlights();
+    state.current = 0;
+    return [0, 0];
+  }
+  state.current = ((state.current % ranges.length) + ranges.length) % ranges.length;
+  const current = ranges[state.current];
+
+  // A match in a closed section opens it, as a browser's own find does.
+  for (let element = current.startContainer.parentElement; element && element !== root; element = element.parentElement) {
+    if (element.tagName === "DETAILS" && !element.open) element.open = true;
+  }
+  const highlights = globalThis.CSS?.highlights;
+  if (highlights) {
+    highlights.set("pmd-find", new Highlight(...ranges));
+    highlights.set("pmd-find-current", new Highlight(current));
+  }
+  const target = current.startContainer.nodeType === Node.ELEMENT_NODE ? current.startContainer : current.startContainer.parentElement;
+  target?.scrollIntoView({ block: "center", inline: "nearest" });
+  return [ranges.length, state.current + 1];
+}
+
+function clearHighlights() {
+  globalThis.CSS?.highlights?.delete("pmd-find");
+  globalThis.CSS?.highlights?.delete("pmd-find-current");
+}

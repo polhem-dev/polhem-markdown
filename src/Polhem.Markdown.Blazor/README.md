@@ -58,6 +58,14 @@ written.
 <MarkdownViewer Markdown="@reply" IsStreaming="@arriving" />
 ```
 
+The browser's own find (Ctrl+F, or Find in Page on a phone) works on the viewer's text. To search from a host's own
+controls, `FindAsync` highlights every match and goes to the first, opening a closed section around it, and
+`FindNextAsync`, `FindPreviousAsync` and `ClearFindAsync` go on from there; `FindMatchCount` and `CurrentFindMatch`
+tell where. A match runs across emphasis and links, and finds an image by its alternative text and a formula by its
+LaTeX, as on Avalonia. The highlights are `--pmd-find` and `--pmd-find-current`, drawn with the browser's CSS Custom
+Highlight API, so a page shows the matches of one viewer at a time. Some browsers' own find does not look inside a
+closed `<details>`; `FindAsync` does.
+
 Set `ZoomImages` to open an image at full size over the page with a click or Enter, in a dialog where the wheel, a
 pinch or + and - zoom it, a drag pans it, a double click switches between fitting the window and the image's own
 size, and Escape or a click beside it closes it. An image inside a link opens the link instead. With

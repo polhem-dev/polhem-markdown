@@ -43,3 +43,29 @@ Polhem.Markdown.Avalonia.MarkdownReader.ScrollViewer.get -> Avalonia.Controls.Sc
 Polhem.Markdown.Avalonia.MarkdownViewer.IsStreaming.get -> bool
 Polhem.Markdown.Avalonia.MarkdownViewer.IsStreaming.set -> void
 static readonly Polhem.Markdown.Avalonia.MarkdownViewer.IsStreamingProperty -> Avalonia.StyledProperty<bool>!
+Polhem.Markdown.Avalonia.MarkdownFindBarItem
+Polhem.Markdown.Avalonia.MarkdownFindBarItem.Close = 4 -> Polhem.Markdown.Avalonia.MarkdownFindBarItem
+Polhem.Markdown.Avalonia.MarkdownFindBarItem.Field = 0 -> Polhem.Markdown.Avalonia.MarkdownFindBarItem
+Polhem.Markdown.Avalonia.MarkdownFindBarItem.MatchCase = 1 -> Polhem.Markdown.Avalonia.MarkdownFindBarItem
+Polhem.Markdown.Avalonia.MarkdownFindBarItem.Next = 3 -> Polhem.Markdown.Avalonia.MarkdownFindBarItem
+Polhem.Markdown.Avalonia.MarkdownFindBarItem.Previous = 2 -> Polhem.Markdown.Avalonia.MarkdownFindBarItem
+Polhem.Markdown.Avalonia.MarkdownViewer.CloseFind() -> void
+Polhem.Markdown.Avalonia.MarkdownViewer.CurrentFindMatch.get -> int
+Polhem.Markdown.Avalonia.MarkdownViewer.Find(string! text, bool matchCase = false) -> int
+Polhem.Markdown.Avalonia.MarkdownViewer.FindBarLabels.get -> System.Func<Polhem.Markdown.Avalonia.MarkdownFindBarItem, string?>?
+Polhem.Markdown.Avalonia.MarkdownViewer.FindBarLabels.set -> void
+Polhem.Markdown.Avalonia.MarkdownViewer.FindCurrentMatchBrush.get -> Avalonia.Media.IBrush!
+Polhem.Markdown.Avalonia.MarkdownViewer.FindCurrentMatchBrush.set -> void
+Polhem.Markdown.Avalonia.MarkdownViewer.FindMatchBrush.get -> Avalonia.Media.IBrush!
+Polhem.Markdown.Avalonia.MarkdownViewer.FindMatchBrush.set -> void
+Polhem.Markdown.Avalonia.MarkdownViewer.FindMatchCount.get -> int
+Polhem.Markdown.Avalonia.MarkdownViewer.FindNext() -> bool
+Polhem.Markdown.Avalonia.MarkdownViewer.FindPrevious() -> bool
+Polhem.Markdown.Avalonia.MarkdownViewer.IsFindOpen.get -> bool
+Polhem.Markdown.Avalonia.MarkdownViewer.OpenFind(string? text = null) -> void
+override Polhem.Markdown.Avalonia.MarkdownViewer.OnAttachedToVisualTree(Avalonia.VisualTreeAttachmentEventArgs! e) -> void
+override Polhem.Markdown.Avalonia.MarkdownViewer.OnDetachedFromVisualTree(Avalonia.VisualTreeAttachmentEventArgs! e) -> void
+static readonly Polhem.Markdown.Avalonia.MarkdownViewer.FindBarLabelsProperty -> Avalonia.StyledProperty<System.Func<Polhem.Markdown.Avalonia.MarkdownFindBarItem, string?>?>!
+static readonly Polhem.Markdown.Avalonia.MarkdownViewer.FindCurrentMatchBrushProperty -> Avalonia.StyledProperty<Avalonia.Media.IBrush!>!
+static readonly Polhem.Markdown.Avalonia.MarkdownViewer.FindMatchBrushProperty -> Avalonia.StyledProperty<Avalonia.Media.IBrush!>!
+override Polhem.Markdown.Avalonia.MarkdownReader.OnKeyDown(Avalonia.Input.KeyEventArgs! e) -> void

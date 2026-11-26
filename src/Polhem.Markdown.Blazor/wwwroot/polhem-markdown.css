@@ -15,6 +15,8 @@
                      colors of the kinds of token in a highlighted code block, in the viewer and the editor
     --pmd-zoom-backdrop
                      behind an image opened at full size (MarkdownViewer.ZoomImages)
+    --pmd-find, --pmd-find-current
+                     behind the matches of MarkdownViewer.FindAsync, and behind the current one
     --pmd-outline-bg the background of a MarkdownReader's table of contents, which must hide the text under it when it
                      slides out
 
@@ -819,3 +821,12 @@
 .pmd-reader-level-4 { padding-left: 44px; }
 .pmd-reader-level-5 { padding-left: 56px; }
 .pmd-reader-level-6 { padding-left: 68px; }
+
+/* The matches of MarkdownViewer.FindAsync, highlighted without changing the page, with the CSS Custom Highlight API. */
+::highlight(pmd-find) {
+  background-color: var(--pmd-find, rgba(255, 213, 0, 0.4));
+}
+
+::highlight(pmd-find-current) {
+  background-color: var(--pmd-find-current, rgba(255, 150, 50, 0.8));
+}

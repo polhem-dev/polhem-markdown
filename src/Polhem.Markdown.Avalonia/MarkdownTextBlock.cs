@@ -268,6 +268,68 @@ internal sealed class MarkdownTextBlock : SelectableTextBlock
     /// <summary>The brush the focus rectangle around a link is drawn with.</summary>
     internal IBrush FocusBrush => _viewer.LinkForeground;
 
+    private IReadOnlyList<(int Start, int Length)> _findMatches = [];
+    private int _findCurrent = -1;
+
+    /// <summary>
+    /// The places <paramref name="query"/> occurs in the text as it is copied, with an image as its alternative text and
+    /// a formula as its LaTeX, as positions of the layout: a match in an image's text covers the image.
+    /// </summary>
+    public IReadOnlyList<(int Start, int Length)> Find(string query, bool matchCase)
+    {
+        var layout = LayoutText;
+        var text = new System.Text.StringBuilder(layout.Length);
+        var positions = new List<int>(layout.Length);
+        for (var index = 0; index < layout.Length; index++)
+        {
+            var shown = layout[index] != ObjectReplacement ? layout[index].ToString()
+                : _embeddedTexts.GetValueOrDefault(index, "");
+            text.Append(shown);
+            positions.AddRange(Enumerable.Repeat(index, shown.Length));
+        }
+        return [.. TextSearch.FindAll(text.ToString(), query, matchCase).Select(match =>
+        {
+            var start = positions[match.Start];
+            return (start, positions[match.Start + match.Length - 1] + 1 - start);
+        })];
+    }
+
+    /// <summary>Highlights the matches of a find in this text, the one at <paramref name="current"/> more strongly.</summary>
+    public void SetFindMatches(IReadOnlyList<(int Start, int Length)> matches, int current)
+    {
+        _findMatches = matches;
+        _findCurrent = current;
+        InvalidateVisual();
+    }
+
+    /// <summary>The rectangle around a match, in the text's own coordinates.</summary>
+    public Rect MatchBounds((int Start, int Length) match)
+    {
+        Rect? bounds = null;
+        foreach (var rectangle in RangeRectangles(match.Start, match.Length, new Point(Padding.Left, Padding.Top)))
+        {
+            bounds = bounds is { } union ? union.Union(rectangle) : rectangle;
+        }
+        return bounds ?? default;
+    }
+
+    private IEnumerable<Rect> RangeRectangles(int start, int length, Point origin) =>
+        TextLayout.HitTestTextRange(start, length).Select(rectangle => rectangle.Translate(new Vector(origin.X, origin.Y)));
+
+    /// <summary>Draws the highlights of a find under the text, then the text and its selection.</summary>
+    protected override void RenderTextLayout(DrawingContext context, Point origin)
+    {
+        for (var index = 0; index < _findMatches.Count; index++)
+        {
+            var brush = index == _findCurrent ? _viewer.FindCurrentMatchBrush : _viewer.FindMatchBrush;
+            foreach (var rectangle in RangeRectangles(_findMatches[index].Start, _findMatches[index].Length, origin))
+            {
+                context.FillRectangle(brush, rectangle, 2);
+            }
+        }
+        base.RenderTextLayout(context, origin);
+    }
+
     protected override AutomationPeer OnCreateAutomationPeer() => new TextAutomationPeer(this);
 
     /// <summary>
