@@ -110,6 +110,17 @@ viewer.ImageActivated += (_, e) =>
 };
 ```
 
+The open image has a toolbar at its top right with a close button and a save button, which writes the image's original
+file where the user picks in a save dialog. To save it your own way, handle `ImageSaveRequested`:
+
+```csharp
+viewer.ImageSaveRequested += (_, e) =>
+{
+    SaveWithMyDownloader(e.Uri);
+    e.Handled = true;   // the viewer shows no save dialog
+};
+```
+
 Screen readers hear what the Blazor viewer's HTML tells them: headings with their level, links, lists and list items
 with the task state, tables, images by their alternative text, and alerts and quotes as groups. Tab moves through the
 links and buttons in the order of the text, passing over text without links, and Enter follows a link; following a

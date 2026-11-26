@@ -6,6 +6,7 @@ using Avalonia.Controls.Primitives;
 using Avalonia.Headless;
 using Avalonia.Input;
 using Avalonia.Threading;
+using Avalonia.VisualTree;
 using Polhem.Markdown.Avalonia.Images;
 using static Polhem.Markdown.Avalonia.UnitTests.ViewerHost;
 
@@ -235,11 +236,35 @@ public class ImageZoomTests(HeadlessSession session)
         Click(window, image);
         var overlay = viewer.ImageZoom!;
 
-        var close = overlay.Children.OfType<Button>().Single();
+        var close = OverlayButton(overlay, ImageZoomOverlay.CloseLabel);
         Assert.Equal(ImageZoomOverlay.CloseLabel, ControlAutomationPeer.CreatePeerForElement(close).GetName());
         Click(window, close);
 
         Assert.Null(viewer.ImageZoom);
+    });
+
+    [Fact(DisplayName = "The toolbar's buttons light up under the pointer, and a press between them keeps the image open")]
+    public Task Toolbar_HoverAndPressBetween() => session.RunAsync(async () =>
+    {
+        var (window, viewer, image) = await ShowLoaded(Picture);
+        Click(window, image);
+        var overlay = viewer.ImageZoom!;
+        var save = OverlayButton(overlay, ImageZoomOverlay.SaveLabel);
+        var close = OverlayButton(overlay, ImageZoomOverlay.CloseLabel);
+        var frame = save.GetVisualDescendants().OfType<Border>().First();
+
+        window.MouseMove(save.TranslatePoint(new Point(save.Bounds.Width / 2, save.Bounds.Height / 2), window)!.Value);
+        Dispatcher.UIThread.RunJobs();
+        Assert.NotEqual(global::Avalonia.Media.Brushes.Transparent, frame.Background);
+
+        var between = save.TranslatePoint(new Point(save.Bounds.Width + 1, save.Bounds.Height / 2), window)!.Value;
+        Assert.True(between.X < close.TranslatePoint(default, window)!.Value.X);
+        window.MouseDown(between, MouseButton.Left);
+        window.MouseUp(between, MouseButton.Left);
+        Dispatcher.UIThread.RunJobs();
+
+        Assert.Same(overlay, viewer.ImageZoom);
+        Assert.Equal(global::Avalonia.Media.Brushes.Transparent, frame.Background);
     });
 
     [Fact(DisplayName = "A drag that starts on an image opens nothing")]
@@ -257,4 +282,87 @@ public class ImageZoomTests(HeadlessSession session)
 
         Assert.Null(viewer.ImageZoom);
     });
+
+    private static Button OverlayButton(ImageZoomOverlay overlay, string label) =>
+        overlay.GetVisualDescendants().OfType<Button>()
+            .Single(button => global::Avalonia.Automation.AutomationProperties.GetName(button) == label);
+
+    [Fact(DisplayName = "The save button saves the image's original bytes under the name its address gives")]
+    public Task Save_WritesOriginalBytes() => session.RunAsync(async () =>
+    {
+        var (window, viewer, image) = await ShowLoaded(Picture, width: 40, height: 30);
+        var saved = new MemoryStream();
+        string? suggested = null;
+        viewer.SaveTarget = name =>
+        {
+            suggested = name;
+            return Task.FromResult<Stream?>(new KeepOpenStream(saved));
+        };
+        Click(window, image);
+
+        await viewer.SaveImageAsync(new Uri("https://example.org/chart.png"), "a chart", image);
+
+        Assert.Equal("chart.png", suggested);
+        Assert.Equal(TestImages.Png(40, 30), saved.ToArray());
+    });
+
+    [Fact(DisplayName = "Clicking the save button raises the event, and a handler that handles it saves the image itself")]
+    public Task Save_Handler_HandlesIt() => session.RunAsync(async () =>
+    {
+        var (window, viewer, image) = await ShowLoaded(Picture);
+        var requested = new List<(Uri, string)>();
+        var opened = 0;
+        viewer.ImageSaveRequested += (_, e) =>
+        {
+            requested.Add((e.Uri, e.AlternativeText));
+            e.Handled = true;
+        };
+        viewer.SaveTarget = _ =>
+        {
+            opened++;
+            return Task.FromResult<Stream?>(null);
+        };
+        Click(window, image);
+
+        var save = OverlayButton(viewer.ImageZoom!, ImageZoomOverlay.SaveLabel);
+        Click(window, save);
+
+        Assert.Equal([(new Uri("https://example.org/chart.png"), "a chart")], requested);
+        Assert.Equal(0, opened);
+    });
+
+    [Fact(DisplayName = "An image that cannot be fetched again, or a save the user cancels, writes nothing")]
+    public Task Save_NothingToWrite() => session.RunAsync(async () =>
+    {
+        var (window, viewer, image) = await ShowLoaded(Picture);
+        var opened = 0;
+        viewer.SaveTarget = _ =>
+        {
+            opened++;
+            return Task.FromResult<Stream?>(null);
+        };
+        Click(window, image);
+
+        await viewer.SaveImageAsync(new Uri("https://example.org/chart.png"), "a chart", image);
+        Assert.Equal(1, opened);
+
+        viewer.ImageLoader = (_, _) => Task.FromResult<Stream?>(null);
+        await viewer.SaveImageAsync(new Uri("https://example.org/chart.png"), "a chart", viewer);
+        Assert.Equal(1, opened);
+    });
+
+    /// <summary>A stream that the save's disposal leaves open, so the test can read what was written.</summary>
+    private sealed class KeepOpenStream(MemoryStream inner) : Stream
+    {
+        public override bool CanRead => false;
+        public override bool CanSeek => false;
+        public override bool CanWrite => true;
+        public override long Length => inner.Length;
+        public override long Position { get => inner.Position; set => inner.Position = value; }
+        public override void Flush() => inner.Flush();
+        public override int Read(byte[] buffer, int offset, int count) => throw new NotSupportedException();
+        public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
+        public override void SetLength(long value) => inner.SetLength(value);
+        public override void Write(byte[] buffer, int offset, int count) => inner.Write(buffer, offset, count);
+    }
 }

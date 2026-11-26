@@ -56,6 +56,9 @@ public partial class MarkdownViewer
         }
 
         var overlay = new ImageZoomOverlay(loaded, view.AlternativeText);
+        // NOTE: the event is raised from the image in the text, not from the overlay: the overlay is in the window's
+        // overlay layer, outside the viewer, so an event from it would never reach a handler on the viewer.
+        overlay.SaveRequested += (_, _) => _ = SaveImageAsync(view.Source, view.AlternativeText, view);
         overlay.Closed += (_, _) =>
         {
             layer.Children.Remove(overlay);

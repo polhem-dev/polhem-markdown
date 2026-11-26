@@ -69,3 +69,9 @@ static readonly Polhem.Markdown.Avalonia.MarkdownViewer.FindBarLabelsProperty ->
 static readonly Polhem.Markdown.Avalonia.MarkdownViewer.FindCurrentMatchBrushProperty -> Avalonia.StyledProperty<Avalonia.Media.IBrush!>!
 static readonly Polhem.Markdown.Avalonia.MarkdownViewer.FindMatchBrushProperty -> Avalonia.StyledProperty<Avalonia.Media.IBrush!>!
 override Polhem.Markdown.Avalonia.MarkdownReader.OnKeyDown(Avalonia.Input.KeyEventArgs! e) -> void
+Polhem.Markdown.Avalonia.MarkdownImageSaveRequestedEventArgs
+Polhem.Markdown.Avalonia.MarkdownImageSaveRequestedEventArgs.AlternativeText.get -> string!
+Polhem.Markdown.Avalonia.MarkdownImageSaveRequestedEventArgs.MarkdownImageSaveRequestedEventArgs(System.Uri! uri, string! alternativeText) -> void
+Polhem.Markdown.Avalonia.MarkdownImageSaveRequestedEventArgs.Uri.get -> System.Uri!
+Polhem.Markdown.Avalonia.MarkdownViewer.ImageSaveRequested -> System.EventHandler<Polhem.Markdown.Avalonia.MarkdownImageSaveRequestedEventArgs!>?
+static readonly Polhem.Markdown.Avalonia.MarkdownViewer.ImageSaveRequestedEvent -> Avalonia.Interactivity.RoutedEvent<Polhem.Markdown.Avalonia.MarkdownImageSaveRequestedEventArgs!>!

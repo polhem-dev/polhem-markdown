@@ -191,6 +191,10 @@ export function openZoom(dialog, component) {
   const zoom = (scale, anchor) => { zoomTo(view, scale, anchor, natural(), room()); apply(); };
   const isClose = e => e.target.closest?.(".pmd-zoom-close");
 
+  // A press on the overlay's toolbar, on a button or between them, is the toolbar's, never a drag or a click beside the
+  // image.
+  const isButton = e => e.target.closest?.(".pmd-zoom-toolbar, .pmd-zoom-close, .pmd-zoom-save");
+
   // Pointers down on the dialog: one drags, two pinch.
   const pointers = new Map();
   let drag = null, pinch = null;
@@ -206,7 +210,7 @@ export function openZoom(dialog, component) {
       zoom(view.scale * Math.exp(-e.deltaY * (e.ctrlKey ? 0.01 : 0.0018)), position(e));
     },
     pointerdown: e => {
-      if (e.button !== 0 || isClose(e)) return;
+      if (e.button !== 0 || isButton(e)) return;
       dialog.setPointerCapture?.(e.pointerId);
       pointers.set(e.pointerId, position(e));
       if (pointers.size === 2) {
@@ -413,4 +417,35 @@ function show(root, state) {
 function clearHighlights() {
   globalThis.CSS?.highlights?.delete("pmd-find");
   globalThis.CSS?.highlights?.delete("pmd-find-current");
+}
+
+// Saves the image open at full size: the browser fetches its original bytes and downloads them under `name`, with an
+// extension for its type when the name has none. Where the image's host does not let the page read it, it opens in a new
+// tab instead, for the reader to save from there.
+export async function saveImage(dialog, name) {
+  const image = dialog.querySelector(".pmd-zoom-image");
+  const source = image.currentSrc || image.src;
+  try {
+    const response = await fetch(source, { referrerPolicy: "no-referrer" });
+    if (!response.ok) throw new Error(`The image answered ${response.status}.`);
+    const blob = await response.blob();
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = withExtension(name, blob.type);
+    link.click();
+    setTimeout(() => URL.revokeObjectURL(link.href), 0);
+  } catch {
+    window.open(source, "_blank", "noopener,noreferrer");
+  }
+}
+
+const imageExtensions = {
+  "image/png": ".png", "image/jpeg": ".jpg", "image/gif": ".gif", "image/webp": ".webp", "image/svg+xml": ".svg",
+  "image/bmp": ".bmp", "image/avif": ".avif",
+};
+
+// `name` with the extension of `type` added, unless it has an extension already.
+export function withExtension(name, type) {
+  if (/\.[a-z0-9]{2,5}$/i.test(name)) return name;
+  return name + (imageExtensions[type] ?? "");
 }

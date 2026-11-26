@@ -9,6 +9,9 @@ Polhem.Markdown 各套件值得注意的變更，每個版本只列幾項重點�
 
 ## [Unreleased]
 
+- 檢視器以原尺寸開啟的圖片，在右上角的工具列中、關閉按鈕旁多了儲存按鈕，儲存的是原始檔：Avalonia 透過存檔對話框，Blazor
+  則直接下載；圖片的伺服器不允許頁面讀取時，改在新分頁開啟。宿主可透過 `ImageSaveRequested`（Avalonia）或
+  `OnImageSaveRequested`（Blazor）改用自己的方式儲存（#88）。
 - 文件內搜尋：在 Avalonia 檢視器按 Ctrl+F（⌘F）會叫出搜尋列並反白所有符合處，`MarkdownReader` 的細欄上有放大鏡按鈕。
   兩個檢視器有相同的 API（Avalonia 的 `Find`、`FindNext`、`FindPrevious`；Blazor 的 `FindAsync` 等），Blazor 上瀏覽器原生的
   搜尋也能用（#85）。

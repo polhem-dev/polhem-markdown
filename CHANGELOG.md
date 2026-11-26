@@ -9,6 +9,10 @@ and versions follow [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+- The image a viewer opens at full size has a save button beside its close button, in a toolbar at its top right. It
+  saves the original file: Avalonia through a save dialog, Blazor as a download, or in a new tab when the image's
+  server does not let the page read it. A host saves images its own way with `ImageSaveRequested` (Avalonia) or
+  `OnImageSaveRequested` (Blazor) (#88).
 - Finding text: Ctrl+F (⌘F) in the Avalonia viewer opens a find bar that highlights every match, and a
   `MarkdownReader` has a search button on its rail. Both viewers have the same API (`Find`, `FindNext`,
   `FindPrevious` on Avalonia; `FindAsync` and the like on Blazor), where the browser's own find also works (#85).

@@ -2,6 +2,7 @@ using Avalonia;
 using Avalonia.Automation;
 using Avalonia.Automation.Peers;
 using Avalonia.Controls;
+using Avalonia.Controls.Templates;
 using Avalonia.Input;
 using Avalonia.Layout;
 using Avalonia.Media;
@@ -17,7 +18,18 @@ namespace Polhem.Markdown.Avalonia.Images;
 /// </summary>
 internal sealed class ImageZoomOverlay : Panel
 {
-    private static readonly Geometry s_closeIcon = Geometry.Parse("M6 6 18 18M18 6 6 18");
+    // NOTE: The icons are drawn on a 20 by 20 grid, unscaled, so their strokes keep one width. The Blazor overlay
+    // draws the same paths, in MarkdownRenderTree.Images.cs.
+    private const string CloseIconPath = "M5.5 5.5 14.5 14.5M14.5 5.5 5.5 14.5";
+    private const string SaveIconPath = "M10 3.5v9M6 9l4 4 4-4M3.5 13.5v1.5a1.5 1.5 0 0 0 1.5 1.5h10a1.5 1.5 0 0 0 1.5-1.5v-1.5";
+    private const double IconSize = 20;
+    private const double ButtonSize = 36;
+
+    // A dark pill with a faint edge shows over a light image as over the dark backdrop.
+    private static readonly IBrush s_toolbarBrush = new SolidColorBrush(Color.FromArgb(0xC7, 0x20, 0x20, 0x20));
+    private static readonly IBrush s_toolbarEdge = new SolidColorBrush(Color.FromArgb(0x24, 0xFF, 0xFF, 0xFF));
+    private static readonly IBrush s_hoverBrush = new SolidColorBrush(Color.FromArgb(0x33, 0xFF, 0xFF, 0xFF));
+    private static readonly IBrush s_pressedBrush = new SolidColorBrush(Color.FromArgb(0x4D, 0xFF, 0xFF, 0xFF));
 
     private readonly LoadedImage _image;
     private readonly ImageCanvas _canvas;
@@ -39,30 +51,30 @@ internal sealed class ImageZoomOverlay : Panel
         _canvas = new ImageCanvas(this);
         Children.Add(_canvas);
 
-        var close = new Button
+        var save = OverlayButton(SaveIconPath, SaveLabel);
+        save.Click += (_, _) => SaveRequested?.Invoke(this, EventArgs.Empty);
+        var close = OverlayButton(CloseIconPath, CloseLabel);
+        close.Click += (_, _) => Close();
+        var toolbar = new Border
         {
-            Content = new Path
-            {
-                Data = s_closeIcon,
-                Stroke = Brushes.White,
-                StrokeThickness = 2,
-                StrokeLineCap = PenLineCap.Round,
-                Width = 16,
-                Height = 16,
-                Stretch = Stretch.Uniform,
-            },
-            Padding = new Thickness(10),
-            Margin = new Thickness(12),
-            Background = new SolidColorBrush(Color.FromArgb(0x66, 0, 0, 0)),
-            BorderThickness = new Thickness(0),
+            Background = s_toolbarBrush,
+            BorderBrush = s_toolbarEdge,
+            BorderThickness = new Thickness(1),
+            CornerRadius = new CornerRadius(ButtonSize / 2 + 5),
+            Padding = new Thickness(4),
+            Margin = new Thickness(16),
             HorizontalAlignment = HorizontalAlignment.Right,
             VerticalAlignment = VerticalAlignment.Top,
-            Cursor = new Cursor(StandardCursorType.Arrow),
+            Child = new StackPanel
+            {
+                Orientation = Orientation.Horizontal,
+                Spacing = 2,
+                Children = { save, close },
+            },
         };
-        AutomationProperties.SetName(close, CloseLabel);
-        ToolTip.SetTip(close, CloseLabel);
-        close.Click += (_, _) => Close();
-        Children.Add(close);
+        // A press between the buttons is the toolbar's, never a drag or a click beside the image.
+        toolbar.PointerPressed += (_, e) => e.Handled = true;
+        Children.Add(toolbar);
 
         AutomationProperties.SetName(this, alternativeText);
         AutomationProperties.SetControlTypeOverride(this, AutomationControlType.Group);
@@ -76,6 +88,66 @@ internal sealed class ImageZoomOverlay : Panel
 
     /// <summary>The accessible name and tooltip of the close button.</summary>
     internal const string CloseLabel = "Close";
+
+    /// <summary>The accessible name and tooltip of the save button.</summary>
+    internal const string SaveLabel = "Save image";
+
+    /// <summary>Occurs when the user asks to save the image; the viewer saves it.</summary>
+    public event EventHandler? SaveRequested;
+
+    /// <summary>
+    /// A round button of the overlay's toolbar, drawn by the overlay instead of the theme so it looks the same in any
+    /// application: a white icon, and a light disc under the pointer.
+    /// </summary>
+    private static Button OverlayButton(string icon, string label)
+    {
+        var frame = new Border
+        {
+            Width = ButtonSize,
+            Height = ButtonSize,
+            CornerRadius = new CornerRadius(ButtonSize / 2),
+            Background = Brushes.Transparent,
+            Child = new Path
+            {
+                Data = Geometry.Parse(icon),
+                Width = IconSize,
+                Height = IconSize,
+                Stretch = Stretch.None,
+                Stroke = Brushes.White,
+                StrokeThickness = 1.75,
+                StrokeLineCap = PenLineCap.Round,
+                StrokeJoin = PenLineJoin.Round,
+                HorizontalAlignment = HorizontalAlignment.Center,
+                VerticalAlignment = VerticalAlignment.Center,
+            },
+        };
+        var button = new Button
+        {
+            Template = new FuncControlTemplate<Button>((_, _) => frame),
+            Cursor = new Cursor(StandardCursorType.Hand),
+        };
+        void Paint()
+        {
+            if (button.IsPressed)
+            {
+                frame.Background = s_pressedBrush;
+            }
+            else
+            {
+                frame.Background = button.IsPointerOver ? s_hoverBrush : Brushes.Transparent;
+            }
+        }
+        button.PropertyChanged += (_, e) =>
+        {
+            if (e.Property == InputElement.IsPointerOverProperty || e.Property == Button.IsPressedProperty)
+            {
+                Paint();
+            }
+        };
+        AutomationProperties.SetName(button, label);
+        ToolTip.SetTip(button, label);
+        return button;
+    }
 
     /// <summary>The most an image is magnified, as a multiple of its own size.</summary>
     internal const double MaxScale = 8;

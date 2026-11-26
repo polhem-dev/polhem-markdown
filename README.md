@@ -57,7 +57,7 @@ shows the start of the sample text in each.
 | Headings | Listed for a table of contents, and scrolled to by id | ✓ | ✓ |
 | Table of contents | `MarkdownReader` scrolls a viewer with a rail of its headings along the edge; the list slides out over the text or is pinned beside it, marking the section being read | ✓ | ✓ |
 | Finding text | A find bar on Ctrl+F (⌘F) on Avalonia, the browser's own find on Blazor, and the same API on both | ✓ | ✓ |
-| Opening an image | `ZoomImages` opens an image at full size over the window, to zoom and pan; a handler can show it instead | ✓ | ✓ |
+| Opening an image | `ZoomImages` opens an image at full size over the window, to zoom and pan; a handler can show it instead. A save button saves the original file | ✓ | ✓ |
 | Screen readers and keyboard | Headings with their level, links, lists, tables and alerts are announced; Tab moves through links and buttons, Enter follows a link | ✓ | ✓ |
 
 The sections below and each viewer's README give the details.

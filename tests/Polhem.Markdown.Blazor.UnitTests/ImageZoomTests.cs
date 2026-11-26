@@ -53,7 +53,7 @@ public class ImageZoomTests : BunitContext
         var dialog = viewer.Find("dialog.pmd-zoom");
         Assert.Equal("a chart", dialog.GetAttribute("aria-label"));
         Assert.Equal("https://example.org/chart.png", dialog.QuerySelector("img.pmd-zoom-image")!.GetAttribute("src"));
-        Assert.Equal("Close", dialog.QuerySelector("button.pmd-zoom-close")!.GetAttribute("aria-label"));
+        Assert.Equal("Close", dialog.QuerySelector(".pmd-zoom-toolbar button.pmd-zoom-close")!.GetAttribute("aria-label"));
         var open = Assert.Single(_module.Invocations["openZoom"]);
         Assert.IsType<ElementReference>(open.Arguments[0]);
 
@@ -117,5 +117,39 @@ public class ImageZoomTests : BunitContext
 
         Assert.Empty(viewer.FindAll("button"));
         Assert.NotNull(viewer.Find("a img"));
+    }
+
+    [Fact(DisplayName = "The save button asks the script to download the image under the name its address gives")]
+    public void Save_CallsScript()
+    {
+        _module.SetupVoid("saveImage", _ => true).SetVoidResult();
+        var viewer = Show(Picture);
+        viewer.Find("button.pmd-image-button").Click();
+
+        var save = viewer.Find("dialog button.pmd-zoom-save");
+        Assert.Equal("Save image", save.GetAttribute("aria-label"));
+        save.Click();
+
+        var call = Assert.Single(_module.Invocations["saveImage"]);
+        Assert.IsType<ElementReference>(call.Arguments[0]);
+        Assert.Equal("chart.png", call.Arguments[1]);
+    }
+
+    [Fact(DisplayName = "A host that handles saving gets the image, and the script downloads nothing")]
+    public void Save_HostHandles()
+    {
+        var requested = new List<MarkdownImageSaveRequestedEventArgs>();
+        var viewer = Render<MarkdownViewer>(parameters => parameters
+            .Add(component => component.Markdown, Picture)
+            .Add(component => component.ZoomImages, true)
+            .Add(component => component.OnImageSaveRequested, e => requested.Add(e)));
+        viewer.Find("button.pmd-image-button").Click();
+
+        viewer.Find("dialog button.pmd-zoom-save").Click();
+
+        var args = Assert.Single(requested);
+        Assert.Equal(new Uri("https://example.org/chart.png"), args.Uri);
+        Assert.Equal("a chart", args.AlternativeText);
+        Assert.Empty(_module.Invocations["saveImage"]);
     }
 }

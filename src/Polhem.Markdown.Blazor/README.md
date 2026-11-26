@@ -72,6 +72,10 @@ size, and Escape or a click beside it closes it. An image inside a link opens th
 `OnImageActivated` set, the host shows the image its own way and the viewer opens nothing. The dialog's backdrop is
 `--pmd-zoom-backdrop`.
 
+The dialog's toolbar, at its top right, has a close button and a save button, which downloads the image's original
+file. When the image's server does not let the page read it, the image opens in a new tab instead, where the browser
+saves it. With `OnImageSaveRequested` set, the host saves the image its own way.
+
 ```razor
 <MarkdownViewer Markdown="@reply" ZoomImages="true" />
 ```
