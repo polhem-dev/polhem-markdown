@@ -12,3 +12,17 @@ Polhem.Markdown.Blazor.MarkdownViewer.OnImageActivated.get -> Microsoft.AspNetCo
 Polhem.Markdown.Blazor.MarkdownViewer.OnImageActivated.set -> void
 Polhem.Markdown.Blazor.MarkdownViewer.ZoomImages.get -> bool
 Polhem.Markdown.Blazor.MarkdownViewer.ZoomImages.set -> void
+Polhem.Markdown.Blazor.MarkdownViewer.OutlineLabel.get -> string!
+Polhem.Markdown.Blazor.MarkdownViewer.OutlineLabel.set -> void
+Polhem.Markdown.Blazor.MarkdownViewer.OutlinePinned.get -> bool
+Polhem.Markdown.Blazor.MarkdownViewer.OutlinePinned.set -> void
+Polhem.Markdown.Blazor.MarkdownViewer.OutlinePinnedChanged.get -> Microsoft.AspNetCore.Components.EventCallback<bool>
+Polhem.Markdown.Blazor.MarkdownViewer.OutlinePinnedChanged.set -> void
+Polhem.Markdown.Blazor.MarkdownViewer.OutlineSide.get -> Polhem.Markdown.OutlineSide
+Polhem.Markdown.Blazor.MarkdownViewer.OutlineSide.set -> void
+Polhem.Markdown.Blazor.MarkdownViewer.PinOutlineLabel.get -> string!
+Polhem.Markdown.Blazor.MarkdownViewer.PinOutlineLabel.set -> void
+Polhem.Markdown.Blazor.MarkdownViewer.ShowOutline.get -> bool
+Polhem.Markdown.Blazor.MarkdownViewer.ShowOutline.set -> void
+Polhem.Markdown.Blazor.MarkdownViewer.UnpinOutlineLabel.get -> string!
+Polhem.Markdown.Blazor.MarkdownViewer.UnpinOutlineLabel.set -> void

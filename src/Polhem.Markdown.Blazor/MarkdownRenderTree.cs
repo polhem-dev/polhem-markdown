@@ -17,6 +17,8 @@ namespace Polhem.Markdown.Blazor;
 internal sealed partial class MarkdownRenderTree
 {
     private const string ClassAttribute = "class";
+    private const string ButtonElement = "button";
+    private const string TypeAttribute = "type";
 
     private const string OnClickAttribute = "onclick";
 

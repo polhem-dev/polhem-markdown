@@ -26,8 +26,8 @@ internal sealed partial class MarkdownRenderTree
         _builder.AddContent(6, code.Language);
         _builder.CloseElement();
 
-        _builder.OpenElement(7, "button");
-        _builder.AddAttribute(8, "type", "button");
+        _builder.OpenElement(7, ButtonElement);
+        _builder.AddAttribute(8, TypeAttribute, ButtonElement);
         _builder.AddAttribute(9, ClassAttribute, "pmd-copy");
         _builder.AddAttribute(10, "title", _viewer.CopyCodeLabel);
         _builder.AddAttribute(11, "aria-label", _viewer.CopyCodeLabel);

@@ -63,6 +63,18 @@ outline.SelectionChanged += (_, _) =>
 To mark the section being read, take the last heading whose `SourceOffset` is at or before `GetSourceOffset` at the
 top of the view.
 
+Or let the viewer show the table of contents itself. `ShowOutline` puts a button in its top corner that opens the
+headings floating over the text, and the pin in the list docks it as a column beside the text. `OutlinePinned` binds
+both ways, so a host can remember it, and `OutlineSide` moves it to the right. The button and the list stay in view as
+the nearest `ScrollViewer` scrolls, and the section being read is marked. `OutlineLabel`, `PinOutlineLabel` and
+`UnpinOutlineLabel` translate the labels.
+
+```xml
+<ScrollViewer>
+  <md:MarkdownViewer Markdown="{Binding Reply}" ShowOutline="True" OutlinePinned="{Binding OutlinePinned}" />
+</ScrollViewer>
+```
+
 Set `ZoomImages` to open an image at full size over the window with a click or Enter, where the wheel, a pinch or
 + and - zoom it, a drag pans it, a double click switches between fitting the window and the image's own size, and
 Escape or a click beside it closes it. An image inside a link opens the link instead. To show images your own way,

@@ -46,6 +46,17 @@ and defaults are at the top of `polhem-markdown.css`:
 }
 ```
 
+Or let the viewer show the table of contents itself. `ShowOutline` puts a button in its top corner that opens the
+headings floating over the text, and the pin in the list docks it as a column beside the text. Bind `OutlinePinned` to
+keep it pinned when the page renders again, and set `OutlineSide` to move it to the right. The list stays in view with
+`position: sticky`, so no element between it and the one that scrolls may clip with `overflow: hidden` (use
+`overflow: clip`). The section being read is marked. `OutlineLabel`, `PinOutlineLabel` and `UnpinOutlineLabel`
+translate the labels, and `--pmd-outline-bg` is the list's background.
+
+```razor
+<MarkdownViewer Markdown="@reply" ShowOutline="true" @bind-OutlinePinned="pinned" />
+```
+
 Set `ZoomImages` to open an image at full size over the page with a click or Enter, in a dialog where the wheel, a
 pinch or + and - zoom it, a drag pans it, a double click switches between fitting the window and the image's own
 size, and Escape or a click beside it closes it. An image inside a link opens the link instead. With

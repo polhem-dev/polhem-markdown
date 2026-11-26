@@ -9,6 +9,12 @@ and versions follow [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+- Both viewers can show a table of contents (`ShowOutline`, off by default): a button in the top corner opens the
+  headings floating over the text, and a pin docks them as a column beside it (`OutlinePinned`, which binds both ways),
+  on the left or the right (`OutlineSide`). The list stays in view as the text scrolls and marks the section being
+  read. The Blazor list's background is `--pmd-outline-bg` (#79).
+- The Avalonia viewer keeps a heading or footnote it moves the focus to at the top of the view. The scroll viewer used
+  to move it out of place again as it brought the focused text into view.
 - Both viewers can open an image at full size over the window, to zoom and pan (`ZoomImages`, off by default); a host
   shows images its own way with `ImageActivated` (Avalonia) or `OnImageActivated` (Blazor). The Blazor dialog's
   backdrop is `--pmd-zoom-backdrop` (#72).

@@ -15,6 +15,8 @@
                      colors of the kinds of token in a highlighted code block, in the viewer and the editor
     --pmd-zoom-backdrop
                      behind an image opened at full size (MarkdownViewer.ZoomImages)
+    --pmd-outline-bg the background of the table of contents (MarkdownViewer.ShowOutline), which must hide the text
+                     under it when it floats
 
   The editor also uses --pmd-code-font for its text, --pmd-link for the text of links, and:
 
@@ -628,3 +630,134 @@
   stroke-width: 2;
   stroke-linecap: round;
 }
+
+/* The table of contents (MarkdownViewer.ShowOutline): beside the viewer's root element, it stays in view as the page or
+   the element around the viewer scrolls. Unpinned, it is a button that opens the list floating over the text; pinned,
+   the list is a column. */
+.pmd-outlined {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.pmd-outlined.pmd-outline-right {
+  flex-direction: row-reverse;
+}
+
+.pmd-outlined.pmd-outline-pinned {
+  gap: 16px;
+}
+
+.pmd-outlined > .pmd {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.pmd-outline {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  flex: none;
+  width: 32px;
+}
+
+.pmd-outline-pinned > .pmd-outline {
+  width: 220px;
+}
+
+.pmd-outline button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px;
+  border: 0;
+  border-radius: 4px;
+  background: none;
+  color: inherit;
+  cursor: pointer;
+}
+
+.pmd-outline button:hover {
+  background: var(--pmd-code-bg, rgba(128, 128, 128, 0.12));
+}
+
+.pmd-outline .pmd-outline-toggle {
+  width: 32px;
+  height: 32px;
+}
+
+.pmd-outline svg {
+  width: 16px;
+  height: 16px;
+  fill: currentColor;
+}
+
+.pmd-outline-backdrop {
+  position: fixed;
+  inset: 0;
+}
+
+.pmd-outline-panel {
+  position: relative;
+  box-sizing: border-box;
+  max-height: 100vh;
+  overflow: auto;
+  padding: 8px;
+  border: 1px solid var(--pmd-rule, rgba(128, 128, 128, 0.35));
+  border-radius: 6px;
+  background: var(--pmd-outline-bg, Canvas);
+}
+
+.pmd-outlined:not(.pmd-outline-pinned) .pmd-outline-panel {
+  position: absolute;
+  top: 36px;
+  width: 260px;
+  max-height: calc(100vh - 48px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+}
+
+.pmd-outline-left:not(.pmd-outline-pinned) .pmd-outline-panel {
+  left: 0;
+}
+
+.pmd-outline-right:not(.pmd-outline-pinned) .pmd-outline-panel {
+  right: 0;
+}
+
+.pmd-outline-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0 0 6px 8px;
+  font-weight: 600;
+}
+
+.pmd-outline ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.pmd-outline-entry {
+  display: block;
+  margin-top: 1px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  color: inherit;
+  text-decoration: none;
+}
+
+.pmd-outline-entry:hover,
+.pmd-outline-entry.pmd-outline-current {
+  background: var(--pmd-code-bg, rgba(128, 128, 128, 0.12));
+}
+
+.pmd-outline-entry.pmd-outline-current {
+  font-weight: 600;
+}
+
+.pmd-outline-level-2 { padding-left: 20px; }
+.pmd-outline-level-3 { padding-left: 32px; }
+.pmd-outline-level-4 { padding-left: 44px; }
+.pmd-outline-level-5 { padding-left: 56px; }
+.pmd-outline-level-6 { padding-left: 68px; }
