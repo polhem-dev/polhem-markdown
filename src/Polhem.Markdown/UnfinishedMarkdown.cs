@@ -146,64 +146,25 @@ internal static class UnfinishedMarkdown
     private static string CompleteStructure(string block)
     {
         var brackets = new Stack<(int Position, bool Image)>();
-        for (var index = 0; index < block.Length; index++)
+        var index = 0;
+        while (index < block.Length)
         {
-            var c = block[index];
-            if (c == '\\')
+            var step = block[index] switch
             {
-                index++;
-                continue;
-            }
-            if (c == '`')
+                '\\' => new Step(index + 2),
+                '`' => CodeSpanStep(block, index),
+                '<' => TagStep(block, index),
+                '[' => OpenBracketStep(block, index, brackets),
+                ']' when brackets.Count > 0 => CloseBracketStep(block, index, brackets.Pop()),
+                _ => new Step(index + 1),
+            };
+            if (step.Result is { } result)
             {
-                var run = RunLength(block, index, '`');
-                var close = FindRun(block, index + run, '`', run);
-                if (close >= 0)
-                {
-                    index = close + run - 1;
-                    continue;
-                }
-                var rest = block[(index + run)..];
-                return rest.Trim().Length == 0
-                    ? block[..index].TrimEnd()
-                    : block + new string('`', run);
+                return result;
             }
-            if (c == '<' && index + 1 < block.Length && (char.IsAsciiLetter(block[index + 1]) || block[index + 1] == '/')
-                && block.IndexOf('>', index) < 0)
-            {
-                return block[..index].TrimEnd();
-            }
-            if (c == '<' && index + 1 == block.Length)
-            {
-                return block[..index].TrimEnd();
-            }
-            if (c == '[')
-            {
-                brackets.Push((index > 0 && block[index - 1] == '!' ? index - 1 : index, index > 0 && block[index - 1] == '!'));
-                continue;
-            }
-            if (c == ']' && brackets.Count > 0)
-            {
-                var (open, image) = brackets.Pop();
-                if (index + 1 < block.Length && block[index + 1] == '(')
-                {
-                    var end = FindDestinationEnd(block, index + 2);
-                    if (end >= 0)
-                    {
-                        index = end;
-                        continue;
-                    }
-
-                    // The address has not ended: an image waits, and a link shows its text.
-                    return image ? block[..open].TrimEnd() : block[..open] + block[(open + 1)..index];
-                }
-                if (index + 1 == block.Length && !image && !IsTaskMarker(block, open))
-                {
-                    // `[text]` at the very end is most likely a link whose address comes next.
-                    return block[..open] + block[(open + 1)..index];
-                }
-            }
+            index = step.Next;
         }
+
         // The brackets still open have not reached their `]`: an image waits, and a link shows its text so far. They are
         // taken innermost first, so the positions of those around them stay true, as in a badge that links somewhere.
         foreach (var (open, image) in brackets)
@@ -211,6 +172,61 @@ internal static class UnfinishedMarkdown
             block = image ? block[..open].TrimEnd() : block.Remove(open, 1);
         }
         return block;
+    }
+
+    /// <summary>Where the scan of a block goes on from, or the completed block when the scan ends there.</summary>
+    private readonly record struct Step(int Next, string? Result = null);
+
+    /// <summary>Skips a code span, or closes one that is open, holding back a lone backtick at the end.</summary>
+    private static Step CodeSpanStep(string block, int index)
+    {
+        var run = RunLength(block, index, '`');
+        var close = FindRun(block, index + run, '`', run);
+        if (close >= 0)
+        {
+            return new Step(close + run);
+        }
+        return new Step(block.Length, block[(index + run)..].Trim().Length == 0
+            ? block[..index].TrimEnd()
+            : block + new string('`', run));
+    }
+
+    /// <summary>Holds back a tag or an autolink still being typed, or a lone <c>&lt;</c> at the end.</summary>
+    private static Step TagStep(string block, int index)
+    {
+        var typing = index + 1 == block.Length
+            || ((char.IsAsciiLetter(block[index + 1]) || block[index + 1] == '/') && block.IndexOf('>', index) < 0);
+        return typing ? new Step(block.Length, block[..index].TrimEnd()) : new Step(index + 1);
+    }
+
+    private static Step OpenBracketStep(string block, int index, Stack<(int Position, bool Image)> brackets)
+    {
+        var image = index > 0 && block[index - 1] == '!';
+        brackets.Push((image ? index - 1 : index, image));
+        return new Step(index + 1);
+    }
+
+    /// <summary>
+    /// Skips a link or image whose address has ended. One whose address has not shows as its text, or waits if it is an
+    /// image; <c>[text]</c> at the very end, most likely a link whose address comes next, shows as its text too.
+    /// </summary>
+    private static Step CloseBracketStep(string block, int index, (int Position, bool Image) bracket)
+    {
+        var (open, image) = bracket;
+        if (index + 1 < block.Length && block[index + 1] == '(')
+        {
+            var end = FindDestinationEnd(block, index + 2);
+            if (end >= 0)
+            {
+                return new Step(end + 1);
+            }
+            return new Step(block.Length, image ? block[..open].TrimEnd() : block[..open] + block[(open + 1)..index]);
+        }
+        if (index + 1 == block.Length && !image && !IsTaskMarker(block, open))
+        {
+            return new Step(block.Length, block[..open] + block[(open + 1)..index]);
+        }
+        return new Step(index + 1);
     }
 
     /// <summary>Whether the bracket at <paramref name="open"/> is a task list item's box, <c>[ ]</c> or <c>[x]</c>.</summary>
@@ -225,24 +241,21 @@ internal static class UnfinishedMarkdown
     private static int FindDestinationEnd(string block, int start)
     {
         var depth = 0;
-        for (var index = start; index < block.Length; index++)
+        var index = start;
+        while (index < block.Length)
         {
-            switch (block[index])
+            var c = block[index];
+            if (c == '\n' || (c == ')' && depth == 0))
             {
-                case '\\':
-                    index++;
-                    break;
-                case '(':
-                    depth++;
-                    break;
-                case ')' when depth == 0:
-                    return index;
-                case ')':
-                    depth--;
-                    break;
-                case '\n':
-                    return -1;
+                return c == ')' ? index : -1;
             }
+            depth += c switch
+            {
+                '(' => 1,
+                ')' => -1,
+                _ => 0,
+            };
+            index += c == '\\' ? 2 : 1;
         }
         return -1;
     }
@@ -275,18 +288,15 @@ internal static class UnfinishedMarkdown
     /// <summary>The start of the next run of exactly <paramref name="length"/> of <paramref name="c"/>, or -1.</summary>
     private static int FindRun(string text, int start, char c, int length)
     {
-        for (var index = start; index < text.Length; index++)
+        var index = text.IndexOf(c, start);
+        while (index >= 0)
         {
-            if (text[index] != c)
-            {
-                continue;
-            }
             var run = RunLength(text, index, c);
             if (run == length)
             {
                 return index;
             }
-            index += run - 1;
+            index = text.IndexOf(c, index + run);
         }
         return -1;
     }
@@ -298,85 +308,96 @@ internal static class UnfinishedMarkdown
     private static string CloseEmphasis(string block)
     {
         var open = new List<(char Marker, int Length)>();
-        for (var index = 0; index < block.Length; index++)
+        var index = 0;
+        while (index < block.Length)
         {
             var c = block[index];
-            if (c == '\\')
+            if (c is '*' or '_' or '~')
             {
-                index++;
-                continue;
-            }
-            if (c == '`')
-            {
-                var run = RunLength(block, index, '`');
-                var close = FindRun(block, index + run, '`', run);
-                if (close < 0)
+                if (IsPendingMarker(block, index))
                 {
-                    break;
+                    // A marker at the very end with nothing after it yet: it opens what has not arrived.
+                    return CloseEmphasis(block[..index].TrimEnd());
                 }
-                index = close + run - 1;
-                continue;
+                index = EmphasisRun(block, index, open);
             }
-            if (c == ']' && index + 1 < block.Length && block[index + 1] == '(')
+            else
             {
-                // A link destination holds no emphasis.
-                var end = FindDestinationEnd(block, index + 2);
-                if (end >= 0)
+                index = c switch
                 {
-                    index = end;
-                }
-                continue;
+                    '\\' => index + 2,
+                    '`' => SkipCodeSpan(block, index),
+                    ']' => SkipDestination(block, index),
+                    _ => index + 1,
+                };
             }
-            if (c is not ('*' or '_' or '~'))
-            {
-                continue;
-            }
-            var length = RunLength(block, index, c);
-            var before = index > 0 ? block[index - 1] : '\n';
-            var after = index + length < block.Length ? block[index + length] : '\n';
-            if (c == '~' && length != 2)
-            {
-                index += length - 1;
-                continue;
-            }
-            if (IsThematicBreakLine(block, index))
-            {
-                index = LineEnd(block, index) - 1;
-                continue;
-            }
-            if (index + length == block.Length && (char.IsWhiteSpace(before) || index == 0))
-            {
-                // A marker at the very end with nothing after it yet: it opens what has not arrived.
-                return CloseEmphasis(block[..index].TrimEnd());
-            }
-            var leftFlanking = !char.IsWhiteSpace(after);
-            var rightFlanking = !char.IsWhiteSpace(before);
-            var intraword = char.IsLetterOrDigit(before) && char.IsLetterOrDigit(after);
-            if (c == '_' && intraword)
-            {
-                index += length - 1;
-                continue;
-            }
-            var match = rightFlanking ? open.FindLastIndex(entry => entry.Marker == c && entry.Length == length) : -1;
-            if (match >= 0)
-            {
-                open.RemoveRange(match, open.Count - match);
-            }
-            else if (leftFlanking)
-            {
-                open.Add((c, length));
-            }
-            index += length - 1;
         }
         if (open.Count == 0)
         {
             return block;
         }
         var closed = new StringBuilder(block.TrimEnd());
-        for (var index = open.Count - 1; index >= 0; index--)
+        for (var entry = open.Count - 1; entry >= 0; entry--)
         {
-            closed.Append(open[index].Marker, open[index].Length);
+            closed.Append(open[entry].Marker, open[entry].Length);
         }
         return closed.ToString();
+    }
+
+    /// <summary>Where a code span at <paramref name="index"/> ends; an open one holds no emphasis to the end.</summary>
+    private static int SkipCodeSpan(string block, int index)
+    {
+        var run = RunLength(block, index, '`');
+        var close = FindRun(block, index + run, '`', run);
+        return close < 0 ? block.Length : close + run;
+    }
+
+    /// <summary>Where the destination after a link's <c>]</c> ends, since a destination holds no emphasis.</summary>
+    private static int SkipDestination(string block, int index)
+    {
+        if (index + 1 < block.Length && block[index + 1] == '(' && FindDestinationEnd(block, index + 2) is >= 0 and var end)
+        {
+            return end + 1;
+        }
+        return index + 1;
+    }
+
+    /// <summary>Whether the marker run at <paramref name="index"/> ends the block after a space, with nothing after it.</summary>
+    private static bool IsPendingMarker(string block, int index)
+    {
+        var length = RunLength(block, index, block[index]);
+        return index + length == block.Length && (index == 0 || char.IsWhiteSpace(block[index - 1]))
+            && (block[index] != '~' || length == 2) && !IsThematicBreakLine(block, index);
+    }
+
+    /// <summary>
+    /// Takes the marker run at <paramref name="index"/>: it closes the innermost open run it matches, or opens one, and
+    /// returns where the scan goes on from. A rule, an intraword underscore or a tilde that is no strikethrough is text.
+    /// </summary>
+    private static int EmphasisRun(string block, int index, List<(char Marker, int Length)> open)
+    {
+        var c = block[index];
+        var length = RunLength(block, index, c);
+        if (IsThematicBreakLine(block, index))
+        {
+            return LineEnd(block, index);
+        }
+        var before = index > 0 ? block[index - 1] : '\n';
+        var after = index + length < block.Length ? block[index + length] : '\n';
+        var text = (c == '~' && length != 2) || (c == '_' && char.IsLetterOrDigit(before) && char.IsLetterOrDigit(after));
+        if (text)
+        {
+            return index + length;
+        }
+        var match = char.IsWhiteSpace(before) ? -1 : open.FindLastIndex(entry => entry.Marker == c && entry.Length == length);
+        if (match >= 0)
+        {
+            open.RemoveRange(match, open.Count - match);
+        }
+        else if (!char.IsWhiteSpace(after))
+        {
+            open.Add((c, length));
+        }
+        return index + length;
     }
 }
