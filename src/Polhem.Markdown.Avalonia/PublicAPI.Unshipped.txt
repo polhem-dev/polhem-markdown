@@ -2,3 +2,12 @@
 Polhem.Markdown.Avalonia.MarkdownViewer.Headings.get -> System.Collections.Generic.IReadOnlyList<Polhem.Markdown.MarkdownHeading!>!
 Polhem.Markdown.Avalonia.MarkdownViewer.HeadingsChanged -> System.EventHandler?
 Polhem.Markdown.Avalonia.MarkdownViewer.ScrollToHeading(string! id) -> bool
+Polhem.Markdown.Avalonia.MarkdownImageActivatedEventArgs
+Polhem.Markdown.Avalonia.MarkdownImageActivatedEventArgs.AlternativeText.get -> string!
+Polhem.Markdown.Avalonia.MarkdownImageActivatedEventArgs.MarkdownImageActivatedEventArgs(System.Uri! uri, string! alternativeText) -> void
+Polhem.Markdown.Avalonia.MarkdownImageActivatedEventArgs.Uri.get -> System.Uri!
+Polhem.Markdown.Avalonia.MarkdownViewer.ImageActivated -> System.EventHandler<Polhem.Markdown.Avalonia.MarkdownImageActivatedEventArgs!>?
+Polhem.Markdown.Avalonia.MarkdownViewer.ZoomImages.get -> bool
+Polhem.Markdown.Avalonia.MarkdownViewer.ZoomImages.set -> void
+static readonly Polhem.Markdown.Avalonia.MarkdownViewer.ImageActivatedEvent -> Avalonia.Interactivity.RoutedEvent<Polhem.Markdown.Avalonia.MarkdownImageActivatedEventArgs!>!
+static readonly Polhem.Markdown.Avalonia.MarkdownViewer.ZoomImagesProperty -> Avalonia.StyledProperty<bool>!

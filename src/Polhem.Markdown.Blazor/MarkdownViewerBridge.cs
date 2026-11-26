@@ -15,4 +15,8 @@ internal sealed class MarkdownViewerBridge(MarkdownViewer viewer)
     /// <summary>Takes a click with the command key held, at a source offset.</summary>
     [JSInvokable]
     public Task SourceRequested(int sourceOffset) => viewer.OnSourceClickedAsync(sourceOffset);
+
+    /// <summary>Takes the closing of the dialog that shows an image at full size.</summary>
+    [JSInvokable]
+    public void ZoomClosed() => viewer.OnZoomClosed();
 }

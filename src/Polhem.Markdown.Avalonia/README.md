@@ -63,6 +63,20 @@ outline.SelectionChanged += (_, _) =>
 To mark the section being read, take the last heading whose `SourceOffset` is at or before `GetSourceOffset` at the
 top of the view.
 
+Set `ZoomImages` to open an image at full size over the window with a click or Enter, where the wheel, a pinch or
++ and - zoom it, a drag pans it, a double click switches between fitting the window and the image's own size, and
+Escape or a click beside it closes it. An image inside a link opens the link instead. To show images your own way,
+handle `ImageActivated`:
+
+```csharp
+viewer.ZoomImages = true;
+viewer.ImageActivated += (_, e) =>
+{
+    ShowInMyViewer(e.Uri, e.AlternativeText);
+    e.Handled = true;   // the viewer opens nothing
+};
+```
+
 Screen readers hear what the Blazor viewer's HTML tells them: headings with their level, links, lists and list items
 with the task state, tables, images by their alternative text, and alerts and quotes as groups. Tab moves through the
 links and buttons in the order of the text, passing over text without links, and Enter follows a link; following a

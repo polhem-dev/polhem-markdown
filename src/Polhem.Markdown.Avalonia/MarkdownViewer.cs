@@ -356,7 +356,7 @@ public partial class MarkdownViewer : Control
         }
         else if (change.Property == OptionsProperty || change.Property == TextElement.FontSizeProperty
             || change.Property == CodeFontFamilyProperty || change.Property == CjkFontFamilyProperty
-            || change.Property == CopyCodeLabelProperty)
+            || change.Property == CopyCodeLabelProperty || change.Property == ZoomImagesProperty)
         {
             Update(fullRebuild: true);
         }

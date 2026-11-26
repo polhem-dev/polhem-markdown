@@ -32,7 +32,7 @@
                                 FirstVisibleSourceOffsetChanged="EditorScrolled" />
             </div>
             <div class="frame viewer-frame preview" @onpointerenter="() => _leader = Pane.Viewer" @onfocusin="() => _leader = Pane.Viewer">
-                <MarkdownViewer @ref="_viewer" Markdown="@_preview" Options="_options" OnLinkActivated="OnLinkActivated"
+                <MarkdownViewer @ref="_viewer" Markdown="@_preview" Options="_options" ZoomImages="true" OnLinkActivated="OnLinkActivated"
                                 FirstVisibleSourceOffsetChanged="ViewerScrolled" OnSourceRequested="GoToSource"
                                 OnHeadingsChanged="HeadingsChanged" />
             </div>
@@ -41,7 +41,7 @@
     else
     {
         <div class="frame viewer-frame">
-            <MarkdownViewer @ref="_viewer" Markdown="@_markdown" Options="_options" OnLinkActivated="OnLinkActivated"
+            <MarkdownViewer @ref="_viewer" Markdown="@_markdown" Options="_options" ZoomImages="true" OnLinkActivated="OnLinkActivated"
                             FirstVisibleSourceOffsetChanged="FollowScroll" OnHeadingsChanged="HeadingsChanged" />
         </div>
     }
