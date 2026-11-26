@@ -29,6 +29,7 @@
 
   <ItemGroup>
     <Compile Include="..\Shared\ModelNodeTypes.cs" Link="Shared\ModelNodeTypes.cs" />
+    <Compile Include="..\Shared\AccessibleRoles.cs" Link="Shared\AccessibleRoles.cs" />
     <None Include="..\Shared\AllNodes.md" Link="AllNodes.md" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 

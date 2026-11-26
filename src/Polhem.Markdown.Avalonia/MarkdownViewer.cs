@@ -1,6 +1,7 @@
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Documents;
+using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.LogicalTree;
 using Avalonia.Media;
@@ -377,9 +378,10 @@ public partial class MarkdownViewer : Control
 
     /// <summary>
     /// Scrolls the nearest scroll viewer so the control with <paramref name="anchorId"/> is at the top, or as near the top
-    /// as the content allows. Returns whether the viewer shows such a control.
+    /// as the content allows, and with <paramref name="moveFocus"/> gives it the focus. Returns whether the viewer shows
+    /// such a control.
     /// </summary>
-    internal bool ScrollToAnchor(string anchorId)
+    internal bool ScrollToAnchor(string anchorId, bool moveFocus = false)
     {
         var target = _panel.GetLogicalDescendants()
             .OfType<Control>()
@@ -398,6 +400,13 @@ public partial class MarkdownViewer : Control
         var viewHeight = view is { Viewport.Height: > 0 } ? view.Viewport.Height : TopLevel.GetTopLevel(this)?.ClientSize.Height ?? 0;
         var height = Math.Max(target.Bounds.Height, viewHeight);
         target.BringIntoView(new Rect(0, 0, target.Bounds.Width, height));
+
+        // NOTE: the focus goes to the target's first text, which takes it although it is no tab stop, as an element a
+        // browser moves to by its fragment takes it. A footnote's anchor is the panel of its content.
+        if (moveFocus && (target as MarkdownTextBlock ?? target.GetLogicalDescendants().OfType<MarkdownTextBlock>().FirstOrDefault()) is { } text)
+        {
+            text.Focus(NavigationMethod.Unspecified);
+        }
         return true;
     }
 

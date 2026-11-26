@@ -93,19 +93,22 @@ internal sealed partial class MarkdownRenderTree
         var kind = alert.Kind.ToString().ToLowerInvariant();
         _builder.OpenElement(0, "div");
         _builder.AddAttribute(1, ClassAttribute, "pmd-alert pmd-alert-" + kind);
-        _builder.OpenElement(2, "p");
-        _builder.AddAttribute(3, ClassAttribute, "pmd-alert-title");
-        _builder.OpenElement(4, "svg");
-        _builder.AddAttribute(5, "viewBox", "0 0 16 16");
-        _builder.AddAttribute(6, "aria-hidden", "true");
-        _builder.OpenElement(7, "path");
-        _builder.AddAttribute(8, "fill-rule", "evenodd");
-        _builder.AddAttribute(9, "d", AlertGlyphs.IconPath(alert.Kind));
+
+        // The Avalonia viewer shows an alert as a group named by its kind; a note is the role that comes nearest.
+        _builder.AddAttribute(2, "role", "note");
+        _builder.OpenElement(3, "p");
+        _builder.AddAttribute(4, ClassAttribute, "pmd-alert-title");
+        _builder.OpenElement(5, "svg");
+        _builder.AddAttribute(6, "viewBox", "0 0 16 16");
+        _builder.AddAttribute(7, "aria-hidden", "true");
+        _builder.OpenElement(8, "path");
+        _builder.AddAttribute(9, "fill-rule", "evenodd");
+        _builder.AddAttribute(10, "d", AlertGlyphs.IconPath(alert.Kind));
         _builder.CloseElement();
         _builder.CloseElement();
-        _builder.AddContent(10, AlertGlyphs.Title(alert.Kind));
+        _builder.AddContent(11, AlertGlyphs.Title(alert.Kind));
         _builder.CloseElement();
-        Blocks(11, alert.Blocks);
+        Blocks(12, alert.Blocks);
         _builder.CloseElement();
     }
 }

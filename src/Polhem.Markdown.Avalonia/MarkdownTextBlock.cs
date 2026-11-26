@@ -1,6 +1,11 @@
+using Avalonia;
+using Avalonia.Automation.Peers;
 using Avalonia.Controls;
 using Avalonia.Controls.Documents;
 using Avalonia.Input;
+using Avalonia.Media;
+using Avalonia.VisualTree;
+using Polhem.Markdown.Avalonia.Automation;
 
 namespace Polhem.Markdown.Avalonia;
 
@@ -10,7 +15,9 @@ namespace Polhem.Markdown.Avalonia;
 /// </summary>
 /// <remarks>
 /// NOTE: links are runs inside the text rather than controls placed in it, so a long link wraps like any other text and
-/// a selection can run through it. A click is mapped to a character with the text layout and from there to a link.
+/// a selection can run through it. A click is mapped to a character with the text layout and from there to a link. The
+/// keyboard and assistive technologies reach a link through a <see cref="LinkFocusTarget"/> laid over it, which takes the
+/// focus but not the pointer.
 /// </remarks>
 internal sealed class MarkdownTextBlock : SelectableTextBlock
 {
@@ -18,6 +25,7 @@ internal sealed class MarkdownTextBlock : SelectableTextBlock
     private readonly List<LinkRange> _links = [];
     private readonly List<string> _anchorIds = [];
     private readonly Dictionary<int, string> _embeddedTexts = [];
+    private readonly List<LinkFocusTarget> _targets = [];
     private string? _layoutText;
 
     public MarkdownTextBlock(MarkdownViewer viewer)
@@ -26,7 +34,11 @@ internal sealed class MarkdownTextBlock : SelectableTextBlock
 
         // A text block without a background takes the pointer only where it draws glyphs. With one, a drag can start in
         // the space after a short line, as it can in a browser.
-        Background = global::Avalonia.Media.Brushes.Transparent;
+        Background = Brushes.Transparent;
+
+        // Only links and buttons take part in Tab navigation, as in a browser; a text's links do through their targets. Any
+        // text still takes the focus when it is clicked, for selecting and copying.
+        IsTabStop = false;
     }
 
     /// <summary>
@@ -49,7 +61,7 @@ internal sealed class MarkdownTextBlock : SelectableTextBlock
         }
         if (extra > Padding.Bottom)
         {
-            Padding = new global::Avalonia.Thickness(Padding.Left, Padding.Top, Padding.Right, extra);
+            Padding = new Thickness(Padding.Left, Padding.Top, Padding.Right, extra);
         }
     }
 
@@ -61,7 +73,56 @@ internal sealed class MarkdownTextBlock : SelectableTextBlock
 
     protected override Type StyleKeyOverride => typeof(SelectableTextBlock);
 
-    public void AddLink(int start, int length, Uri target) => _links.Add(new LinkRange(start, length, target, null));
+    public void AddLink(int start, int length, Uri target) => AddLinkRange(new LinkRange(start, length, target, null, null));
+
+    /// <summary>
+    /// Records a link that moves to an anchor of the same text. <paramref name="name"/> is what an assistive technology
+    /// reads for it instead of its text, as for the arrow of a footnote's back link.
+    /// </summary>
+    public void AddAnchorLink(int start, int length, string anchorId, string? name = null) =>
+        AddLinkRange(new LinkRange(start, length, null, anchorId, name));
+
+    private void AddLinkRange(LinkRange link)
+    {
+        _links.Add(link);
+        _targets.Add(new LinkFocusTarget(this, _links.Count - 1));
+    }
+
+    /// <summary>Takes the text's links out of Tab navigation, for a text whose links do not open, such as a summary.</summary>
+    public void ExcludeLinksFromTabOrder()
+    {
+        foreach (var target in _targets)
+        {
+            target.IsTabStop = false;
+        }
+    }
+
+    /// <summary>The controls that stand for the text's links, in the order of the text.</summary>
+    internal IReadOnlyList<LinkFocusTarget> LinkTargets => _targets;
+
+    protected override Size ArrangeOverride(Size finalSize)
+    {
+        var focused = _targets.Find(target => target.IsFocused);
+        var size = base.ArrangeOverride(finalSize);
+
+        // NOTE: the targets join the visual children here rather than when their links are added, because a text block
+        // with inline controls clears its visual children when it arranges them, and adds back only those controls. A
+        // target taken off loses the focus, which it is given back once it is back.
+        foreach (var target in _targets)
+        {
+            if (target.GetVisualParent() != this)
+            {
+                VisualChildren.Add(target);
+            }
+            target.Measure(default);
+            target.Arrange(LinkBounds(target.Index));
+        }
+        if (focused is { IsFocused: false })
+        {
+            focused.Focus(NavigationMethod.Unspecified);
+        }
+        return size;
+    }
 
     /// <summary>Records an id a link in the text can move to this text by.</summary>
     public void AddAnchor(string id)
@@ -90,31 +151,34 @@ internal sealed class MarkdownTextBlock : SelectableTextBlock
     /// <see cref="InlineCollection.Text"/>, so the selected text after an image or a formula was shifted by one character
     /// for each; from 12.1 it is an object replacement character. The text built here follows the layout on both.
     /// </remarks>
-    public string CopiedText
+    public string CopiedText => TextBetween(Math.Min(SelectionStart, SelectionEnd), Math.Max(SelectionStart, SelectionEnd));
+
+    /// <summary>The whole text as an assistive technology reads it, which is also how it is copied.</summary>
+    public string AccessibleText => TextBetween(0, LayoutLength);
+
+    /// <summary>The text between two positions of the layout, with embedded controls as their text.</summary>
+    private string TextBetween(int start, int end)
     {
-        get
+        var text = LayoutText;
+        start = Math.Clamp(start, 0, text.Length);
+        end = Math.Clamp(end, 0, text.Length);
+        if (start >= end)
         {
-            var text = LayoutText;
-            var start = Math.Clamp(Math.Min(SelectionStart, SelectionEnd), 0, text.Length);
-            var end = Math.Clamp(Math.Max(SelectionStart, SelectionEnd), 0, text.Length);
-            if (start == end)
-            {
-                return "";
-            }
-            var builder = new System.Text.StringBuilder(end - start);
-            for (var index = start; index < end; index++)
-            {
-                if (text[index] != ObjectReplacement)
-                {
-                    builder.Append(text[index]);
-                }
-                else if (_embeddedTexts.TryGetValue(index, out var embedded))
-                {
-                    builder.Append(embedded);
-                }
-            }
-            return builder.ToString();
+            return "";
         }
+        var builder = new System.Text.StringBuilder(end - start);
+        for (var index = start; index < end; index++)
+        {
+            if (text[index] != ObjectReplacement)
+            {
+                builder.Append(text[index]);
+            }
+            else if (_embeddedTexts.TryGetValue(index, out var embedded))
+            {
+                builder.Append(embedded);
+            }
+        }
+        return builder.ToString();
     }
 
     /// <summary>The number of positions in the text's layout, which is where a selection can end.</summary>
@@ -154,14 +218,63 @@ internal sealed class MarkdownTextBlock : SelectableTextBlock
 
     private const char ObjectReplacement = '\uFFFC';
 
-    public void AddAnchorLink(int start, int length, string anchorId) => _links.Add(new LinkRange(start, length, null, anchorId));
-
     /// <summary>The target of the link at a character index of the text, or <see langword="null"/>.</summary>
     public Uri? LinkAt(int index) => LinkRangeAt(index)?.Target;
 
     /// <summary>The link at a character index of the text, or <see langword="null"/>.</summary>
     public LinkRange? LinkRangeAt(int index) =>
         _links.FirstOrDefault(link => index >= link.Start && index < link.Start + link.Length);
+
+    /// <summary>The index of the link the keyboard is on, or -1.</summary>
+    public int FocusedLink => _targets.FindIndex(target => target.IsFocused);
+
+    /// <summary>What an assistive technology reads for a link: its text, or the name it was given.</summary>
+    public string LinkName(int index) =>
+        _links[index] is { Name: { } name } ? name : TextBetween(_links[index].Start, _links[index].Start + _links[index].Length);
+
+    /// <summary>The rectangle around a link, in the text's own coordinates.</summary>
+    public Rect LinkBounds(int index)
+    {
+        Rect? bounds = null;
+        foreach (var rectangle in LinkRectangles(index))
+        {
+            bounds = bounds is { } union ? union.Union(rectangle) : rectangle;
+        }
+        return bounds ?? default;
+    }
+
+    /// <summary>The rectangles a link takes up, one for each line it is on, in the text's own coordinates.</summary>
+    public IEnumerable<Rect> LinkRectangles(int index) =>
+        TextLayout.HitTestTextRange(_links[index].Start, _links[index].Length)
+            .Select(rectangle => rectangle.Translate(new Vector(Padding.Left, Padding.Top)));
+
+    /// <summary>
+    /// Follows a link: opens its URI, or moves to its anchor. From the keyboard, the focus moves to the anchor too, so the
+    /// next Tab continues from there and a screen reader reads it, as in a browser.
+    /// </summary>
+    public void ActivateLink(int index, bool moveFocus = true)
+    {
+        var link = _links[index];
+        if (link.AnchorId is { } anchorId)
+        {
+            _viewer.ScrollToAnchor(anchorId, moveFocus);
+        }
+        else if (link.Target is { } target)
+        {
+            _viewer.ActivateLink(this, target);
+        }
+    }
+
+    /// <summary>The brush the focus rectangle around a link is drawn with.</summary>
+    internal IBrush FocusBrush => _viewer.LinkForeground;
+
+    protected override AutomationPeer OnCreateAutomationPeer() => new TextAutomationPeer(this);
+
+    /// <summary>
+    /// The text, which is also what a control that shows this text as its content is named by, such as the header of a
+    /// collapsible section.
+    /// </summary>
+    public override string ToString() => AccessibleText;
 
     protected override void OnLostFocus(FocusChangedEventArgs e)
     {
@@ -205,17 +318,9 @@ internal sealed class MarkdownTextBlock : SelectableTextBlock
         {
             return;
         }
-        if (LinkUnder(e) is not { } link)
+        if (LinkUnder(e) is { } link)
         {
-            return;
-        }
-        if (link.AnchorId is { } anchorId)
-        {
-            _viewer.ScrollToAnchor(anchorId);
-        }
-        else if (link.Target is { } target)
-        {
-            _viewer.ActivateLink(this, target);
+            ActivateLink(_links.IndexOf(link), moveFocus: false);
         }
     }
 
@@ -225,11 +330,14 @@ internal sealed class MarkdownTextBlock : SelectableTextBlock
         {
             return null;
         }
-        var point = e.GetPosition(this) - new global::Avalonia.Point(Padding.Left, Padding.Top);
+        var point = e.GetPosition(this) - new Point(Padding.Left, Padding.Top);
         var hit = TextLayout.HitTestPoint(point);
         return hit.IsInside ? LinkRangeAt(hit.TextPosition) : null;
     }
 
-    /// <summary>A link run: <see cref="Target"/> for a link that opens a URI, <see cref="AnchorId"/> for one within the text.</summary>
-    internal sealed record LinkRange(int Start, int Length, Uri? Target, string? AnchorId);
+    /// <summary>
+    /// A link run: <see cref="Target"/> for a link that opens a URI, <see cref="AnchorId"/> for one within the text.
+    /// <see cref="Name"/> replaces its text for an assistive technology.
+    /// </summary>
+    internal sealed record LinkRange(int Start, int Length, Uri? Target, string? AnchorId, string? Name);
 }

@@ -9,6 +9,11 @@ and versions follow [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+- The Avalonia viewer tells screen readers what the Blazor viewer's HTML does: headings with their level, links,
+  lists and list items, tables, images by their alternative text, and alerts, quotes and collapsible sections as named
+  groups. Tab moves through links and buttons in the order of the text, and Enter follows a link (#70).
+- In the Avalonia viewer, a paragraph without links is no longer a Tab stop; a click still gives it the focus for
+  selecting and copying. The Blazor viewer marks an alert with `role="note"`.
 - Both viewers list the text's headings for a table of contents or an outline (`Headings`, with `HeadingsChanged` on
   Avalonia and `OnHeadingsChanged` on Blazor) and scroll one to the top of the view (`ScrollToHeading`,
   `ScrollToHeadingAsync`). `MarkdownHeading` gives each heading's level, text, id and source offset (#71).

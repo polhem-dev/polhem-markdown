@@ -1,4 +1,6 @@
 using Avalonia;
+using Avalonia.Automation;
+using Avalonia.Automation.Peers;
 using Avalonia.Controls;
 using Avalonia.Media;
 using Polhem.Markdown.Model;
@@ -25,12 +27,19 @@ internal sealed class ImageView : Decorator
         _height = image.Height;
         Source = image.SourceFor(viewer.IsDarkTheme);
         Child = new TextBlock { Text = image.AlternativeText };
+        AutomationProperties.SetName(this, image.AlternativeText);
         if (image.Title is { } title)
         {
             ToolTip.SetTip(this, title);
         }
         _loading = viewer.LoadImage(Source);
     }
+
+    /// <summary>
+    /// An image is one element named by its alternative text, whether it shows the picture or the text; an image with no
+    /// alternative text is decorative and left out, as in a browser.
+    /// </summary>
+    protected override AutomationPeer OnCreateAutomationPeer() => new Automation.LeafAutomationPeer(this, AutomationControlType.Image);
 
     /// <summary>The address the image is loaded from.</summary>
     public Uri Source { get; }

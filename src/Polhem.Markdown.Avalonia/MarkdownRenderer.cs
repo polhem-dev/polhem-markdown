@@ -1,4 +1,6 @@
 using Avalonia;
+using Avalonia.Automation;
+using Avalonia.Automation.Peers;
 using Avalonia.Controls;
 using Avalonia.Controls.Documents;
 using Avalonia.Controls.Templates;
@@ -52,7 +54,7 @@ internal sealed partial class MarkdownRenderer
             AlignedBlockNode aligned => Aligned(aligned, depth),
             DetailsNode details => Details(details, depth),
             TableNode table => Table(table),
-            ThematicBreakNode => Rule(),
+            ThematicBreakNode => Expose(Rule(), AutomationControlType.Separator),
             FootnotesNode footnotes => Footnotes(footnotes, depth),
             _ => null,
         };
@@ -83,7 +85,7 @@ internal sealed partial class MarkdownRenderer
     {
         HorizontalScrollBarVisibility = global::Avalonia.Controls.Primitives.ScrollBarVisibility.Auto,
         VerticalScrollBarVisibility = global::Avalonia.Controls.Primitives.ScrollBarVisibility.Disabled,
-        Content = new FormulaView(math.Formula, display: true, _renderedFormulas, line: null) { HorizontalAlignment = HorizontalAlignment.Center },
+        Content = Named(new FormulaView(math.Formula, display: true, _renderedFormulas, line: null) { HorizontalAlignment = HorizontalAlignment.Center }, math.Source),
     };
 
     private MarkdownTextBlock Heading(HeadingNode heading)
@@ -95,6 +97,9 @@ internal sealed partial class MarkdownRenderer
         {
             text.AddAnchor(heading.Id);
         }
+        // NOTE: a header with a level is what Avalonia's macOS backend shows as a heading; Windows reads the level.
+        AutomationProperties.SetControlTypeOverride(text, AutomationControlType.Header);
+        AutomationProperties.SetHeadingLevel(text, Math.Clamp(heading.Level, 1, 6));
         return text;
     }
 
@@ -105,15 +110,10 @@ internal sealed partial class MarkdownRenderer
     private StackPanel Footnotes(FootnotesNode footnotes, int depth)
     {
         _rendered.Add(typeof(FootnoteNode));
-        var grid = new Grid { RowSpacing = 4 };
-        grid.SetValue(MarkdownViewer.TextGroupProperty, MarkdownViewer.TextGroup.List);
-        grid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Auto));
-        grid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
+        var list = ListPanel(spacing: 4);
         for (var index = 0; index < footnotes.Notes.Count; index++)
         {
             var note = footnotes.Notes[index];
-            grid.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
-
             var marker = new TextBlock
             {
                 Text = note.Number.ToString(System.Globalization.CultureInfo.InvariantCulture) + ".",
@@ -121,45 +121,76 @@ internal sealed partial class MarkdownRenderer
                 MinWidth = 18,
                 TextAlignment = TextAlignment.Right,
             };
-            Grid.SetRow(marker, index);
-
             var content = Blocks(note.Blocks, depth + 1, spacing: 4);
             content.SetValue(MarkdownViewer.AnchorIdsProperty, [note.Id]);
-            Grid.SetRow(content, index);
-            Grid.SetColumn(content, 1);
-
-            grid.Children.Add(marker);
-            grid.Children.Add(content);
+            list.Children.Add(ListItem(marker, content, index, footnotes.Notes.Count));
         }
 
-        var panel = new StackPanel { Spacing = 8, Children = { Rule(), grid } };
+        var panel = new StackPanel { Spacing = 8, Children = { Rule(), list } };
         panel.SetValue(TextElement.FontSizeProperty, _viewer.GetValue(TextElement.FontSizeProperty) * FootnoteScale);
         return panel;
     }
 
-    private Grid List(ListNode list, int depth)
+    private StackPanel List(ListNode list, int depth)
     {
         _rendered.Add(typeof(ListItemNode));
-        var grid = new Grid { RowSpacing = list.IsLoose ? 8 : 2 };
-        grid.SetValue(MarkdownViewer.TextGroupProperty, MarkdownViewer.TextGroup.List);
-        grid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Auto));
-        grid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
+        var panel = ListPanel(spacing: list.IsLoose ? 8 : 2);
         for (var index = 0; index < list.Items.Count; index++)
         {
-            grid.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
-
             var item = list.Items[index];
-            var marker = Marker(list, item, index, depth);
-            Grid.SetRow(marker, index);
-
             var content = Blocks(item.Blocks, depth + 1, spacing: list.IsLoose ? 8 : 4);
-            Grid.SetRow(content, index);
-            Grid.SetColumn(content, 1);
-
-            grid.Children.Add(marker);
-            grid.Children.Add(content);
+            panel.Children.Add(ListItem(Marker(list, item, index, depth), content, index, list.Items.Count));
         }
-        return grid;
+        return panel;
+    }
+
+    /// <summary>
+    /// The panel of a list's items. Each item is a grid of its own, so an assistive technology sees it as one list item
+    /// with its marker; the marker column is shared, so the items' content lines up as in one grid.
+    /// </summary>
+    private static StackPanel ListPanel(double spacing)
+    {
+        var panel = Expose(new StackPanel { Spacing = spacing }, AutomationControlType.List);
+        panel.SetValue(MarkdownViewer.TextGroupProperty, MarkdownViewer.TextGroup.List);
+        Grid.SetIsSharedSizeScope(panel, true);
+        return panel;
+    }
+
+    private static Grid ListItem(Control marker, Control content, int index, int count)
+    {
+        var item = Expose(new Grid(), AutomationControlType.ListItem);
+        item.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Auto) { SharedSizeGroup = MarkerColumn });
+        item.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
+        AutomationProperties.SetPositionInSet(item, index + 1);
+        AutomationProperties.SetSizeOfSet(item, count);
+        Grid.SetColumn(content, 1);
+        item.Children.Add(marker);
+        item.Children.Add(content);
+        return item;
+    }
+
+    private const string MarkerColumn = "Marker";
+
+    /// <summary>Names a control for an assistive technology.</summary>
+    private static T Named<T>(T control, string name) where T : Control
+    {
+        AutomationProperties.SetName(control, name);
+        return control;
+    }
+
+    /// <summary>
+    /// Shows a panel to an assistive technology as an element of <paramref name="type"/>, which a panel is not by
+    /// default, optionally named.
+    /// </summary>
+    private static T Expose<T>(T control, AutomationControlType type, string? name = null) where T : Control
+    {
+        AutomationProperties.SetControlTypeOverride(control, type);
+        AutomationProperties.SetIsControlElementOverride(control, true);
+        if (name is not null)
+        {
+            AutomationProperties.SetName(control, name);
+        }
+        return control;
     }
 
     /// <summary>
@@ -206,12 +237,12 @@ internal sealed partial class MarkdownRenderer
 
     private Border Quote(QuoteNode quote, int depth)
     {
-        var border = new Border
+        var border = Expose(new Border
         {
             BorderThickness = new Thickness(3, 0, 0, 0),
             Padding = new Thickness(10, 2, 0, 2),
             Child = Blocks(quote.Blocks, depth, spacing: 8),
-        };
+        }, AutomationControlType.Group);
         border.Bind(Border.BorderBrushProperty, _viewer.GetObservable(MarkdownViewer.RuleBrushProperty));
         return border;
     }
@@ -236,7 +267,7 @@ internal sealed partial class MarkdownRenderer
         };
         icon.Bind(global::Avalonia.Controls.Shapes.Shape.FillProperty, brush);
 
-        var title = new TextBlock
+        var title = new DecorativeTextBlock
         {
             Text = AlertGlyphs.Title(alert.Kind),
             FontWeight = FontWeight.SemiBold,
@@ -244,15 +275,16 @@ internal sealed partial class MarkdownRenderer
         };
         title.Bind(TextBlock.ForegroundProperty, brush);
 
+        // The group is named by the title, so the title is not read a second time.
         var content = Blocks(alert.Blocks, depth, spacing: 8);
         content.Children.Insert(0, new StackPanel { Orientation = Orientation.Horizontal, Spacing = 6, Children = { icon, title } });
 
-        var border = new Border
+        var border = Expose(new Border
         {
             BorderThickness = new Thickness(3, 0, 0, 0),
             Padding = new Thickness(10, 2, 0, 2),
             Child = content,
-        };
+        }, AutomationControlType.Group, AlertGlyphs.Title(alert.Kind));
         border.Bind(Border.BorderBrushProperty, brush);
         return border;
     }
@@ -287,6 +319,11 @@ internal sealed partial class MarkdownRenderer
     {
         var summary = Text(details.Summary);
         summary.IsHitTestVisible = false;
+
+        // The header is the tab stop, and the summary's text names it.
+        summary.IsTabStop = false;
+        summary.ExcludeLinksFromTabOrder();
+        summary.Focusable = false;
         var key = _viewer.DetailsKey(details);
         var expander = new Expander
         {
@@ -296,6 +333,7 @@ internal sealed partial class MarkdownRenderer
             HorizontalAlignment = HorizontalAlignment.Stretch,
             HorizontalContentAlignment = HorizontalAlignment.Stretch,
         };
+        AutomationProperties.SetName(expander, summary.AccessibleText);
         expander.PropertyChanged += (_, change) =>
         {
             if (change.Property == Expander.IsExpandedProperty)
@@ -316,14 +354,15 @@ internal sealed partial class MarkdownRenderer
         var text = list.IsOrdered
             ? (list.Start + index).ToString(System.Globalization.CultureInfo.InvariantCulture) + "."
             : s_bullets[depth % s_bullets.Length];
-        return new TextBlock
-        {
-            Text = text,
-            Margin = new Thickness(0, 0, 6, 0),
-            HorizontalAlignment = HorizontalAlignment.Right,
-            MinWidth = list.IsOrdered ? 18 : 12,
-            TextAlignment = TextAlignment.Right,
-        };
+
+        // A bullet is drawn, not read, as a browser does not read the marker of an unordered list; a number is read.
+        TextBlock marker = list.IsOrdered ? new TextBlock() : new DecorativeTextBlock();
+        marker.Text = text;
+        marker.Margin = new Thickness(0, 0, 6, 0);
+        marker.HorizontalAlignment = HorizontalAlignment.Right;
+        marker.MinWidth = list.IsOrdered ? 18 : 12;
+        marker.TextAlignment = TextAlignment.Right;
+        return marker;
     }
 
     private ScrollViewer Table(TableNode table)
@@ -332,7 +371,7 @@ internal sealed partial class MarkdownRenderer
         _rendered.Add(typeof(TableCellNode));
 
         var columns = table.Alignments.Count;
-        var grid = new Grid();
+        var grid = Expose(new Grid(), AutomationControlType.Table);
         grid.SetValue(MarkdownViewer.TextGroupProperty, MarkdownViewer.TextGroup.Table);
         for (var column = 0; column < columns; column++)
         {
@@ -379,7 +418,11 @@ internal sealed partial class MarkdownRenderer
             text.FontWeight = FontWeight.SemiBold;
         }
 
-        var cell = new Border { Padding = new Thickness(8, 4), Child = text };
+        // NOTE: Avalonia's macOS backend shows a header item as a button, which VoiceOver would offer to press, so there a
+        // header cell is a cell like the others; its row comes first.
+        var cell = Expose(
+            new Border { Padding = new Thickness(8, 4), Child = text },
+            header && !OperatingSystem.IsMacOS() ? AutomationControlType.HeaderItem : AutomationControlType.DataItem);
         cell.Bind(Border.BorderBrushProperty, _viewer.GetObservable(MarkdownViewer.RuleBrushProperty));
         if (header)
         {

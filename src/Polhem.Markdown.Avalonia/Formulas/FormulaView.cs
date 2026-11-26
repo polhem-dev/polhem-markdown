@@ -1,4 +1,5 @@
 using Avalonia;
+using Avalonia.Automation.Peers;
 using Avalonia.Controls;
 using Avalonia.Controls.Documents;
 using Avalonia.Media;
@@ -36,6 +37,9 @@ internal sealed class FormulaView : Control
 
     /// <summary>Where the formula's baseline lies below the view's top, for tests.</summary>
     internal double BaselineFromTop => Box.Ascent + _padding;
+
+    /// <summary>A formula is one element named by its LaTeX, which the renderer sets.</summary>
+    protected override AutomationPeer OnCreateAutomationPeer() => new Automation.LeafAutomationPeer(this, AutomationControlType.Text);
 
     protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
     {
