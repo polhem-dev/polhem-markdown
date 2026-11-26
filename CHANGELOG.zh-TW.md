@@ -9,6 +9,9 @@ Polhem.Markdown 各套件值得注意的變更，每個版本只列幾項重點�
 
 ## [Unreleased]
 
+- Avalonia 的 `MarkdownViewer` 可以像瀏覽器一樣跨區塊選取文字：拖曳可以從一個段落、清單項目、表格儲存格或程式碼區塊延伸到下一個，
+  拖到視窗邊緣時會自動捲動；Ctrl+A（Cmd+A）全選整份文字，複製時依文件順序產生純文字（#1）。
+
 ## [0.3.1] - 2026-11-25
 
 詳細內容：[docs/zh-TW/changelogs/0.3.1.md](docs/zh-TW/changelogs/0.3.1.md)

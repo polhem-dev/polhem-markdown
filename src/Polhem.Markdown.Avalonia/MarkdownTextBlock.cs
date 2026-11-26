@@ -4,7 +4,7 @@ using Avalonia.Input;
 namespace Polhem.Markdown.Avalonia;
 
 /// <summary>
-/// A paragraph, heading or table cell: selectable text whose link runs can be clicked. A link either opens a URI or
+/// A paragraph, heading, table cell or the code of a code block: selectable text whose link runs can be clicked. A link either opens a URI or
 /// moves to an anchor of the same text: a heading, a footnote, or a reference to one.
 /// </summary>
 /// <remarks>
@@ -20,6 +20,10 @@ internal sealed class MarkdownTextBlock : SelectableTextBlock
     public MarkdownTextBlock(MarkdownViewer viewer)
     {
         _viewer = viewer;
+
+        // A text block without a background takes the pointer only where it draws glyphs. With one, a drag can start in
+        // the space after a short line, as it can in a browser.
+        Background = global::Avalonia.Media.Brushes.Transparent;
     }
 
     /// <summary>
@@ -76,6 +80,19 @@ internal sealed class MarkdownTextBlock : SelectableTextBlock
     /// <summary>The link at a character index of the text, or <see langword="null"/>.</summary>
     public LinkRange? LinkRangeAt(int index) =>
         _links.FirstOrDefault(link => index >= link.Start && index < link.Start + link.Length);
+
+    protected override void OnLostFocus(FocusChangedEventArgs e)
+    {
+        // Avalonia clears a text's selection when the text loses the focus. Within a selection that spans texts, the
+        // viewer decides instead (see `MarkdownViewer.KeepsSelectionOnLostFocus`).
+        var (start, end) = (SelectionStart, SelectionEnd);
+        base.OnLostFocus(e);
+        if (_viewer.KeepsSelectionOnLostFocus(this, e.NewFocusedElement) && start != end)
+        {
+            SetCurrentValue(SelectionStartProperty, start);
+            SetCurrentValue(SelectionEndProperty, end);
+        }
+    }
 
     protected override void OnPointerMoved(PointerEventArgs e)
     {

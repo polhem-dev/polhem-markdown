@@ -40,6 +40,11 @@ Set `CjkFontFamily` when the text has Chinese, Japanese or Korean, so bold CJK t
                    CjkFontFamily="PingFang TC, Microsoft JhengHei UI, Noto Sans CJK TC" />
 ```
 
+Text can be selected as in a browser: a drag runs from one block into the next, and scrolls the nearest scroll viewer
+when it reaches its edge. Shift-click extends the selection, Ctrl+A (Cmd+A) selects the whole text, and Ctrl+C
+(Cmd+C) copies it as plain text, with an empty line between blocks, a line break between list items and table rows,
+and a tab between table cells. The text of a closed `<details>` section is left out.
+
 ## MarkdownEditor
 
 Edits Markdown as source on AvaloniaEdit, colored the way the viewer reads it, with a toolbar, format commands and list

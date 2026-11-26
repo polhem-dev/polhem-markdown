@@ -106,6 +106,7 @@ internal sealed partial class MarkdownRenderer
     {
         _rendered.Add(typeof(FootnoteNode));
         var grid = new Grid { RowSpacing = 4 };
+        grid.SetValue(MarkdownViewer.TextGroupProperty, MarkdownViewer.TextGroup.List);
         grid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Auto));
         grid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
         for (var index = 0; index < footnotes.Notes.Count; index++)
@@ -140,6 +141,7 @@ internal sealed partial class MarkdownRenderer
     {
         _rendered.Add(typeof(ListItemNode));
         var grid = new Grid { RowSpacing = list.IsLoose ? 8 : 2 };
+        grid.SetValue(MarkdownViewer.TextGroupProperty, MarkdownViewer.TextGroup.List);
         grid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Auto));
         grid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
         for (var index = 0; index < list.Items.Count; index++)
@@ -331,6 +333,7 @@ internal sealed partial class MarkdownRenderer
 
         var columns = table.Alignments.Count;
         var grid = new Grid();
+        grid.SetValue(MarkdownViewer.TextGroupProperty, MarkdownViewer.TextGroup.Table);
         for (var column = 0; column < columns; column++)
         {
             grid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Auto));
@@ -344,6 +347,7 @@ internal sealed partial class MarkdownRenderer
             for (var column = 0; column < columns; column++)
             {
                 var cell = TableCell(column < row.Cells.Count ? row.Cells[column].Inlines : [], table.Alignments[column], header);
+                cell.Child!.SetValue(MarkdownViewer.TableRowProperty, rowIndex);
 
                 // Each cell draws its right and bottom edge; the first row and column add the outer top and left.
                 cell.BorderThickness = new Thickness(column == 0 ? 1 : 0, rowIndex == 0 ? 1 : 0, 1, 1);

@@ -120,6 +120,13 @@ public partial class MarkdownViewer : Control
         LogicalChildren.Add(_panel);
         VisualChildren.Add(_panel);
         AddHandler(PointerPressedEvent, OnPointerPressedForSource, RoutingStrategies.Tunnel);
+        AddHandler(PointerPressedEvent, OnPointerPressedForSelection, RoutingStrategies.Tunnel);
+        AddHandler(PointerPressedEvent, OnPointerPressedAfterText, RoutingStrategies.Bubble, handledEventsToo: true);
+        AddHandler(PointerMovedEvent, OnPointerMovedForSelection, RoutingStrategies.Bubble, handledEventsToo: true);
+        AddHandler(PointerReleasedEvent, OnPointerReleasedForSelection, RoutingStrategies.Bubble, handledEventsToo: true);
+        AddHandler(PointerCaptureLostEvent, OnPointerCaptureLostForSelection, RoutingStrategies.Bubble, handledEventsToo: true);
+        AddHandler(KeyDownEvent, OnKeyDownForSelection, RoutingStrategies.Tunnel);
+        AddHandler(SelectableTextBlock.CopyingToClipboardEvent, OnCopyingToClipboard, RoutingStrategies.Bubble);
     }
 
     /// <summary>Gets or sets the Markdown text to show.</summary>
@@ -431,6 +438,7 @@ public partial class MarkdownViewer : Control
         _sources.InsertRange(head, keys.GetRange(head, built));
 
         KeepRanges(document);
+        KeepSelection();
         ForgetImagesNotIn(document);
         _hasThemedImages = document.Blocks.SelectMany(NodeTree.SelfAndDescendants)
             .Any(node => node is ImageNode { DarkSource: not null } or ImageNode { LightSource: not null });
