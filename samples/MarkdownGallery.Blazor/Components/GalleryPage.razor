@@ -5,7 +5,6 @@
     <div class="bar">
         <label><input type="checkbox" @bind="_dark" /> Dark</label>
         <label><input type="checkbox" @bind="_edit" /> Edit</label>
-        <label><input type="checkbox" @bind="_showOutline" /> Outline</label>
         <button type="button" @onclick="Replay">Replay</button>
         <span class="status">@_status</span>
     </div>
@@ -19,18 +18,23 @@
                 <MarkdownEditor @ref="_editor" Markdown="@_markdown" MarkdownChanged="Edited" aria-label="Markdown source"
                                 FirstVisibleSourceOffsetChanged="EditorScrolled" />
             </div>
-            <div class="frame viewer-frame preview" @onpointerenter="() => _leader = Pane.Viewer" @onfocusin="() => _leader = Pane.Viewer">
-                <MarkdownViewer @ref="_viewer" Markdown="@_preview" Options="_options" ZoomImages="true" ShowOutline="_showOutline" @bind-OutlinePinned="_outlinePinned"
-                                OnLinkActivated="OnLinkActivated" FirstVisibleSourceOffsetChanged="ViewerScrolled"
-                                OnSourceRequested="GoToSource" />
+            <div class="frame preview" @onpointerenter="() => _leader = Pane.Viewer" @onfocusin="() => _leader = Pane.Viewer">
+                <MarkdownReader @bind-OutlinePinned="_outlinePinned">
+                    <MarkdownViewer @ref="_viewer" Markdown="@_preview" Options="_options" ZoomImages="true"
+                                    OnLinkActivated="OnLinkActivated" FirstVisibleSourceOffsetChanged="ViewerScrolled"
+                                    OnSourceRequested="GoToSource" />
+                </MarkdownReader>
             </div>
         </div>
     }
     else
     {
-        <div class="frame viewer-frame">
-            <MarkdownViewer @ref="_viewer" Markdown="@_markdown" Options="_options" ZoomImages="true" ShowOutline="_showOutline" @bind-OutlinePinned="_outlinePinned"
-                            OnLinkActivated="OnLinkActivated" />
+        @* The reader scrolls the viewer and offers the table of contents along its edge. *@
+        <div class="frame reader-frame">
+            <MarkdownReader @bind-OutlinePinned="_outlinePinned">
+                <MarkdownViewer @ref="_viewer" Markdown="@_markdown" Options="_options" ZoomImages="true"
+                                OnLinkActivated="OnLinkActivated" />
+            </MarkdownReader>
         </div>
     }
     </div>
@@ -52,8 +56,6 @@
     private MarkdownEditor? _editor;
     private MarkdownViewer? _viewer;
     private Pane _leader = Pane.Editor;
-    private bool _showOutline = true;
-
     // Bound, so the pin stays as the reader set it when the page renders again.
     private bool _outlinePinned;
 

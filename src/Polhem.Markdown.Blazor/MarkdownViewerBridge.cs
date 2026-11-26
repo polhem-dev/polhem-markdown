@@ -21,7 +21,7 @@ internal sealed class MarkdownViewerBridge(MarkdownViewer viewer)
     /// end of the text.
     /// </summary>
     [JSInvokable]
-    public void ReadingChanged(int sourceOffset) => viewer.OnReadingChanged(sourceOffset);
+    public void ReadingChanged(int sourceOffset) => viewer.Reader?.OnReadingChanged(viewer, sourceOffset);
 
     /// <summary>Takes the closing of the dialog that shows an image at full size.</summary>
     [JSInvokable]

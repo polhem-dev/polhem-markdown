@@ -11,23 +11,32 @@ Polhem.Markdown.Avalonia.MarkdownViewer.ZoomImages.get -> bool
 Polhem.Markdown.Avalonia.MarkdownViewer.ZoomImages.set -> void
 static readonly Polhem.Markdown.Avalonia.MarkdownViewer.ImageActivatedEvent -> Avalonia.Interactivity.RoutedEvent<Polhem.Markdown.Avalonia.MarkdownImageActivatedEventArgs!>!
 static readonly Polhem.Markdown.Avalonia.MarkdownViewer.ZoomImagesProperty -> Avalonia.StyledProperty<bool>!
-Polhem.Markdown.Avalonia.MarkdownViewer.OutlineLabel.get -> string!
-Polhem.Markdown.Avalonia.MarkdownViewer.OutlineLabel.set -> void
-Polhem.Markdown.Avalonia.MarkdownViewer.OutlinePinned.get -> bool
-Polhem.Markdown.Avalonia.MarkdownViewer.OutlinePinned.set -> void
-Polhem.Markdown.Avalonia.MarkdownViewer.OutlineSide.get -> Polhem.Markdown.OutlineSide
-Polhem.Markdown.Avalonia.MarkdownViewer.OutlineSide.set -> void
-Polhem.Markdown.Avalonia.MarkdownViewer.PinOutlineLabel.get -> string!
-Polhem.Markdown.Avalonia.MarkdownViewer.PinOutlineLabel.set -> void
-Polhem.Markdown.Avalonia.MarkdownViewer.ShowOutline.get -> bool
-Polhem.Markdown.Avalonia.MarkdownViewer.ShowOutline.set -> void
-Polhem.Markdown.Avalonia.MarkdownViewer.UnpinOutlineLabel.get -> string!
-Polhem.Markdown.Avalonia.MarkdownViewer.UnpinOutlineLabel.set -> void
-override Polhem.Markdown.Avalonia.MarkdownViewer.OnAttachedToVisualTree(Avalonia.VisualTreeAttachmentEventArgs! e) -> void
-override Polhem.Markdown.Avalonia.MarkdownViewer.OnDetachedFromVisualTree(Avalonia.VisualTreeAttachmentEventArgs! e) -> void
-static readonly Polhem.Markdown.Avalonia.MarkdownViewer.OutlineLabelProperty -> Avalonia.StyledProperty<string!>!
-static readonly Polhem.Markdown.Avalonia.MarkdownViewer.OutlinePinnedProperty -> Avalonia.StyledProperty<bool>!
-static readonly Polhem.Markdown.Avalonia.MarkdownViewer.OutlineSideProperty -> Avalonia.StyledProperty<Polhem.Markdown.OutlineSide>!
-static readonly Polhem.Markdown.Avalonia.MarkdownViewer.PinOutlineLabelProperty -> Avalonia.StyledProperty<string!>!
-static readonly Polhem.Markdown.Avalonia.MarkdownViewer.ShowOutlineProperty -> Avalonia.StyledProperty<bool>!
-static readonly Polhem.Markdown.Avalonia.MarkdownViewer.UnpinOutlineLabelProperty -> Avalonia.StyledProperty<string!>!
+Polhem.Markdown.Avalonia.MarkdownReader
+Polhem.Markdown.Avalonia.MarkdownReader.MarkdownReader() -> void
+Polhem.Markdown.Avalonia.MarkdownReader.OutlineLabel.get -> string!
+Polhem.Markdown.Avalonia.MarkdownReader.OutlineLabel.set -> void
+Polhem.Markdown.Avalonia.MarkdownReader.OutlinePinned.get -> bool
+Polhem.Markdown.Avalonia.MarkdownReader.OutlinePinned.set -> void
+Polhem.Markdown.Avalonia.MarkdownReader.OutlineSide.get -> Polhem.Markdown.OutlineSide
+Polhem.Markdown.Avalonia.MarkdownReader.OutlineSide.set -> void
+Polhem.Markdown.Avalonia.MarkdownReader.PinOutlineLabel.get -> string!
+Polhem.Markdown.Avalonia.MarkdownReader.PinOutlineLabel.set -> void
+Polhem.Markdown.Avalonia.MarkdownReader.TextMaxWidth.get -> double
+Polhem.Markdown.Avalonia.MarkdownReader.TextMaxWidth.set -> void
+Polhem.Markdown.Avalonia.MarkdownReader.UnpinOutlineLabel.get -> string!
+Polhem.Markdown.Avalonia.MarkdownReader.UnpinOutlineLabel.set -> void
+Polhem.Markdown.Avalonia.MarkdownReader.Viewer.get -> Polhem.Markdown.Avalonia.MarkdownViewer?
+Polhem.Markdown.Avalonia.MarkdownReader.Viewer.set -> void
+override Polhem.Markdown.Avalonia.MarkdownReader.ArrangeOverride(Avalonia.Size finalSize) -> Avalonia.Size
+override Polhem.Markdown.Avalonia.MarkdownReader.MeasureOverride(Avalonia.Size availableSize) -> Avalonia.Size
+override Polhem.Markdown.Avalonia.MarkdownReader.OnAttachedToVisualTree(Avalonia.VisualTreeAttachmentEventArgs! e) -> void
+override Polhem.Markdown.Avalonia.MarkdownReader.OnDetachedFromVisualTree(Avalonia.VisualTreeAttachmentEventArgs! e) -> void
+override Polhem.Markdown.Avalonia.MarkdownReader.OnPropertyChanged(Avalonia.AvaloniaPropertyChangedEventArgs! change) -> void
+static readonly Polhem.Markdown.Avalonia.MarkdownReader.OutlineLabelProperty -> Avalonia.StyledProperty<string!>!
+static readonly Polhem.Markdown.Avalonia.MarkdownReader.OutlinePinnedProperty -> Avalonia.StyledProperty<bool>!
+static readonly Polhem.Markdown.Avalonia.MarkdownReader.OutlineSideProperty -> Avalonia.StyledProperty<Polhem.Markdown.OutlineSide>!
+static readonly Polhem.Markdown.Avalonia.MarkdownReader.PinOutlineLabelProperty -> Avalonia.StyledProperty<string!>!
+static readonly Polhem.Markdown.Avalonia.MarkdownReader.TextMaxWidthProperty -> Avalonia.StyledProperty<double>!
+static readonly Polhem.Markdown.Avalonia.MarkdownReader.UnpinOutlineLabelProperty -> Avalonia.StyledProperty<string!>!
+static readonly Polhem.Markdown.Avalonia.MarkdownReader.ViewerProperty -> Avalonia.StyledProperty<Polhem.Markdown.Avalonia.MarkdownViewer?>!
+Polhem.Markdown.Avalonia.MarkdownReader.ScrollViewer.get -> Avalonia.Controls.ScrollViewer!

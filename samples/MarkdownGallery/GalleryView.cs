@@ -9,9 +9,9 @@ using Polhem.Markdown.Avalonia;
 namespace MarkdownGallery;
 
 /// <summary>
-/// The sample text in a viewer, with a theme switch, a replay that types the text in chunks as a streamed reply
-/// arrives, an edit switch that puts an editor beside the viewer, an outline switch that turns on the viewer's own table
-/// of contents, and a status line showing the last link to the host's own scheme.
+/// The sample text in a viewer inside a reader, which adds the table of contents, with a theme switch, a replay that
+/// types the text in chunks as a streamed reply arrives, an edit switch that puts an editor beside the viewer, and a
+/// status line showing the last link to the host's own scheme.
 /// </summary>
 public sealed class GalleryView : UserControl
 {
@@ -25,7 +25,7 @@ public sealed class GalleryView : UserControl
     {
         var options = new MarkdownOptions();
         options.AllowedLinkSchemes.Add("polhem");
-        _viewer = new MarkdownViewer { Options = options, Markdown = SampleText.Markdown, ZoomImages = true, ShowOutline = true };
+        _viewer = new MarkdownViewer { Options = options, Markdown = SampleText.Markdown, ZoomImages = true };
         _viewer.LinkActivated += OnLinkActivated;
 
         var dark = new ToggleSwitch { OnContent = "Dark", OffContent = "Light", VerticalAlignment = VerticalAlignment.Center };
@@ -36,23 +36,22 @@ public sealed class GalleryView : UserControl
         replay.Click += (_, _) => Replay();
 
         var edit = new ToggleSwitch { OnContent = "Edit", OffContent = "Edit", VerticalAlignment = VerticalAlignment.Center };
-        var showOutline = new ToggleSwitch { OnContent = "Outline", OffContent = "Outline", IsChecked = true, VerticalAlignment = VerticalAlignment.Center };
-        showOutline.IsCheckedChanged += (_, _) => _viewer.ShowOutline = showOutline.IsChecked == true;
 
         var bar = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 12, Margin = new Thickness(16, 8) };
         bar.Children.Add(dark);
         bar.Children.Add(edit);
-        bar.Children.Add(showOutline);
         bar.Children.Add(replay);
         bar.Children.Add(_status);
 
-        var viewerScroll = new ScrollViewer { Content = new Border { Padding = new Thickness(16, 8, 16, 24), Child = _viewer } };
+        // The reader scrolls the viewer and offers the table of contents along its edge.
+        var reader = new MarkdownReader { Viewer = _viewer };
+        var viewerScroll = reader.ScrollViewer;
         var editor = new MarkdownEditor { Markdown = SampleText.Markdown };
         _ = new SourceSync(editor, _viewer, viewerScroll);
 
         // The editor sits beside the viewer, or above it on a narrow screen such as a phone's, each in a frame.
         var editorFrame = Frame(editor);
-        var viewerFrame = Frame(viewerScroll);
+        var viewerFrame = Frame(reader);
         editorFrame.IsVisible = false;
         var panes = new Grid { Margin = new Thickness(16, 0, 16, 16) };
         panes.Children.Add(editorFrame);
