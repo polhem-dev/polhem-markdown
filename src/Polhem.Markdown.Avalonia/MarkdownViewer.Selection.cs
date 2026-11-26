@@ -55,7 +55,8 @@ public partial class MarkdownViewer
             MarkdownTextBlock? previous = null;
             foreach (var text in Texts())
             {
-                if (text.SelectionStart == text.SelectionEnd || text.SelectedText.Length == 0)
+                var copied = text.CopiedText;
+                if (copied.Length == 0)
                 {
                     continue;
                 }
@@ -63,7 +64,7 @@ public partial class MarkdownViewer
                 {
                     builder.Append(Separator(previous, text));
                 }
-                builder.Append(text.SelectedText);
+                builder.Append(copied);
                 previous = text;
             }
             return builder.ToString();
@@ -344,17 +345,20 @@ public partial class MarkdownViewer
             SelectAll();
             e.Handled = true;
         }
-        else if (keys.Copy.Any(gesture => gesture.Matches(e)) && SpansTexts)
+        else if (keys.Copy.Any(gesture => gesture.Matches(e)) && SelectedText.Length > 0)
         {
             _ = CopySelectionAsync();
             e.Handled = true;
         }
     }
 
-    /// <summary>Copies the whole selection instead of a text's own part, when a text's context menu copies it.</summary>
+    /// <summary>
+    /// Copies the whole selection instead of a text's own part when a text's context menu copies it, and copies images
+    /// and formulas as text rather than as object replacement characters.
+    /// </summary>
     private void OnCopyingToClipboard(object? sender, RoutedEventArgs e)
     {
-        if (SpansTexts)
+        if (SelectedText.Length > 0)
         {
             _ = CopySelectionAsync();
             e.Handled = true;
@@ -470,8 +474,7 @@ public partial class MarkdownViewer
         return layout.HitTestPoint(clamped).TextPosition;
     }
 
-    private static int TextLength(MarkdownTextBlock text) =>
-        (text.Inlines is { Count: > 0 } inlines ? inlines.Text : text.Text)?.Length ?? 0;
+    private static int TextLength(MarkdownTextBlock text) => text.LayoutLength;
 
     /// <summary>The texts that can be selected, in document order: those shown, which leaves out a closed section's.</summary>
     private List<MarkdownTextBlock> Texts() =>

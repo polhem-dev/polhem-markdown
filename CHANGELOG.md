@@ -12,6 +12,9 @@ and versions follow [Semantic Versioning](https://semver.org/).
 - The Avalonia `MarkdownViewer` selects text across blocks, as a browser does: a drag runs from one paragraph, list
   item, table cell or code block into the next and scrolls at the edge of the view, Ctrl+A (Cmd+A) selects the whole
   text, and copying gives plain text in document order (#1).
+- The Avalonia `MarkdownViewer` copies an image as its alternative text and a formula as its LaTeX (`$…$`). On
+  Avalonia 12.0, copied text no longer loses or shifts characters after an image or a formula, and a triple click
+  selects such a paragraph to its end.
 
 ## [0.3.1] - 2026-11-25
 

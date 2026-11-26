@@ -79,6 +79,26 @@ public class SelectionTests(HeadlessSession session)
         Assert.Equal("Intro\n\none\ntwo\n\na\tb\nc\td\n\nx = 1\n\nEnd", viewer.SelectedText);
     });
 
+    [Fact(DisplayName = "An image is copied as its alternative text and a formula as its LaTeX, not as an object replacement character")]
+    public Task SelectedText_EmbeddedControls_CopiedAsText() => session.RunAsync(async () =>
+    {
+        var (window, viewer) = Show("![build passing](https://example.com/badge.svg)\n\nBefore ![logo](https://example.com/a.png) and $x^2$ after.");
+
+        viewer.SelectAll();
+        Assert.Equal("build passing\n\nBefore logo and $x^2$ after.", viewer.SelectedText);
+
+        // A selection inside one text, here by a triple click, is copied by the viewer too, so it gets the same text.
+        var point = Near(Texts(viewer)[1], window);
+        for (var click = 0; click < 3; click++)
+        {
+            window.MouseDown(point, MouseButton.Left);
+            window.MouseUp(point, MouseButton.Left);
+        }
+        window.KeyPressQwerty(PhysicalKey.C, CommandKey);
+        Dispatcher.UIThread.RunJobs();
+        Assert.Equal("Before logo and $x^2$ after.", await window.Clipboard!.TryGetTextAsync());
+    });
+
     [Fact(DisplayName = "The command key with A selects the whole document, and with C copies it")]
     public Task Keys_SelectAllAndCopy() => session.RunAsync(async () =>
     {

@@ -1,4 +1,5 @@
 using Avalonia.Controls;
+using Avalonia.Controls.Documents;
 using Avalonia.Input;
 
 namespace Polhem.Markdown.Avalonia;
@@ -16,6 +17,8 @@ internal sealed class MarkdownTextBlock : SelectableTextBlock
     private readonly MarkdownViewer _viewer;
     private readonly List<LinkRange> _links = [];
     private readonly List<string> _anchorIds = [];
+    private readonly Dictionary<int, string> _embeddedTexts = [];
+    private string? _layoutText;
 
     public MarkdownTextBlock(MarkdownViewer viewer)
     {
@@ -72,6 +75,85 @@ internal sealed class MarkdownTextBlock : SelectableTextBlock
         _anchorIds.Add(id);
     }
 
+    /// <summary>
+    /// Records the text an embedded control at <paramref name="offset"/> is copied as: an image's alternative text, or a
+    /// formula's LaTeX.
+    /// </summary>
+    public void AddEmbeddedText(int offset, string text) => _embeddedTexts[offset] = text;
+
+    /// <summary>
+    /// The selected text as it is copied, with an image as its alternative text and a formula as its LaTeX.
+    /// </summary>
+    /// <remarks>
+    /// NOTE: this does not use <see cref="SelectableTextBlock.SelectedText"/>. Up to Avalonia 12.0, an embedded control
+    /// takes one position in the layout, which the selection counts in, but no character in
+    /// <see cref="InlineCollection.Text"/>, so the selected text after an image or a formula was shifted by one character
+    /// for each; from 12.1 it is an object replacement character. The text built here follows the layout on both.
+    /// </remarks>
+    public string CopiedText
+    {
+        get
+        {
+            var text = LayoutText;
+            var start = Math.Clamp(Math.Min(SelectionStart, SelectionEnd), 0, text.Length);
+            var end = Math.Clamp(Math.Max(SelectionStart, SelectionEnd), 0, text.Length);
+            if (start == end)
+            {
+                return "";
+            }
+            var builder = new System.Text.StringBuilder(end - start);
+            for (var index = start; index < end; index++)
+            {
+                if (text[index] != ObjectReplacement)
+                {
+                    builder.Append(text[index]);
+                }
+                else if (_embeddedTexts.TryGetValue(index, out var embedded))
+                {
+                    builder.Append(embedded);
+                }
+            }
+            return builder.ToString();
+        }
+    }
+
+    /// <summary>The number of positions in the text's layout, which is where a selection can end.</summary>
+    public int LayoutLength => LayoutText.Length;
+
+    /// <summary>The text as its layout counts it: an object replacement character for each embedded control.</summary>
+    private string LayoutText => _layoutText ??= Inlines is { Count: > 0 } inlines ? Flatten(inlines) : Text ?? "";
+
+    private static string Flatten(InlineCollection inlines)
+    {
+        var builder = new System.Text.StringBuilder();
+        Append(inlines, builder);
+        return builder.ToString();
+
+        static void Append(InlineCollection inlines, System.Text.StringBuilder builder)
+        {
+            foreach (var inline in inlines)
+            {
+                switch (inline)
+                {
+                    case InlineUIContainer:
+                        builder.Append(ObjectReplacement);
+                        break;
+                    case LineBreak:
+                        builder.Append('\n');
+                        break;
+                    case Span span:
+                        Append(span.Inlines, builder);
+                        break;
+                    case Run run:
+                        builder.Append(run.Text);
+                        break;
+                }
+            }
+        }
+    }
+
+    private const char ObjectReplacement = '\uFFFC';
+
     public void AddAnchorLink(int start, int length, string anchorId) => _links.Add(new LinkRange(start, length, null, anchorId));
 
     /// <summary>The target of the link at a character index of the text, or <see langword="null"/>.</summary>
@@ -91,6 +173,19 @@ internal sealed class MarkdownTextBlock : SelectableTextBlock
         {
             SetCurrentValue(SelectionStartProperty, start);
             SetCurrentValue(SelectionEndProperty, end);
+        }
+    }
+
+    protected override void OnPointerPressed(PointerPressedEventArgs e)
+    {
+        base.OnPointerPressed(e);
+
+        // NOTE: a triple click selects the whole text with `SelectAll`, which up to Avalonia 12.0 stops short by one
+        // position for each image or formula in the text (see `CopiedText`).
+        if (e.ClickCount == 3 && e.GetCurrentPoint(this).Properties.IsLeftButtonPressed)
+        {
+            SetCurrentValue(SelectionStartProperty, 0);
+            SetCurrentValue(SelectionEndProperty, LayoutLength);
         }
     }
 
