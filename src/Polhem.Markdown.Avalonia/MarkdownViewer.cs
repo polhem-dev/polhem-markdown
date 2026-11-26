@@ -349,7 +349,7 @@ public partial class MarkdownViewer : Control
 
         // NOTE: a change of theme rebuilds only the blocks with a picture whose source depends on it, since the block key
         // holds the source shown.
-        if (change.Property == MarkdownProperty
+        if (change.Property == MarkdownProperty || change.Property == IsStreamingProperty
             || (change.Property == ThemeVariantScope.ActualThemeVariantProperty && _hasThemedImages))
         {
             Update(fullRebuild: false);
@@ -436,7 +436,7 @@ public partial class MarkdownViewer : Control
 
     private void Update(bool fullRebuild)
     {
-        var markdown = Markdown ?? "";
+        var markdown = TextToParse;
         var document = MarkdownModelBuilder.Build(markdown, Options ?? new MarkdownOptions());
         AssignDetailsKeys(document);
         if (CjkFontFamily is { } cjkFamily)

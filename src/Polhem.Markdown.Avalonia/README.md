@@ -66,6 +66,22 @@ top of the view.
 
 Or put the viewer in a `MarkdownReader`, below, which shows the table of contents itself.
 
+To show a reply while it arrives, set the text again as it grows. Only the blocks that changed are rebuilt. Set
+`IsStreaming` while it arrives, and the syntax its last block leaves open shows as it will once the reply is complete:
+emphasis and code spans are closed, a link shows as its text until its address ends, an image or a tag still being
+typed waits, and a table's header row shows as a table. Clear it when the reply ends, and the text shows exactly as
+written.
+
+```csharp
+viewer.IsStreaming = true;
+await foreach (var token in reply)
+{
+    text += token;
+    viewer.Markdown = text;
+}
+viewer.IsStreaming = false;
+```
+
 Set `ZoomImages` to open an image at full size over the window with a click or Enter, where the wheel, a pinch or
 + and - zoom it, a drag pans it, a double click switches between fitting the window and the image's own size, and
 Escape or a click beside it closes it. An image inside a link opens the link instead. To show images your own way,

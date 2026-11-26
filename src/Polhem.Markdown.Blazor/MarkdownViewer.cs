@@ -97,10 +97,12 @@ public partial class MarkdownViewer : ComponentBase, IAsyncDisposable
     /// <inheritdoc/>
     protected override void OnParametersSet()
     {
-        if (!string.Equals(Markdown, _parsedMarkdown, StringComparison.Ordinal) || !ReferenceEquals(Options, _parsedOptions))
+        if (!string.Equals(Markdown, _parsedMarkdown, StringComparison.Ordinal) || !ReferenceEquals(Options, _parsedOptions)
+            || IsStreaming != _parsedStreaming)
         {
             var headings = _document.Headings;
-            _document = string.IsNullOrEmpty(Markdown) ? s_empty : MarkdownModelBuilder.Build(Markdown, Options ?? new MarkdownOptions());
+            _document = string.IsNullOrEmpty(Markdown) ? s_empty : MarkdownModelBuilder.Build(TextToParse, Options ?? new MarkdownOptions());
+            _parsedStreaming = IsStreaming;
             _headingsChanged |= !headings.SequenceEqual(_document.Headings);
             _parsedMarkdown = Markdown;
             _parsedOptions = Options;

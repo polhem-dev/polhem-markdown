@@ -40,3 +40,6 @@ static readonly Polhem.Markdown.Avalonia.MarkdownReader.TextMaxWidthProperty -> 
 static readonly Polhem.Markdown.Avalonia.MarkdownReader.UnpinOutlineLabelProperty -> Avalonia.StyledProperty<string!>!
 static readonly Polhem.Markdown.Avalonia.MarkdownReader.ViewerProperty -> Avalonia.StyledProperty<Polhem.Markdown.Avalonia.MarkdownViewer?>!
 Polhem.Markdown.Avalonia.MarkdownReader.ScrollViewer.get -> Avalonia.Controls.ScrollViewer!
+Polhem.Markdown.Avalonia.MarkdownViewer.IsStreaming.get -> bool
+Polhem.Markdown.Avalonia.MarkdownViewer.IsStreaming.set -> void
+static readonly Polhem.Markdown.Avalonia.MarkdownViewer.IsStreamingProperty -> Avalonia.StyledProperty<bool>!

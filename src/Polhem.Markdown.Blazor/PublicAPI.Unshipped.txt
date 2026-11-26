@@ -34,3 +34,5 @@ Polhem.Markdown.Blazor.MarkdownReader.UnpinOutlineLabel.get -> string!
 Polhem.Markdown.Blazor.MarkdownReader.UnpinOutlineLabel.set -> void
 override Polhem.Markdown.Blazor.MarkdownReader.BuildRenderTree(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder! builder) -> void
 override Polhem.Markdown.Blazor.MarkdownReader.OnAfterRenderAsync(bool firstRender) -> System.Threading.Tasks.Task!
+Polhem.Markdown.Blazor.MarkdownViewer.IsStreaming.get -> bool
+Polhem.Markdown.Blazor.MarkdownViewer.IsStreaming.set -> void
