@@ -67,7 +67,7 @@ internal sealed class CodeBlockView : Border
         // The gap around the code is the text's margin rather than the scroll viewer's padding. The scroll content
         // presenter leaves its padding out of the size it asks for but takes it off the room it gives the text, so
         // with padding the text got one line less than it needed and its last line was cut off.
-        var body = new SelectableTextBlock
+        var body = new MarkdownTextBlock(viewer)
         {
             TextWrapping = TextWrapping.NoWrap,
             Margin = new Thickness(10, 0, 10, 8),

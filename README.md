@@ -50,6 +50,7 @@ shows the start of the sample text in each.
 | Link schemes | Only allowed schemes can be clicked (`http`, `https`, `mailto` by default) | ✓ | ✓ |
 | Image schemes | Only allowed schemes load (`https` by default) | ✓ | ✓ |
 | SVG images | | Trusted badge hosts | Every allowed image |
+| Selecting text | A drag runs across blocks; copying gives plain text, with tabs between table cells | ✓ | ✓ |
 | Streaming | Set the text again as a reply arrives | ✓ | ✓ |
 | Light and dark themes | | Brushes | CSS variables |
 | Source positions | For keeping an editor in step | ✓ | ✓ |
