@@ -2,7 +2,6 @@ using Avalonia;
 using Avalonia.Automation;
 using Avalonia.Automation.Peers;
 using Avalonia.Controls;
-using Avalonia.Controls.Documents;
 using Avalonia.Controls.Primitives;
 using Avalonia.Input;
 using Avalonia.Layout;
@@ -12,41 +11,40 @@ using Path = Avalonia.Controls.Shapes.Path;
 namespace Polhem.Markdown.Avalonia;
 
 /// <summary>
-/// The table of contents of a <see cref="MarkdownViewer"/>: its label, a button that pins or unpins it, and an entry
-/// for each heading. The viewer shows it floating over the text or pinned beside it.
+/// The table of contents of a <see cref="MarkdownReader"/>: its label, a button that pins or unpins it, and an entry for
+/// each heading. It is as tall as the reader and flush with its rail, floating over the text or pinned beside it, with
+/// a line on the side of the text.
 /// </summary>
 internal sealed class OutlinePanel : Border
 {
-    /// <summary>A pin, upright: the panel floats and can be pinned.</summary>
-    internal static readonly Geometry PinIcon = Geometry.Parse(
-        "M9 2h6l-1 2v5l3 3v2h-4.25v6L12 22l-.75-2v-6H7v-2l3-3V4z");
+    /// <summary>A pin, upright.</summary>
+    private static readonly Geometry s_pinIcon = Geometry.Parse("M9 2h6l-1 2v5l3 3v2h-4.25v6L12 22l-.75-2v-6H7v-2l3-3V4z");
 
-    private readonly MarkdownViewer _viewer;
+    private readonly MarkdownReader _reader;
     private readonly TextBlock _title;
     private readonly ToggleButton _pin;
+    private readonly Path _pinIconPath;
     private readonly StackPanel _entries = new() { Spacing = 1 };
 
-    public OutlinePanel(MarkdownViewer viewer)
+    public OutlinePanel(MarkdownReader reader)
     {
-        _viewer = viewer;
+        _reader = reader;
+        Width = PanelWidth;
         Padding = new Thickness(8);
-        BorderThickness = new Thickness(1);
-        CornerRadius = new CornerRadius(6);
-        Bind(BorderBrushProperty, viewer.GetObservable(MarkdownViewer.RuleBrushProperty));
 
         _title = new TextBlock { FontWeight = FontWeight.SemiBold, VerticalAlignment = VerticalAlignment.Center };
+        _pinIconPath = new Path { Data = s_pinIcon, Width = 14, Height = 14, Stretch = Stretch.Uniform };
         _pin = new ToggleButton
         {
-            Content = new Path { Data = PinIcon, Width = 14, Height = 14, Stretch = Stretch.Uniform },
+            Content = _pinIconPath,
             Padding = new Thickness(6),
             Background = Brushes.Transparent,
             BorderThickness = new Thickness(0),
             VerticalAlignment = VerticalAlignment.Center,
         };
-        ((Path)_pin.Content).Bind(Path.FillProperty, viewer.GetObservable(TextElement.ForegroundProperty));
-        _pin.Click += (_, _) => viewer.SetCurrentValue(MarkdownViewer.OutlinePinnedProperty, _pin.IsChecked == true);
+        _pin.Click += (_, _) => reader.SetCurrentValue(MarkdownReader.OutlinePinnedProperty, _pin.IsChecked == true);
 
-        var header = new DockPanel { Margin = new Thickness(8, 0, 0, 6) };
+        var header = new DockPanel { Margin = new Thickness(8, 4, 0, 8) };
         DockPanel.SetDock(_pin, Dock.Right);
         header.Children.Add(_pin);
         header.Children.Add(_title);
@@ -66,27 +64,18 @@ internal sealed class OutlinePanel : Border
         AutomationProperties.SetLandmarkType(this, AutomationLandmarkType.Navigation);
         AutomationProperties.SetControlTypeOverride(this, AutomationControlType.Group);
         AutomationProperties.SetIsControlElementOverride(this, true);
-        UpdateLabels();
-        UpdateBackground();
 
-        // NOTE: bringing an entry into view scrolls the list only. Left to bubble, the request would scroll the text
-        // around the viewer to wherever the panel was last placed.
+        // NOTE: bringing an entry into view scrolls the list only. Left to bubble, the request would scroll the text.
         AddHandler(RequestBringIntoViewEvent, (_, e) => e.Handled = true);
     }
 
-    /// <summary>Whether the panel is pinned beside the text, as opposed to floating over it.</summary>
-    public bool IsPinned
-    {
-        get => _pin.IsChecked == true;
-        set
-        {
-            _pin.IsChecked = value;
-            BoxShadow = value ? default : new BoxShadows(new BoxShadow { OffsetY = 4, Blur = 16, Color = Color.FromArgb(0x40, 0, 0, 0) });
-            UpdateLabels();
-        }
-    }
+    /// <summary>How wide the panel is.</summary>
+    public const double PanelWidth = 260;
 
     public IEnumerable<OutlineEntry> Entries => _entries.Children.OfType<OutlineEntry>();
+
+    /// <summary>The button that pins or unpins the panel, for tests.</summary>
+    internal ToggleButton PinButton => _pin;
 
     /// <summary>Occurs when a user picks a heading.</summary>
     public event EventHandler<MarkdownHeading>? HeadingPicked;
@@ -94,29 +83,35 @@ internal sealed class OutlinePanel : Border
     /// <summary>Occurs when a user presses Escape in the panel.</summary>
     public event EventHandler? Dismissed;
 
-    public void UpdateLabels()
+    /// <summary>
+    /// Shows the panel's state: pinned or floating, on which side, with which labels, in the viewer's brushes and an
+    /// opaque background for its theme.
+    /// </summary>
+    public void UpdateLook(bool pinned, OutlineSide side, MarkdownViewer? viewer, bool dark)
     {
-        _title.Text = _viewer.OutlineLabel;
-        AutomationProperties.SetName(this, _viewer.OutlineLabel);
-        var pin = IsPinned ? _viewer.UnpinOutlineLabel : _viewer.PinOutlineLabel;
+        _pin.IsChecked = pinned;
+        _title.Text = _reader.OutlineLabel;
+        AutomationProperties.SetName(this, _reader.OutlineLabel);
+        var pin = pinned ? _reader.UnpinOutlineLabel : _reader.PinOutlineLabel;
         AutomationProperties.SetName(_pin, pin);
         ToolTip.SetTip(_pin, pin);
+
+        Background = new SolidColorBrush(dark ? Color.FromRgb(0x1E, 0x1E, 0x1E) : Color.FromRgb(0xFD, 0xFD, 0xFD));
+        BorderBrush = viewer?.RuleBrush;
+        BorderThickness = side == OutlineSide.Left ? new Thickness(0, 0, 1, 0) : new Thickness(1, 0, 0, 0);
+        BoxShadow = pinned
+            ? default
+            : new BoxShadows(new BoxShadow { OffsetX = side == OutlineSide.Left ? 4 : -4, Blur = 16, Color = Color.FromArgb(0x30, 0, 0, 0) });
+        _pinIconPath.Fill = viewer?.GetValue(global::Avalonia.Controls.Documents.TextElement.ForegroundProperty) ?? Brushes.Gray;
     }
 
-    /// <summary>
-    /// Gives the panel an opaque background for the viewer's theme, so the text under a floating panel does not show
-    /// through.
-    /// </summary>
-    public void UpdateBackground() =>
-        Background = new SolidColorBrush(_viewer.IsDarkTheme ? Color.FromRgb(0x1E, 0x1E, 0x1E) : Colors.White);
-
-    /// <summary>Lists <paramref name="headings"/>, keeping the mark on the current one where it still is.</summary>
-    public void Update(IReadOnlyList<MarkdownHeading> headings, MarkdownHeading? current)
+    /// <summary>Lists <paramref name="headings"/>, marking <paramref name="current"/>.</summary>
+    public void Update(MarkdownViewer viewer, IReadOnlyList<MarkdownHeading> headings, MarkdownHeading? current)
     {
         _entries.Children.Clear();
         foreach (var heading in headings)
         {
-            var entry = new OutlineEntry(_viewer, heading) { IsCurrent = heading == current };
+            var entry = new OutlineEntry(viewer, heading) { IsCurrent = heading == current };
             entry.Click += (_, _) => HeadingPicked?.Invoke(this, heading);
             _entries.Children.Add(entry);
         }

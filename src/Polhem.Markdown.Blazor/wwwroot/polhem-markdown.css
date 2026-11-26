@@ -15,8 +15,8 @@
                      colors of the kinds of token in a highlighted code block, in the viewer and the editor
     --pmd-zoom-backdrop
                      behind an image opened at full size (MarkdownViewer.ZoomImages)
-    --pmd-outline-bg the background of the table of contents (MarkdownViewer.ShowOutline), which must hide the text
-                     under it when it floats
+    --pmd-outline-bg the background of a MarkdownReader's table of contents, which must hide the text under it when it
+                     slides out
 
   The editor also uses --pmd-code-font for its text, --pmd-link for the text of links, and:
 
@@ -631,44 +631,137 @@
   stroke-linecap: round;
 }
 
-/* The table of contents (MarkdownViewer.ShowOutline): beside the viewer's root element, it stays in view as the page or
-   the element around the viewer scrolls. Unpinned, it is a button that opens the list floating over the text; pinned,
-   the list is a column. */
-.pmd-outlined {
+/* MarkdownReader: a reading area that scrolls a viewer in a centred column, with a rail along its edge and a table of
+   contents that slides out over the text or, pinned, stands beside it. It fills the height its host gives it. */
+.pmd-reader {
+  position: relative;
   display: flex;
-  align-items: flex-start;
-  gap: 8px;
+  height: 100%;
+  min-height: 0;
+  overflow: clip;
 }
 
-.pmd-outlined.pmd-outline-right {
+.pmd-reader-right,
+.pmd-reader-right .pmd-reader-outline {
   flex-direction: row-reverse;
 }
 
-.pmd-outlined.pmd-outline-pinned {
-  gap: 16px;
-}
-
-.pmd-outlined > .pmd {
+.pmd-reader-scroll {
   flex: 1 1 auto;
   min-width: 0;
+  overflow: auto;
 }
 
-.pmd-outline {
-  position: sticky;
-  top: 0;
+.pmd-reader-text {
+  box-sizing: border-box;
+  max-width: var(--pmd-reader-text-width, none);
+  margin: 0 auto;
+  padding: 8px 16px 24px;
+}
+
+.pmd-reader-outline {
+  position: relative;
   z-index: 2;
+  display: flex;
   flex: none;
-  width: 32px;
 }
 
-.pmd-outline-pinned > .pmd-outline {
-  width: 220px;
+/* The rail: a short line for each heading, shorter and indented for a deeper level, the section being read in the link
+   color, as the Avalonia reader's OutlineRail draws it. */
+.pmd-reader-rail {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  box-sizing: border-box;
+  width: 40px;
+  height: 100%;
+  margin: 0;
+  padding: 19px 0 0;
+  overflow: hidden;
+  border: 0;
+  background: none;
+  cursor: pointer;
 }
 
-.pmd-outline button {
+.pmd-reader-rail:focus-visible {
+  outline: 2px solid var(--pmd-link, #3b82f6);
+  outline-offset: -4px;
+}
+
+.pmd-reader-mark {
+  flex: none;
+  height: 2px;
+  margin-left: 15px;
+  width: 10px;
+  border-radius: 1px;
+  background: var(--pmd-rule, rgba(128, 128, 128, 0.35));
+}
+
+.pmd-reader-mark-1 { margin-left: 11px; width: 18px; }
+.pmd-reader-mark-2 { margin-left: 13px; width: 14px; }
+
+.pmd-reader-mark.pmd-reader-current {
+  background: var(--pmd-link, #3b82f6);
+}
+
+/* The list: flush with the rail and as tall as the reader, with a line on the side of the text. It shows while the
+   pointer is on the rail or the list, while the list has the focus, when a click opened it, or pinned. */
+.pmd-reader-panel {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 40px;
+  box-sizing: border-box;
+  width: 260px;
+  padding: 8px;
+  overflow: auto;
+  border-right: 1px solid var(--pmd-rule, rgba(128, 128, 128, 0.35));
+  background: var(--pmd-outline-bg, Canvas);
+  box-shadow: 4px 0 16px rgba(0, 0, 0, 0.19);
+  visibility: hidden;
+  opacity: 0;
+  transition: opacity 0.2s, visibility 0.2s;
+}
+
+.pmd-reader-right .pmd-reader-panel {
+  left: auto;
+  right: 40px;
+  border-right: 0;
+  border-left: 1px solid var(--pmd-rule, rgba(128, 128, 128, 0.35));
+  box-shadow: -4px 0 16px rgba(0, 0, 0, 0.19);
+}
+
+.pmd-reader-outline:hover .pmd-reader-panel,
+.pmd-reader-panel:focus-within,
+.pmd-reader-open .pmd-reader-panel,
+.pmd-reader-pinned .pmd-reader-panel {
+  visibility: visible;
+  opacity: 1;
+}
+
+.pmd-reader-pinned .pmd-reader-panel {
+  position: static;
+  height: 100%;
+  box-shadow: none;
+  transition: none;
+}
+
+.pmd-reader-backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+
+.pmd-reader-header {
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: space-between;
+  margin: 4px 0 8px 8px;
+  font-weight: 600;
+}
+
+.pmd-reader-pin {
+  display: flex;
   padding: 6px;
   border: 0;
   border-radius: 4px;
@@ -677,68 +770,24 @@
   cursor: pointer;
 }
 
-.pmd-outline button:hover {
+.pmd-reader-pin:hover,
+.pmd-reader-pin[aria-pressed="true"] {
   background: var(--pmd-code-bg, rgba(128, 128, 128, 0.12));
 }
 
-.pmd-outline .pmd-outline-toggle {
-  width: 32px;
-  height: 32px;
-}
-
-.pmd-outline svg {
-  width: 16px;
-  height: 16px;
+.pmd-reader-pin svg {
+  width: 14px;
+  height: 14px;
   fill: currentColor;
 }
 
-.pmd-outline-backdrop {
-  position: fixed;
-  inset: 0;
-}
-
-.pmd-outline-panel {
-  position: relative;
-  box-sizing: border-box;
-  max-height: 100vh;
-  overflow: auto;
-  padding: 8px;
-  border: 1px solid var(--pmd-rule, rgba(128, 128, 128, 0.35));
-  border-radius: 6px;
-  background: var(--pmd-outline-bg, Canvas);
-}
-
-.pmd-outlined:not(.pmd-outline-pinned) .pmd-outline-panel {
-  position: absolute;
-  top: 36px;
-  width: 260px;
-  max-height: calc(100vh - 48px);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
-}
-
-.pmd-outline-left:not(.pmd-outline-pinned) .pmd-outline-panel {
-  left: 0;
-}
-
-.pmd-outline-right:not(.pmd-outline-pinned) .pmd-outline-panel {
-  right: 0;
-}
-
-.pmd-outline-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin: 0 0 6px 8px;
-  font-weight: 600;
-}
-
-.pmd-outline ul {
+.pmd-reader-panel ul {
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
-.pmd-outline-entry {
+.pmd-reader-entry {
   display: block;
   margin-top: 1px;
   padding: 4px 8px;
@@ -747,17 +796,17 @@
   text-decoration: none;
 }
 
-.pmd-outline-entry:hover,
-.pmd-outline-entry.pmd-outline-current {
+.pmd-reader-entry:hover,
+.pmd-reader-entry.pmd-reader-current {
   background: var(--pmd-code-bg, rgba(128, 128, 128, 0.12));
 }
 
-.pmd-outline-entry.pmd-outline-current {
+.pmd-reader-entry.pmd-reader-current {
   font-weight: 600;
 }
 
-.pmd-outline-level-2 { padding-left: 20px; }
-.pmd-outline-level-3 { padding-left: 32px; }
-.pmd-outline-level-4 { padding-left: 44px; }
-.pmd-outline-level-5 { padding-left: 56px; }
-.pmd-outline-level-6 { padding-left: 68px; }
+.pmd-reader-level-2 { padding-left: 20px; }
+.pmd-reader-level-3 { padding-left: 32px; }
+.pmd-reader-level-4 { padding-left: 44px; }
+.pmd-reader-level-5 { padding-left: 56px; }
+.pmd-reader-level-6 { padding-left: 68px; }

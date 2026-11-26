@@ -1,6 +1,7 @@
 # Polhem.Markdown.Avalonia
 
-A Markdown viewer control and a Markdown source editor control for Avalonia. The viewer renders the same model as
+A Markdown viewer control, a reader control that adds a table of contents around it, and a Markdown source editor
+control for Avalonia. The viewer renders the same model as
 `Polhem.Markdown.Blazor`, so an Avalonia and a Blazor front end show the same text the same way.
 
 ![The same reply in the Blazor viewer and the Avalonia viewer](https://raw.githubusercontent.com/polhem-dev/polhem-markdown/main/docs/images/viewer-hero.png)
@@ -63,17 +64,7 @@ outline.SelectionChanged += (_, _) =>
 To mark the section being read, take the last heading whose `SourceOffset` is at or before `GetSourceOffset` at the
 top of the view.
 
-Or let the viewer show the table of contents itself. `ShowOutline` puts a button in its top corner that opens the
-headings floating over the text, and the pin in the list docks it as a column beside the text. `OutlinePinned` binds
-both ways, so a host can remember it, and `OutlineSide` moves it to the right. The button and the list stay in view as
-the nearest `ScrollViewer` scrolls, and the section being read is marked. `OutlineLabel`, `PinOutlineLabel` and
-`UnpinOutlineLabel` translate the labels.
-
-```xml
-<ScrollViewer>
-  <md:MarkdownViewer Markdown="{Binding Reply}" ShowOutline="True" OutlinePinned="{Binding OutlinePinned}" />
-</ScrollViewer>
-```
+Or put the viewer in a `MarkdownReader`, below, which shows the table of contents itself.
 
 Set `ZoomImages` to open an image at full size over the window with a click or Enter, where the wheel, a pinch or
 + and - zoom it, a drag pans it, a double click switches between fitting the window and the image's own size, and
@@ -93,6 +84,27 @@ Screen readers hear what the Blazor viewer's HTML tells them: headings with thei
 with the task state, tables, images by their alternative text, and alerts and quotes as groups. Tab moves through the
 links and buttons in the order of the text, passing over text without links, and Enter follows a link; following a
 link to a footnote or a heading moves the focus there.
+
+## MarkdownReader
+
+A reading area for a viewer: it scrolls the viewer, keeps the text in a centred column (`TextMaxWidth`, 800 by
+default), and offers a table of contents. A narrow rail along its edge draws a short line for each heading and marks
+the section being read. Pointing at the rail, or clicking it, slides the list of headings out over the text; the pin in
+the list keeps it beside the text as a column, the text centring in the room that is left. Picking a heading scrolls
+to it.
+
+The viewer is the reader's content and keeps its own properties; the reader scrolls it, so it needs no `ScrollViewer`
+around it.
+
+```xml
+<md:MarkdownReader OutlinePinned="{Binding OutlinePinned}">
+  <md:MarkdownViewer Markdown="{Binding Reply}" ZoomImages="True" />
+</md:MarkdownReader>
+```
+
+`OutlinePinned` binds both ways, so a host can remember it, and `OutlineSide` moves the rail and the list to the right.
+`OutlineLabel`, `PinOutlineLabel` and `UnpinOutlineLabel` translate the labels. `ScrollViewer` is the scroll viewer the
+text scrolls in, for a host that keeps an editor in step with it.
 
 ## MarkdownEditor
 

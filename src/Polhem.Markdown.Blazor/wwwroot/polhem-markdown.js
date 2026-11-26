@@ -98,8 +98,8 @@ function schedule(viewer) {
     if (viewer.reportReading) {
       // At the end of the text the last headings cannot reach the top of the view, so there the bottom decides which
       // section is being read, as in the Avalonia viewer.
-      // A heading just below the top counts as read, as the text moves a little when it reflows; the Avalonia viewer
-      // uses the same distance (MarkdownViewer.ReadingMargin).
+      // A heading just below the top counts as read, as the text moves a little when it reflows; the Avalonia
+      // reader uses the same distance (MarkdownReader.ReadingMargin).
       const reading = offsetAt(blocks, atEnd(viewer.scroller) ? viewBottom(viewer.scroller) : viewTop(viewer.scroller) + ReadingMargin);
       if (reading !== viewer.lastReading) {
         viewer.lastReading = reading;

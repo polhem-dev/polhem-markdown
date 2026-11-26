@@ -93,7 +93,7 @@ public partial class MarkdownViewer
     /// <inheritdoc/>
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if ((OnSourceRequested.HasDelegate || FirstVisibleSourceOffsetChanged.HasDelegate || OutlineShown) && RendererInfo.IsInteractive)
+        if ((OnSourceRequested.HasDelegate || FirstVisibleSourceOffsetChanged.HasDelegate || Reader is not null) && RendererInfo.IsInteractive)
         {
             await WatchSourceAsync(force: false);
         }
@@ -105,7 +105,6 @@ public partial class MarkdownViewer
         {
             await OpenZoomAsync();
         }
-        await FocusOutlineAsync();
     }
 
     /// <summary>
@@ -116,7 +115,7 @@ public partial class MarkdownViewer
     {
         var scroll = FirstVisibleSourceOffsetChanged.HasDelegate;
         var clicks = OnSourceRequested.HasDelegate;
-        var reading = OutlineShown;
+        var reading = Reader is not null;
         if (!force && ReferenceEquals(_watchedRanges, _sourceRanges) && _watchedScroll == scroll && _watchedClicks == clicks
             && _watchedReading == reading)
         {

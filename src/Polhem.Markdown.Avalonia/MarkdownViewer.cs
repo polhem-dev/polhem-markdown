@@ -346,7 +346,6 @@ public partial class MarkdownViewer : Control
     protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
     {
         base.OnPropertyChanged(change);
-        OnOutlinePropertyChanged(change);
 
         // NOTE: a change of theme rebuilds only the blocks with a picture whose source depends on it, since the block key
         // holds the source shown.
@@ -366,18 +365,14 @@ public partial class MarkdownViewer : Control
     /// <inheritdoc/>
     protected override Size MeasureOverride(Size availableSize)
     {
-        var inset = OutlineInset;
-        _panel.Measure(availableSize.WithWidth(Math.Max(0, availableSize.Width - inset)));
-        MeasureOutline(availableSize);
-        return _panel.DesiredSize.WithWidth(_panel.DesiredSize.Width + inset);
+        _panel.Measure(availableSize);
+        return _panel.DesiredSize;
     }
 
     /// <inheritdoc/>
     protected override Size ArrangeOverride(Size finalSize)
     {
-        var inset = OutlineInset;
-        _panel.Arrange(new Rect(OutlineSide == OutlineSide.Left ? inset : 0, 0, Math.Max(0, finalSize.Width - inset), finalSize.Height));
-        ArrangeOutline(finalSize);
+        _panel.Arrange(new Rect(finalSize));
         return finalSize;
     }
 
@@ -507,7 +502,6 @@ public partial class MarkdownViewer : Control
             return;
         }
         Headings = document.Headings;
-        UpdateOutlineHeadings();
         HeadingsChanged?.Invoke(this, EventArgs.Empty);
     }
 

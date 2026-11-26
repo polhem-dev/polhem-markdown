@@ -55,7 +55,7 @@ shows the start of the sample text in each.
 | Light and dark themes | | Brushes | CSS variables |
 | Source positions | For keeping an editor in step | ✓ | ✓ |
 | Headings | Listed for a table of contents, and scrolled to by id | ✓ | ✓ |
-| Table of contents | `ShowOutline` adds a button that opens the headings floating over the text, or pinned beside it, marking the section being read | ✓ | ✓ |
+| Table of contents | `MarkdownReader` scrolls a viewer with a rail of its headings along the edge; the list slides out over the text or is pinned beside it, marking the section being read | ✓ | ✓ |
 | Opening an image | `ZoomImages` opens an image at full size over the window, to zoom and pan; a handler can show it instead | ✓ | ✓ |
 | Screen readers and keyboard | Headings with their level, links, lists, tables and alerts are announced; Tab moves through links and buttons, Enter follows a link | ✓ | ✓ |
 

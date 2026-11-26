@@ -1,7 +1,7 @@
 # Polhem.Markdown.Blazor
 
-A Markdown viewer component that renders semantic HTML styled with CSS variables, and a Markdown source editor
-component, for Blazor. The viewer renders the same model as `Polhem.Markdown.Avalonia`, so a Blazor and an Avalonia
+A Markdown viewer component that renders semantic HTML styled with CSS variables, a reader component that adds a
+table of contents around it, and a Markdown source editor component, for Blazor. The viewer renders the same model as `Polhem.Markdown.Avalonia`, so a Blazor and an Avalonia
 front end show the same text the same way.
 
 ![The same reply in the Blazor viewer and the Avalonia viewer](https://raw.githubusercontent.com/polhem-dev/polhem-markdown/main/docs/images/viewer-hero.png)
@@ -46,16 +46,7 @@ and defaults are at the top of `polhem-markdown.css`:
 }
 ```
 
-Or let the viewer show the table of contents itself. `ShowOutline` puts a button in its top corner that opens the
-headings floating over the text, and the pin in the list docks it as a column beside the text. Bind `OutlinePinned` to
-keep it pinned when the page renders again, and set `OutlineSide` to move it to the right. The list stays in view with
-`position: sticky`, so no element between it and the one that scrolls may clip with `overflow: hidden` (use
-`overflow: clip`). The section being read is marked. `OutlineLabel`, `PinOutlineLabel` and `UnpinOutlineLabel`
-translate the labels, and `--pmd-outline-bg` is the list's background.
-
-```razor
-<MarkdownViewer Markdown="@reply" ShowOutline="true" @bind-OutlinePinned="pinned" />
-```
+Or put the viewer in a `MarkdownReader`, below, which shows the table of contents itself.
 
 Set `ZoomImages` to open an image at full size over the page with a click or Enter, in a dialog where the wheel, a
 pinch or + and - zoom it, a drag pans it, a double click switches between fitting the window and the image's own
@@ -91,6 +82,29 @@ size, and Escape or a click beside it closes it. An image inside a link opens th
     private void Follow(int offset) => current = headings.LastOrDefault(heading => heading.SourceOffset <= offset);
 }
 ```
+
+## MarkdownReader
+
+A reading area for a viewer: it scrolls the viewer, keeps the text in a centred column (`TextMaxWidth`, 800 pixels by
+default), and offers a table of contents. A narrow rail along its edge draws a short line for each heading and marks
+the section being read. Pointing at the rail, or clicking it, slides the list of headings out over the text; the pin in
+the list keeps it beside the text as a column, the text centring in the room that is left. Picking a heading scrolls
+to it.
+
+The viewer is the reader's child content and keeps its own parameters. The reader scrolls it and fills the height its
+host gives it, so give it one, as with `height: 100%` in a box of a set height.
+
+```razor
+<div style="height: 80vh">
+    <MarkdownReader @bind-OutlinePinned="pinned">
+        <MarkdownViewer Markdown="@reply" ZoomImages="true" />
+    </MarkdownReader>
+</div>
+```
+
+Bind `OutlinePinned` to keep it pinned when the page renders again, and set `OutlineSide` to move the rail and the list
+to the right. `OutlineLabel`, `PinOutlineLabel` and `UnpinOutlineLabel` translate the labels, and `--pmd-outline-bg` is
+the list's background.
 
 ## MarkdownEditor
 
