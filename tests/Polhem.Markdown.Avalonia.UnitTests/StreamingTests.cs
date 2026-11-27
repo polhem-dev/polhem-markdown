@@ -70,4 +70,48 @@ public class StreamingTests(HeadlessSession session)
         Assert.Equal(1, viewer.LastBuiltBlockCount);
         Assert.Equal("A second one that grows", LastText(viewer));
     });
+
+    [Theory(DisplayName = "While streaming, the last block after display math is completed; once complete, the text shows as written")]
+    [InlineData("Read [site](ht", "Read site", "Read [site](ht")]
+    [InlineData("Some **bold", "Some bold", "Some **bold")]
+    public Task Streaming_CompletesAfterDisplayMath(string last, string streamed, string written) => session.RunAsync(() =>
+    {
+        var (_, viewer) = Show("");
+        viewer.IsStreaming = true;
+        viewer.Markdown = "A\n\n$$x = 1$$\n\n" + last;
+        Dispatcher.UIThread.RunJobs();
+
+        Assert.Equal(streamed, LastText(viewer));
+        Assert.Empty(Descendants<MarkdownTextBlock>(viewer).Last().Links);
+
+        viewer.IsStreaming = false;
+        Dispatcher.UIThread.RunJobs();
+        Assert.Equal(written, LastText(viewer));
+    });
+
+    [Fact(DisplayName = "While streaming, an unfinished image after display math waits")]
+    public Task Streaming_ImageAfterDisplayMathWaits() => session.RunAsync(() =>
+    {
+        var (_, viewer) = Show("");
+        viewer.IsStreaming = true;
+        viewer.Markdown = "A\n\n$$x = 1$$\n\n![Map](https://ex";
+        Dispatcher.UIThread.RunJobs();
+
+        Assert.DoesNotContain(Descendants<MarkdownTextBlock>(viewer), text => text.AccessibleText.Contains("![Map]", StringComparison.Ordinal));
+
+        viewer.IsStreaming = false;
+        Dispatcher.UIThread.RunJobs();
+        Assert.Contains(Descendants<MarkdownTextBlock>(viewer), text => text.AccessibleText.Contains("![Map](https://ex", StringComparison.Ordinal));
+    });
+
+    [Fact(DisplayName = "While streaming, a table's header row after display math shows as a table")]
+    public Task Streaming_HeaderRowAfterDisplayMathIsTable() => session.RunAsync(() =>
+    {
+        var (_, viewer) = Show("");
+        viewer.IsStreaming = true;
+        viewer.Markdown = "A\n\n$$x = 1$$\n\n| Name | Size";
+        Dispatcher.UIThread.RunJobs();
+
+        Assert.Contains(Descendants<Grid>(viewer), grid => grid.GetValue(MarkdownViewer.TextGroupProperty) == MarkdownViewer.TextGroup.Table);
+    });
 }

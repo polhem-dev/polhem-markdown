@@ -73,6 +73,27 @@ public class UnfinishedMarkdownTests
         Assert.Equal(unfinished, UnfinishedMarkdown.Complete(unfinished));
     }
 
+    [Theory(DisplayName = "Display math on one line opens no math block, so the blocks after it are completed")]
+    [InlineData("A\n\n$$x = 1$$\n\nRead [site](ht", "A\n\n$$x = 1$$\n\nRead site")]
+    [InlineData("A\n\n$$x = 1$$\n\n![Map](https://ex", "A\n\n$$x = 1$$\n\n")]
+    [InlineData("A\n\n$$x = 1$$\n\nSome **bold", "A\n\n$$x = 1$$\n\nSome **bold**")]
+    [InlineData("A\n\n$$x = 1$$\n\n| Name | Size", "A\n\n$$x = 1$$\n\n| Name | Size\n| --- | --- |")]
+    [InlineData("A\n\n  $$ \\frac{36{,}000}{3} = 12{,}000 $$\n\nSee [the city's site](https://kyoto", "A\n\n  $$ \\frac{36{,}000}{3} = 12{,}000 $$\n\nSee the city's site")]
+    [InlineData("A\n\n```x``` is code\n\nRead [site](ht", "A\n\n```x``` is code\n\nRead site")]
+    public void Complete_CompletesAfterOneLineMath(string unfinished, string expected)
+    {
+        Assert.Equal(expected, UnfinishedMarkdown.Complete(unfinished));
+    }
+
+    [Theory(DisplayName = "After a closed math block or code fence, the blocks after it are completed")]
+    [InlineData("A\n\n$$\nx = 1\n$$\n\nRead [site](ht", "A\n\n$$\nx = 1\n$$\n\nRead site")]
+    [InlineData("A\n\n$$\nx = 1\n$$\nRead [site](ht", "A\n\n$$\nx = 1\n$$\nRead site")]
+    [InlineData("A\n\n```\ncode\n```\n\nRead [site](ht", "A\n\n```\ncode\n```\n\nRead site")]
+    public void Complete_CompletesAfterClosedFence(string unfinished, string expected)
+    {
+        Assert.Equal(expected, UnfinishedMarkdown.Complete(unfinished));
+    }
+
     [Fact(DisplayName = "Only the last block changes, so the blocks before it keep their text and source offsets")]
     public void Complete_ChangesOnlyLastBlock()
     {

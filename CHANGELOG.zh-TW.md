@@ -9,6 +9,9 @@ Polhem.Markdown 各套件值得注意的變更，每個版本只列幾項重點�
 
 ## [Unreleased]
 
+- `IsStreaming` 遇到寫在同一行的顯示數學（`$$x = 1$$`）後，會繼續補完後面的文字。先前它把這一行當成一個沒有結束的數學區塊
+  開頭，使得之後的連結、圖片、強調與表格標題列在回覆送達時露出原始 Markdown。
+
 ## [0.4.0] - 2026-11-26
 
 詳細內容：[docs/zh-TW/changelogs/0.4.0.md](docs/zh-TW/changelogs/0.4.0.md)

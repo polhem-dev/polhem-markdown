@@ -9,6 +9,10 @@ and versions follow [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+- `IsStreaming` again completes the text after display math written on one line (`$$x = 1$$`). It took the line for
+  the start of a math block that never closed, so a link, image, emphasis or table header row after it showed its
+  Markdown while the reply arrived.
+
 ## [0.4.0] - 2026-11-26
 
 Details: [docs/en/changelogs/0.4.0.md](docs/en/changelogs/0.4.0.md)

@@ -74,14 +74,18 @@ internal static class UnfinishedMarkdown
         return fence is null ? Math.Min(start, markdown.Length) : null;
     }
 
-    /// <summary>The fence a line opens: a run of three or more backticks or tildes, or <c>$$</c>.</summary>
+    /// <summary>
+    /// The fence a line opens: a run of three or more backticks or tildes, or of two or more dollar signs with nothing
+    /// after it.
+    /// </summary>
+    /// <remarks>
+    /// NOTE: this follows Markdig. <c>$$x = 1$$</c> on one line is display math inside a paragraph, not a math block,
+    /// and a backtick run with a backtick after it on the same line is a code span, not a fence. Taking either for a
+    /// fence would leave it open to the end of the text, and nothing after it would be completed.
+    /// </remarks>
     private static string? FenceOf(ReadOnlySpan<char> line)
     {
-        if (line.StartsWith("$$", StringComparison.Ordinal))
-        {
-            return "$$";
-        }
-        if (line.Length < 3 || (line[0] != '`' && line[0] != '~'))
+        if (line.Length < 2 || line[0] is not ('`' or '~' or '$'))
         {
             return null;
         }
@@ -90,7 +94,14 @@ internal static class UnfinishedMarkdown
         {
             length++;
         }
-        return length >= 3 ? new string(line[0], length) : null;
+        var rest = line[length..];
+        var opens = line[0] switch
+        {
+            '$' => length >= 2 && rest.IsWhiteSpace(),
+            '`' => length >= 3 && !rest.Contains('`'),
+            _ => length >= 3,
+        };
+        return opens ? new string(line[0], length) : null;
     }
 
     private static string CompleteBlock(string block)
