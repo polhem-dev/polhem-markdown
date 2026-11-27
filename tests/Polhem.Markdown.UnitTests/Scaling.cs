@@ -13,7 +13,11 @@ namespace Polhem.Markdown.UnitTests;
 /// is linear and about sixteen times when it is quadratic, wherever it runs. To keep noise out of that ratio:
 /// <list type="bullet">
 /// <item>the smaller input is doubled until the fastest of a few runs of it takes a few milliseconds, so no run is too
-/// short to time, or until the larger input would allocate more than the runtime can reserve (see the next item);</item>
+/// short to time. When the size reaches its largest and a run is still that short, as when the work is one vectorized
+/// search through the text, each timed run calls the code several times in a row instead: a run of a few hundredths of
+/// a millisecond changes many times over with a cache miss or a context switch, and one such run made a linear case
+/// look twelve times slower at four times the input. Both stop growing when the larger input would allocate more than
+/// the runtime can reserve (see the next item);</item>
 /// <item>both inputs run several times before any is timed, so the code being timed has been compiled to its final
 /// tier rather than measured partly before and partly after the JIT recompiles it;</item>
 /// <item>no garbage collection happens during a timed run, when the runtime can reserve the memory the run allocates.
@@ -45,40 +49,54 @@ internal static class Scaling
     /// Asserts that the fastest run of <paramref name="run"/> on <c>input(size * 4)</c> takes less than ten times as long
     /// as the fastest on <c>input(size)</c>, where <c>size</c> starts at <paramref name="start"/> and doubles, up to
     /// <paramref name="largest"/>, until its fastest run takes a few milliseconds or the larger input would allocate too much
-    /// to time without collections.
+    /// to time without collections. When <paramref name="largest"/> is reached first, each run repeats the work on the same
+    /// input until it takes a few milliseconds, within the same allocation bound.
     /// </summary>
     public static void AssertLinear(Func<int, string> input, Action<string> run, int start, int largest, string what)
     {
         var size = start;
         var small = input(size);
+        var repeats = 1;
         run(small);
-        while (size * 2 <= largest && Fastest(run, small) < s_shortest && Allocated(run, small) * 2 * Factor <= MaxReserved)
+        while (Fastest(run, small, repeats) < s_shortest)
         {
-            size *= 2;
-            small = input(size);
+            var memory = Allocated(run, small, repeats) * 2 * Factor;
+            if (memory > MaxReserved)
+            {
+                break;
+            }
+            if (size * 2 <= largest)
+            {
+                size *= 2;
+                small = input(size);
+            }
+            else
+            {
+                repeats *= 2;
+            }
         }
         var large = input(size * Factor);
         for (var warmUp = 0; warmUp < WarmUps; warmUp++)
         {
-            run(small);
-            run(large);
+            Repeat(run, small, repeats);
+            Repeat(run, large, repeats);
         }
-        var smallMemory = Allocated(run, small);
-        var largeMemory = Allocated(run, large);
+        var smallMemory = Allocated(run, small, repeats);
+        var largeMemory = Allocated(run, large, repeats);
 
         var smallFastest = TimeSpan.MaxValue;
         var largeFastest = TimeSpan.MaxValue;
         var ratios = new double[Rounds];
         for (var round = 0; round < Rounds; round++)
         {
-            var smallTime = TimeWithoutCollection(run, small, smallMemory);
-            var largeTime = TimeWithoutCollection(run, large, largeMemory);
+            var smallTime = TimeWithoutCollection(run, small, repeats, smallMemory);
+            var largeTime = TimeWithoutCollection(run, large, repeats, largeMemory);
             smallFastest = smallTime < smallFastest ? smallTime : smallFastest;
             largeFastest = largeTime < largeFastest ? largeTime : largeFastest;
             ratios[round] = largeTime.TotalMilliseconds / Math.Max(smallTime.TotalMilliseconds, 0.001);
         }
         var ratio = largeFastest.TotalMilliseconds / Math.Max(smallFastest.TotalMilliseconds, 0.001);
-        Assert.True(ratio < Limit, $"{what}: {Factor} times the input (size {size}) took {Format(ratio)} times as long, at best {Milliseconds(smallFastest)} ms against {Milliseconds(largeFastest)} ms (ratios of each round: {string.Join(", ", ratios.Select(Format))}).");
+        Assert.True(ratio < Limit, $"{what}: {Factor} times the input (size {size}) took {Format(ratio)} times as long, {repeats} calls per run, at best {Milliseconds(smallFastest)} ms against {Milliseconds(largeFastest)} ms (ratios of each round: {string.Join(", ", ratios.Select(Format))}).");
     }
 
     private static string Milliseconds(TimeSpan time) => Format(time.TotalMilliseconds);
@@ -86,21 +104,21 @@ internal static class Scaling
     private static string Format(double value) => value.ToString("0.0", System.Globalization.CultureInfo.InvariantCulture);
 
     /// <summary>The fastest of a few runs, so that one slow run, compiling or interrupted, does not stop the doubling early.</summary>
-    private static TimeSpan Fastest(Action<string> run, string input)
+    private static TimeSpan Fastest(Action<string> run, string input, int repeats)
     {
         var fastest = TimeSpan.MaxValue;
         for (var attempt = 0; attempt < 3; attempt++)
         {
-            var time = Time(run, input);
+            var time = Time(run, input, repeats);
             fastest = time < fastest ? time : fastest;
         }
         return fastest;
     }
 
-    private static long Allocated(Action<string> run, string input)
+    private static long Allocated(Action<string> run, string input, int repeats)
     {
         var before = GC.GetAllocatedBytesForCurrentThread();
-        run(input);
+        Repeat(run, input, repeats);
         return GC.GetAllocatedBytesForCurrentThread() - before;
     }
 
@@ -108,17 +126,17 @@ internal static class Scaling
     /// Times one run, keeping the garbage collector out of it when <paramref name="memory"/>, what the run allocates, can
     /// be reserved beforehand; otherwise the run starts on a collected heap.
     /// </summary>
-    private static TimeSpan TimeWithoutCollection(Action<string> run, string input, long memory)
+    private static TimeSpan TimeWithoutCollection(Action<string> run, string input, int repeats, long memory)
     {
         // NOTE: starting the region collects the whole heap first, so either way the run starts on a collected heap.
         if (!TryStartNoCollection(memory + memory / 2 + (1 << 20)))
         {
             GC.Collect();
-            return Time(run, input);
+            return Time(run, input, repeats);
         }
         try
         {
-            return Time(run, input);
+            return Time(run, input, repeats);
         }
         finally
         {
@@ -130,12 +148,20 @@ internal static class Scaling
         }
     }
 
-    private static TimeSpan Time(Action<string> run, string input)
+    private static TimeSpan Time(Action<string> run, string input, int repeats)
     {
         var watch = Stopwatch.StartNew();
-        run(input);
+        Repeat(run, input, repeats);
         watch.Stop();
         return watch.Elapsed;
+    }
+
+    private static void Repeat(Action<string> run, string input, int repeats)
+    {
+        for (var call = 0; call < repeats; call++)
+        {
+            run(input);
+        }
     }
 
     private static bool TryStartNoCollection(long memory)
