@@ -9,8 +9,12 @@ Polhem.Markdown 各套件值得注意的變更，每個版本只列幾項重點�
 
 ## [Unreleased]
 
-- `IsStreaming` 遇到寫在同一行的顯示數學（`$$x = 1$$`）後，會繼續補完後面的文字。先前它把這一行當成一個沒有結束的數學區塊
-  開頭，使得之後的連結、圖片、強調與表格標題列在回覆送達時露出原始 Markdown。
+## [0.4.1] - 2026-11-27
+
+詳細內容：[docs/zh-TW/changelogs/0.4.1.md](docs/zh-TW/changelogs/0.4.1.md)
+
+- `IsStreaming` 會補完寫在同一行的顯示數學（`$$x = 1$$`）之後的文字。0.4.0 把這一行當成一個沒有結束的數學區塊開頭，使得之後的
+  連結、圖片、強調與表格標題列在回覆送達時露出原始 Markdown。
 
 ## [0.4.0] - 2026-11-26
 
@@ -75,7 +79,8 @@ Polhem.Markdown 各套件值得注意的變更，每個版本只列幾項重點�
 - `Polhem.Markdown.Blazor` 新增 `MarkdownViewer` 元件，把 Markdown 文字呈現為語意化 HTML：連結以 `OnLinkActivated`
   交給宿主、程式碼區塊附複製鈕，樣式以 `--pmd-*` CSS 變數設定。
 
-[Unreleased]: https://github.com/polhem-dev/polhem-markdown/compare/v0.4.0...HEAD
+[Unreleased]: https://github.com/polhem-dev/polhem-markdown/compare/v0.4.1...HEAD
+[0.4.1]: https://github.com/polhem-dev/polhem-markdown/compare/v0.4.0...v0.4.1
 [0.4.0]: https://github.com/polhem-dev/polhem-markdown/compare/v0.3.1...v0.4.0
 [0.3.1]: https://github.com/polhem-dev/polhem-markdown/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/polhem-dev/polhem-markdown/compare/v0.2.1...v0.3.0
