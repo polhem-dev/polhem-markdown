@@ -17,6 +17,10 @@ Polhem.Markdown 各套件值得注意的變更，每個版本只列幾項重點�
   `Background`、`Underline` 或 `Strikethrough` 加上筆刷），畫在選取範圍底下，與語法顏色互不影響。標示跟著編輯移動、
   文字刪除時一起消失，並可依 owner key 一起清除（`ClearMarks`）。`GetTextBounds` 取得某個 offset 或範圍在編輯器中的位置，
   `ViewChanged` 在位置可能改變時通知，方便在文字旁放彈出視窗。範例程式以 diff 預覽一項修改。Blazor 編輯器尚未提供這些成員。
+- Avalonia 的 `MarkdownEditor` 以檢視器的搜尋列在原文中搜尋與取代：Ctrl+F（⌘F）搜尋，Ctrl+H（⌥⌘F）取代目前這一處，
+  或全部取代並只算一個復原步驟，可選擇大小寫相符、全字相符與正規表示式（`MarkdownFindOptions`）。宿主可以從自己的選單
+  打開（`OpenFind`、`OpenReplace`）、用程式碼搜尋與取代（`Find`、`ReplaceCurrentMatch`、`ReplaceAllMatches`），或把
+  快捷鍵留給自己（`HandleFindShortcuts`）。AvaloniaEdit 原本的搜尋面板不再出現。Blazor 編輯器尚未提供這項功能。
 
 ## [0.4.1] - 2026-11-27
 

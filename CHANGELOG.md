@@ -19,6 +19,11 @@ and versions follow [Semantic Versioning](https://semver.org/).
   (`ClearMarks`). `GetTextBounds` tells where an offset or a range is in the editor, and `ViewChanged` when that may
   have moved, for a popup placed next to the text. The gallery previews a change as a diff. The Blazor editor does not
   have these yet.
+- The Avalonia `MarkdownEditor` finds and replaces in the source with the viewer's find bar: Ctrl+F (⌘F) to find,
+  Ctrl+H (⌥⌘F) to replace the current match or every match as one step to undo, with options for case, whole words and
+  regular expressions (`MarkdownFindOptions`). A host opens it from its own menu (`OpenFind`, `OpenReplace`), finds and
+  replaces from code (`Find`, `ReplaceCurrentMatch`, `ReplaceAllMatches`), or leaves the keys to itself
+  (`HandleFindShortcuts`). AvaloniaEdit's own search panel no longer opens. The Blazor editor does not have this yet.
 
 ## [0.4.1] - 2026-11-27
 

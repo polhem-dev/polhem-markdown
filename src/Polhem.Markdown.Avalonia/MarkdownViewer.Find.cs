@@ -9,7 +9,7 @@ using Avalonia.VisualTree;
 namespace Polhem.Markdown.Avalonia;
 
 // Finding text in the viewer (polhem-dev/polhem-markdown#85).
-public partial class MarkdownViewer
+public partial class MarkdownViewer : IFindBarOwner
 {
     /// <summary>Defines the <see cref="FindMatchBrush"/> property.</summary>
     public static readonly StyledProperty<IBrush> FindMatchBrushProperty =
@@ -66,6 +66,23 @@ public partial class MarkdownViewer
 
     /// <summary>The find bar, once it has been opened, for tests.</summary>
     internal FindBar? FindBarControl => _findBar;
+
+    Control IFindBarOwner.Control => this;
+
+    IBrush IFindBarOwner.FindBarBorderBrush => RuleBrush;
+
+    IBrush IFindBarOwner.FindBarHoverBrush => CodeBackground;
+
+    IBrush IFindBarOwner.FindBarAccentBrush => LinkForeground;
+
+    bool IFindBarOwner.IsDarkTheme => IsDarkTheme;
+
+    void IFindBarOwner.FindFromBar(string text, MarkdownFindOptions options) => Find(text, options.HasFlag(MarkdownFindOptions.MatchCase));
+
+    void IFindBarOwner.ReplaceFromBar(string replacement, bool all)
+    {
+        // The viewer's bar has no replace row.
+    }
 
     /// <summary>
     /// Opens the find bar at the top right of the view and moves the focus to it, as Ctrl+F (⌘F on macOS) in the viewer

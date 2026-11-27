@@ -15,3 +15,8 @@ override Polhem.Markdown.MarkdownReplacement.GetHashCode() -> int
 override Polhem.Markdown.MarkdownReplacement.ToString() -> string!
 static Polhem.Markdown.MarkdownReplacement.operator !=(Polhem.Markdown.MarkdownReplacement? left, Polhem.Markdown.MarkdownReplacement? right) -> bool
 static Polhem.Markdown.MarkdownReplacement.operator ==(Polhem.Markdown.MarkdownReplacement? left, Polhem.Markdown.MarkdownReplacement? right) -> bool
+Polhem.Markdown.MarkdownFindOptions
+Polhem.Markdown.MarkdownFindOptions.MatchCase = 1 -> Polhem.Markdown.MarkdownFindOptions
+Polhem.Markdown.MarkdownFindOptions.None = 0 -> Polhem.Markdown.MarkdownFindOptions
+Polhem.Markdown.MarkdownFindOptions.RegularExpression = 4 -> Polhem.Markdown.MarkdownFindOptions
+Polhem.Markdown.MarkdownFindOptions.WholeWord = 2 -> Polhem.Markdown.MarkdownFindOptions

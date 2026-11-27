@@ -59,19 +59,6 @@ public class MarkdownEditorTests(HeadlessSession session)
         Assert.Equal("# Title\n\ntext", editor.TextEditor.Text);
     });
 
-    [Fact(DisplayName = "The search panel opens under a host theme with no AvaloniaEdit styles")]
-    public Task OpenSearch_HostThemeWithoutEditorStyles_Opens() => session.RunAsync(() =>
-    {
-        // NOTE: AvaloniaEdit's own Simple theme threw KeyNotFoundException here under a Semi host, for a font size
-        // resource only Avalonia's Simple theme defines.
-        var editor = Show("text");
-
-        editor.TextEditor.SearchPanel.Open();
-        Dispatcher.UIThread.RunJobs();
-
-        Assert.True(editor.TextEditor.SearchPanel.IsOpened);
-    });
-
     [Fact(DisplayName = "The editor's own resources follow the theme variant")]
     public Task Resources_FollowThemeVariant() => session.RunAsync(() =>
     {

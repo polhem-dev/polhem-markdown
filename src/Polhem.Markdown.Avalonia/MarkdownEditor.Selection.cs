@@ -170,6 +170,7 @@ public partial class MarkdownEditor
         {
             _selectionBatch--;
         }
+        OnSelectionMovedForFind();
         ReportSelection();
     }
 

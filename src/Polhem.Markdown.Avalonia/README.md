@@ -207,6 +207,22 @@ Editor.ClearMarks(this);    // this host's marks only
 
 The gallery in the repository shows a change this way, with buttons to accept or reject it.
 
+Ctrl+F (⌘F on macOS) in the editor opens the viewer's find bar over the source, with buttons for matching case,
+whole words and regular expressions. Every match is highlighted, apart from the host's marks, and the current one is
+selected and scrolled into view. Ctrl+H (⌥⌘F on macOS) adds a row to replace the current match, or every match as one
+step to undo; with a regular expression, `$1` or `${name}` in the replacement is a group of the match. A host opens the
+bar from its own menu, or finds and replaces from code:
+
+```csharp
+Editor.OpenReplace();                                            // OpenFind for find only, CloseFind
+Editor.Find("colour", MarkdownFindOptions.WholeWord);            // highlights the matches and selects the first
+Editor.ReplaceCurrentMatch("color");                             // and selects the next; FindNext, FindPrevious
+Editor.ReplaceAllMatches("color");                               // one step to undo
+```
+
+When the host's menu or key bindings take these keys, set `HandleFindShortcuts="False"` and call `OpenFind` and
+`OpenReplace` from them. `FindMatchBrush`, `FindCurrentMatchBrush` and `FindBarLabels` work as in the viewer.
+
 The toolbar's labels are English; give your own, or `null` to keep one. Set `ShowToolbar="False"` to lay out buttons of
 your own instead:
 
