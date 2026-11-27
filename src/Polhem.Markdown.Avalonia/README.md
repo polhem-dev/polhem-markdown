@@ -183,6 +183,30 @@ Editor.Replace(
 ]);                                           // both in one step to undo
 ```
 
+A host that shows something about parts of the text, such as a change it proposes, marks ranges with a background, an
+underline or a strikethrough in a brush of its own. The marks move with the edits, a mark goes away when all of its text
+is deleted, and an owner key clears one host's marks without touching others'. `GetTextBounds` tells where a range or an
+offset is in the editor, or `null` while it is out of view, and `ViewChanged` tells when to ask again:
+
+```csharp
+var removed = Editor.AddMark(start, length, MarkdownRangeMarkStyle.Strikethrough, Brushes.Red, owner: this);
+var added = Editor.AddMark(insertedAt, insertedLength, MarkdownRangeMarkStyle.Background, greenTint, owner: this);
+
+Editor.ViewChanged += (_, _) =>
+{
+    // Place a popup under the added text, or hide it while that is scrolled out of view.
+    if (Editor.GetTextBounds(added.Start, added.Length) is { } bounds)
+    {
+        Canvas.SetLeft(Popup, bounds.Left);
+        Canvas.SetTop(Popup, bounds.Bottom);
+    }
+};
+
+Editor.ClearMarks(this);    // this host's marks only
+```
+
+The gallery in the repository shows a change this way, with buttons to accept or reject it.
+
 The toolbar's labels are English; give your own, or `null` to keep one. Set `ShowToolbar="False"` to lay out buttons of
 your own instead:
 

@@ -83,14 +83,15 @@ public partial class MarkdownEditor : Control
 
         _colorizer = new SyntaxColorizer(this);
         _editor.TextArea.TextView.LineTransformers.Add(_colorizer);
+        _editor.TextArea.TextView.BackgroundRenderers.Add(new RangeMarkRenderer(_marks));
         _editor.Document.Changed += OnDocumentChanged;
         _editor.Document.UpdateFinished += OnDocumentUpdateFinished;
         _editor.TextArea.Caret.PositionChanged += (_, _) => ScheduleSelectionReport();
         _editor.TextArea.SelectionChanged += (_, _) => ScheduleSelectionReport();
         _editor.TextArea.AddHandler(KeyDownEvent, OnTextAreaKeyDown, RoutingStrategies.Tunnel);
         _editor.TemplateApplied += OnEditorTemplateApplied;
-        _editor.TextArea.TextView.ScrollOffsetChanged += (_, _) => UpdateFirstVisibleSourceOffset();
-        _editor.TextArea.TextView.VisualLinesChanged += (_, _) => UpdateFirstVisibleSourceOffset();
+        _editor.TextArea.TextView.ScrollOffsetChanged += (_, _) => OnViewChanged();
+        _editor.TextArea.TextView.VisualLinesChanged += (_, _) => OnViewChanged();
         _scanTimer = new DispatcherTimer(s_scanDelay, DispatcherPriority.Background, (_, _) =>
         {
             _scanTimer!.Stop();
@@ -236,6 +237,7 @@ public partial class MarkdownEditor : Control
         var toolbarHeight = _toolbar.DesiredSize.Height;
         _toolbar.Arrange(new Rect(0, 0, finalSize.Width, toolbarHeight));
         _editor.Arrange(new Rect(0, toolbarHeight, finalSize.Width, Math.Max(0, finalSize.Height - toolbarHeight)));
+        ReportTextViewMoved();
         return finalSize;
     }
 
@@ -267,6 +269,7 @@ public partial class MarkdownEditor : Control
         {
             _editor.Document.Text = text;
             _editor.Document.UndoStack.ClearAll();
+            ClearMarks();
         }
         finally
         {
@@ -279,15 +282,21 @@ public partial class MarkdownEditor : Control
     {
         _version++;
         _colorizer.Shift(e.Offset, e.RemovalLength, e.InsertionLength);
-        if (!_settingText && !_editor.Document.IsInUpdate)
+        _marks.UpdateOffsets(e);
+        if (!_editor.Document.IsInUpdate)
         {
-            OnTextEdited();
+            RemoveEmptyMarks();
+            if (!_settingText)
+            {
+                OnTextEdited();
+            }
         }
     }
 
     /// <summary>Reports a group of changes once it ends, so a binding does not see the text halfway through it.</summary>
     private void OnDocumentUpdateFinished(object? sender, EventArgs e)
     {
+        RemoveEmptyMarks();
         if (!_settingText && _editor.Document.Text != Markdown)
         {
             OnTextEdited();

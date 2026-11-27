@@ -13,6 +13,12 @@ and versions follow [Semantic Versioning](https://semver.org/).
   `Select`) and reports when it or the caret moves (`SelectionChanged`). `Replace` changes one range, or several at once
   (`MarkdownReplacement`, offsets in the text before any of them), as one step to undo, keeping the caret, the
   selection and the undo history. The Blazor editor does not have these yet.
+- The Avalonia `MarkdownEditor` draws marks a host puts over ranges of the source (`AddMark`, with
+  `MarkdownRangeMarkStyle` `Background`, `Underline` or `Strikethrough` and a brush), under the selection and apart
+  from the syntax colors. Marks move with the edits, go away with their text, and are cleared together by an owner key
+  (`ClearMarks`). `GetTextBounds` tells where an offset or a range is in the editor, and `ViewChanged` when that may
+  have moved, for a popup placed next to the text. The gallery previews a change as a diff. The Blazor editor does not
+  have these yet.
 
 ## [0.4.1] - 2026-11-27
 

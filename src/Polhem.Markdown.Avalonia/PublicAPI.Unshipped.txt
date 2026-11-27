@@ -6,3 +6,21 @@ Polhem.Markdown.Avalonia.MarkdownEditor.SelectedText.get -> string!
 Polhem.Markdown.Avalonia.MarkdownEditor.SelectionChanged -> System.EventHandler?
 Polhem.Markdown.Avalonia.MarkdownEditor.SelectionLength.get -> int
 Polhem.Markdown.Avalonia.MarkdownEditor.SelectionStart.get -> int
+Polhem.Markdown.Avalonia.MarkdownEditor.AddMark(int start, int length, Polhem.Markdown.Avalonia.MarkdownRangeMarkStyle style, Avalonia.Media.IBrush! brush, object? owner = null) -> Polhem.Markdown.Avalonia.MarkdownRangeMark!
+Polhem.Markdown.Avalonia.MarkdownEditor.ClearMarks() -> void
+Polhem.Markdown.Avalonia.MarkdownEditor.ClearMarks(object! owner) -> void
+Polhem.Markdown.Avalonia.MarkdownEditor.GetTextBounds(int start, int length) -> Avalonia.Rect?
+Polhem.Markdown.Avalonia.MarkdownEditor.Marks.get -> System.Collections.Generic.IReadOnlyList<Polhem.Markdown.Avalonia.MarkdownRangeMark!>!
+Polhem.Markdown.Avalonia.MarkdownEditor.RemoveMark(Polhem.Markdown.Avalonia.MarkdownRangeMark! mark) -> bool
+Polhem.Markdown.Avalonia.MarkdownEditor.ViewChanged -> System.EventHandler?
+Polhem.Markdown.Avalonia.MarkdownRangeMark
+Polhem.Markdown.Avalonia.MarkdownRangeMark.Brush.get -> Avalonia.Media.IBrush!
+Polhem.Markdown.Avalonia.MarkdownRangeMark.IsRemoved.get -> bool
+Polhem.Markdown.Avalonia.MarkdownRangeMark.Length.get -> int
+Polhem.Markdown.Avalonia.MarkdownRangeMark.Owner.get -> object?
+Polhem.Markdown.Avalonia.MarkdownRangeMark.Start.get -> int
+Polhem.Markdown.Avalonia.MarkdownRangeMark.Style.get -> Polhem.Markdown.Avalonia.MarkdownRangeMarkStyle
+Polhem.Markdown.Avalonia.MarkdownRangeMarkStyle
+Polhem.Markdown.Avalonia.MarkdownRangeMarkStyle.Background = 0 -> Polhem.Markdown.Avalonia.MarkdownRangeMarkStyle
+Polhem.Markdown.Avalonia.MarkdownRangeMarkStyle.Strikethrough = 2 -> Polhem.Markdown.Avalonia.MarkdownRangeMarkStyle
+Polhem.Markdown.Avalonia.MarkdownRangeMarkStyle.Underline = 1 -> Polhem.Markdown.Avalonia.MarkdownRangeMarkStyle
