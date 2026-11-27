@@ -126,7 +126,10 @@ preview in `MarkdownViewer` beside it, not as rich text. The two editors color a
 - **Its links cannot be opened from the source**: the viewer opens them after checking their scheme.
 - **On Avalonia** it is built on AvaloniaEdit and works under any theme with no styles from the host. A host reads
   and sets the selection (`SelectionStart`, `SelectionLength`, `SelectedText`, `Select`, `SelectionChanged`) and
-  replaces ranges from code, one range or several together, as one step to undo (`Replace`). It draws the host's own
+  replaces ranges from code, one range or several together, as one step to undo (`Replace`). Ctrl+F (⌘F) opens the
+  viewer's find bar over the source, and Ctrl+H (⌥⌘F) adds a row to replace the current match or every match, with
+  options for case, whole words and regular expressions; a host opens them from its own menu or finds and replaces from
+  code. It draws the host's own
   marks over ranges (a background, an underline or a strikethrough) that move with the edits, and tells where a range
   is on the screen (`GetTextBounds`, `ViewChanged`), for a change shown as a diff before it is accepted or a popup
   next to the selection.

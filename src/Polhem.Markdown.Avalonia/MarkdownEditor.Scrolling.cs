@@ -54,6 +54,11 @@ public partial class MarkdownEditor
     private void OnEditorTemplateApplied(object? sender, TemplateAppliedEventArgs e)
     {
         _scrollViewer = e.NameScope.Find<ScrollViewer>("PART_ScrollViewer");
+
+        // NOTE: the editor finds with the viewer's find bar (polhem-dev/polhem-markdown#97). AvaloniaEdit installs its own
+        // search panel with the template, which would take Cmd+F or Ctrl+F, F3 and Ctrl+H when a host turns
+        // HandleFindShortcuts off, so it comes out here and not in the constructor.
+        _editor.SearchPanel?.Uninstall();
     }
 
     private void UpdateFirstVisibleSourceOffset()

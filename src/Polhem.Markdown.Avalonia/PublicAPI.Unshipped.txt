@@ -24,3 +24,32 @@ Polhem.Markdown.Avalonia.MarkdownRangeMarkStyle
 Polhem.Markdown.Avalonia.MarkdownRangeMarkStyle.Background = 0 -> Polhem.Markdown.Avalonia.MarkdownRangeMarkStyle
 Polhem.Markdown.Avalonia.MarkdownRangeMarkStyle.Strikethrough = 2 -> Polhem.Markdown.Avalonia.MarkdownRangeMarkStyle
 Polhem.Markdown.Avalonia.MarkdownRangeMarkStyle.Underline = 1 -> Polhem.Markdown.Avalonia.MarkdownRangeMarkStyle
+Polhem.Markdown.Avalonia.MarkdownEditor.CloseFind() -> void
+Polhem.Markdown.Avalonia.MarkdownEditor.CurrentFindMatch.get -> int
+Polhem.Markdown.Avalonia.MarkdownEditor.Find(string! text, Polhem.Markdown.MarkdownFindOptions options = Polhem.Markdown.MarkdownFindOptions.None) -> int
+Polhem.Markdown.Avalonia.MarkdownEditor.FindBarLabels.get -> System.Func<Polhem.Markdown.Avalonia.MarkdownFindBarItem, string?>?
+Polhem.Markdown.Avalonia.MarkdownEditor.FindBarLabels.set -> void
+Polhem.Markdown.Avalonia.MarkdownEditor.FindCurrentMatchBrush.get -> Avalonia.Media.IBrush!
+Polhem.Markdown.Avalonia.MarkdownEditor.FindCurrentMatchBrush.set -> void
+Polhem.Markdown.Avalonia.MarkdownEditor.FindMatchBrush.get -> Avalonia.Media.IBrush!
+Polhem.Markdown.Avalonia.MarkdownEditor.FindMatchBrush.set -> void
+Polhem.Markdown.Avalonia.MarkdownEditor.FindMatchCount.get -> int
+Polhem.Markdown.Avalonia.MarkdownEditor.FindNext() -> bool
+Polhem.Markdown.Avalonia.MarkdownEditor.FindPrevious() -> bool
+Polhem.Markdown.Avalonia.MarkdownEditor.HandleFindShortcuts.get -> bool
+Polhem.Markdown.Avalonia.MarkdownEditor.HandleFindShortcuts.set -> void
+Polhem.Markdown.Avalonia.MarkdownEditor.IsFindOpen.get -> bool
+Polhem.Markdown.Avalonia.MarkdownEditor.IsReplaceOpen.get -> bool
+Polhem.Markdown.Avalonia.MarkdownEditor.OpenFind(string? text = null) -> void
+Polhem.Markdown.Avalonia.MarkdownEditor.OpenReplace(string? text = null) -> void
+Polhem.Markdown.Avalonia.MarkdownEditor.ReplaceAllMatches(string! replacement) -> int
+Polhem.Markdown.Avalonia.MarkdownEditor.ReplaceCurrentMatch(string! replacement) -> bool
+Polhem.Markdown.Avalonia.MarkdownFindBarItem.RegularExpression = 6 -> Polhem.Markdown.Avalonia.MarkdownFindBarItem
+Polhem.Markdown.Avalonia.MarkdownFindBarItem.Replace = 8 -> Polhem.Markdown.Avalonia.MarkdownFindBarItem
+Polhem.Markdown.Avalonia.MarkdownFindBarItem.ReplaceAll = 9 -> Polhem.Markdown.Avalonia.MarkdownFindBarItem
+Polhem.Markdown.Avalonia.MarkdownFindBarItem.ReplaceField = 7 -> Polhem.Markdown.Avalonia.MarkdownFindBarItem
+Polhem.Markdown.Avalonia.MarkdownFindBarItem.WholeWord = 5 -> Polhem.Markdown.Avalonia.MarkdownFindBarItem
+static readonly Polhem.Markdown.Avalonia.MarkdownEditor.FindBarLabelsProperty -> Avalonia.StyledProperty<System.Func<Polhem.Markdown.Avalonia.MarkdownFindBarItem, string?>?>!
+static readonly Polhem.Markdown.Avalonia.MarkdownEditor.FindCurrentMatchBrushProperty -> Avalonia.StyledProperty<Avalonia.Media.IBrush!>!
+static readonly Polhem.Markdown.Avalonia.MarkdownEditor.FindMatchBrushProperty -> Avalonia.StyledProperty<Avalonia.Media.IBrush!>!
+static readonly Polhem.Markdown.Avalonia.MarkdownEditor.HandleFindShortcutsProperty -> Avalonia.StyledProperty<bool>!

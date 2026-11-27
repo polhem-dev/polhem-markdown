@@ -84,11 +84,21 @@ public partial class MarkdownEditor : Control
         _colorizer = new SyntaxColorizer(this);
         _editor.TextArea.TextView.LineTransformers.Add(_colorizer);
         _editor.TextArea.TextView.BackgroundRenderers.Add(new RangeMarkRenderer(_marks));
+        _editor.TextArea.TextView.BackgroundRenderers.Add(new RangeMarkRenderer(_findHighlights));
         _editor.Document.Changed += OnDocumentChanged;
         _editor.Document.UpdateFinished += OnDocumentUpdateFinished;
-        _editor.TextArea.Caret.PositionChanged += (_, _) => ScheduleSelectionReport();
-        _editor.TextArea.SelectionChanged += (_, _) => ScheduleSelectionReport();
+        _editor.TextArea.Caret.PositionChanged += (_, _) =>
+        {
+            ScheduleSelectionReport();
+            OnSelectionMovedForFind();
+        };
+        _editor.TextArea.SelectionChanged += (_, _) =>
+        {
+            ScheduleSelectionReport();
+            OnSelectionMovedForFind();
+        };
         _editor.TextArea.AddHandler(KeyDownEvent, OnTextAreaKeyDown, RoutingStrategies.Tunnel);
+        AddHandler(KeyDownEvent, OnKeyDownForFind, RoutingStrategies.Tunnel);
         _editor.TemplateApplied += OnEditorTemplateApplied;
         _editor.TextArea.TextView.ScrollOffsetChanged += (_, _) => OnViewChanged();
         _editor.TextArea.TextView.VisualLinesChanged += (_, _) => OnViewChanged();
@@ -171,6 +181,7 @@ public partial class MarkdownEditor : Control
     protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
     {
         base.OnPropertyChanged(change);
+        OnFindPropertyChanged(change);
         if (change.Property == MarkdownProperty)
         {
             SetText(Markdown ?? "");
@@ -228,6 +239,7 @@ public partial class MarkdownEditor : Control
         _toolbar.Measure(availableSize);
         var toolbar = _toolbar.DesiredSize;
         _editor.Measure(availableSize.Deflate(new Thickness(0, toolbar.Height, 0, 0)));
+        MeasureFindBar();
         return new Size(Math.Max(toolbar.Width, _editor.DesiredSize.Width), toolbar.Height + _editor.DesiredSize.Height);
     }
 
@@ -237,6 +249,7 @@ public partial class MarkdownEditor : Control
         var toolbarHeight = _toolbar.DesiredSize.Height;
         _toolbar.Arrange(new Rect(0, 0, finalSize.Width, toolbarHeight));
         _editor.Arrange(new Rect(0, toolbarHeight, finalSize.Width, Math.Max(0, finalSize.Height - toolbarHeight)));
+        ArrangeFindBar(finalSize, toolbarHeight);
         ReportTextViewMoved();
         return finalSize;
     }
@@ -286,6 +299,7 @@ public partial class MarkdownEditor : Control
         if (!_editor.Document.IsInUpdate)
         {
             RemoveEmptyMarks();
+            KeepFind();
             if (!_settingText)
             {
                 OnTextEdited();
@@ -297,6 +311,7 @@ public partial class MarkdownEditor : Control
     private void OnDocumentUpdateFinished(object? sender, EventArgs e)
     {
         RemoveEmptyMarks();
+        KeepFind();
         if (!_settingText && _editor.Document.Text != Markdown)
         {
             OnTextEdited();
