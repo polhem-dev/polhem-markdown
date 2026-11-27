@@ -2,6 +2,7 @@ using System.Globalization;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using Polhem.Markdown.Model;
+using Polhem.Markdown.Output;
 
 namespace Polhem.Markdown.Blazor;
 
@@ -58,15 +59,14 @@ internal sealed partial class MarkdownRenderTree
     private void FootnoteBackLink(FootnoteBackLinkNode back)
     {
         var referenceId = back.ReferenceId;
-        var position = back.Position > 1 ? back.Position.ToString(CultureInfo.InvariantCulture) : "";
         _builder.AddContent(0, " ");
         _builder.OpenElement(1, "a");
         _builder.AddAttribute(2, ClassAttribute, "pmd-fnback");
         _builder.AddAttribute(3, "href", _viewer.AnchorHref(referenceId));
-        _builder.AddAttribute(4, "aria-label", position.Length == 0 ? "Back to reference" : "Back to reference " + position);
+        _builder.AddAttribute(4, "aria-label", ViewerMarkup.BackLinkLabel(back));
         _builder.AddAttribute(5, OnClickAttribute, EventCallback.Factory.Create<MouseEventArgs>(_viewer, () => _viewer.MoveToAnchorAsync(referenceId)));
         _builder.AddEventPreventDefaultAttribute(6, OnClickAttribute, true);
-        _builder.AddContent(7, "\u21A9" + position);
+        _builder.AddContent(7, ViewerMarkup.BackLinkText(back));
         _builder.CloseElement();
     }
 }

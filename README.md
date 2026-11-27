@@ -15,7 +15,7 @@ the result, adds a reader with a table of contents around it, and edits the sour
 
 | Package | For |
 |---------|-----|
-| `Polhem.Markdown` | Parsing (with [Markdig](https://github.com/xoofx/markdig)) and the safety policy shared by the viewers |
+| `Polhem.Markdown` | Parsing (with [Markdig](https://github.com/xoofx/markdig)), the safety policy shared by the viewers, and HTML export |
 | `Polhem.Markdown.Avalonia` | A viewer control, a reader control with a table of contents, and a source editor control for Avalonia |
 | `Polhem.Markdown.Blazor` | A viewer component for Blazor, rendering semantic HTML styled with CSS variables, a reader component with a table of contents, and a source editor component |
 
@@ -140,6 +140,27 @@ preview in `MarkdownViewer` beside it, not as rich text. The two editors color a
 
 Each package's README shows how to use its editor: [Avalonia](src/Polhem.Markdown.Avalonia/README.md),
 [Blazor](src/Polhem.Markdown.Blazor/README.md).
+
+## Saving as HTML
+
+`MarkdownHtml`, in `Polhem.Markdown`, writes a text as HTML from the same model and under the same safety policy as the
+viewers, so a host can save a document as a web page, or print that page to PDF from the platform's web view.
+
+```csharp
+var page = MarkdownHtml.ToPage(markdown, options, new MarkdownHtmlOptions
+{
+    // Return the bytes of an image to embed it as a data: URI; null keeps it as a link.
+    ImageContent = source => source.IsFile
+        ? new MarkdownImageContent("image/png", File.ReadAllBytes(source.LocalPath))
+        : null,
+});
+```
+
+- `ToPage` writes a standalone page with the viewers' look; `ToFragment` writes one `div` to place in a page of the
+  host's own, which includes `MarkdownHtml.StyleSheet`.
+- The markup is the Blazor viewer's: highlighted code, Mermaid diagrams as inline SVG and math as MathML, with no
+  script. The stylesheet uses the same `--pmd-*` variables, so an exported page is themed the same way.
+- Images stay links unless the host returns their bytes; the package never reads a file or the network itself.
 
 ## Samples
 

@@ -3,16 +3,18 @@ using System.Net;
 using System.Text;
 using Polhem.Markdown.Formulas;
 
-namespace Polhem.Markdown.Blazor;
+namespace Polhem.Markdown.Output;
 
 /// <summary>
-/// Writes a formula as MathML markup. Blazor's render tree creates every element it does not know as HTML, except SVG,
-/// so MathML built there would never be laid out as math; markup, parsed by the browser, gets the MathML namespace.
+/// Writes a formula as MathML markup, for the Blazor viewer and for <see cref="MarkdownHtml"/>. Blazor's render tree
+/// creates every element it does not know as HTML, except SVG, so MathML built there would never be laid out as math;
+/// markup, parsed by the browser, gets the MathML namespace.
 /// </summary>
 /// <remarks>
-/// IMPORTANT: this is the only markup the viewer writes as a string. Element and attribute names and attribute values
-/// are constants of this class or numbers, and every text, the LaTeX source included, is HTML-encoded, so nothing from
-/// the Markdown can become markup. <c>Render_Math_WritesOnlyMathMl</c> checks the elements and attributes written.
+/// IMPORTANT: this is the only markup the Blazor viewer writes as a string. Element and attribute names and attribute
+/// values are constants of this class or numbers, and every text, the LaTeX source included, is HTML-encoded, so nothing
+/// from the Markdown can become markup. <c>Render_Math_WritesOnlyMathMl</c> in the Blazor tests and
+/// <c>ToFragment_Math_WritesOnlyMathMl</c> check the elements and attributes written.
 /// </remarks>
 internal static class MathMlWriter
 {
