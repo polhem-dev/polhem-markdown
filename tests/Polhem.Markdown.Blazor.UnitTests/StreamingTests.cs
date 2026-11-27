@@ -46,4 +46,35 @@ public class StreamingTests : BunitContext
 
         Assert.Equal(["Name", "Size"], viewer.FindAll("th").Select(cell => cell.TextContent));
     }
+
+    [Fact(DisplayName = "While streaming, an unfinished image after display math waits; once complete, the text shows as written")]
+    public void Streaming_ImageAfterDisplayMathWaits()
+    {
+        var viewer = Stream("A\n\n$$x = 1$$\n\n![Map](https://ex");
+
+        Assert.Empty(viewer.FindAll("img"));
+        Assert.DoesNotContain("![Map]", viewer.Markup, StringComparison.Ordinal);
+
+        viewer.Render(parameters => parameters.Add(component => component.IsStreaming, false));
+        Assert.Contains("![Map](https://ex", viewer.Markup, StringComparison.Ordinal);
+    }
+
+    [Theory(DisplayName = "While streaming, the last block after display math is completed")]
+    [InlineData("Read [site](ht", "Read site")]
+    [InlineData("Some **bold", "Some bold")]
+    public void Streaming_CompletesAfterDisplayMath(string last, string text)
+    {
+        var viewer = Stream("A\n\n$$x = 1$$\n\n" + last);
+
+        Assert.Equal(text, viewer.FindAll("p")[^1].TextContent);
+        Assert.Empty(viewer.FindAll("a"));
+    }
+
+    [Fact(DisplayName = "While streaming, a table's header row after display math shows as a table")]
+    public void Streaming_HeaderRowAfterDisplayMathIsTable()
+    {
+        var viewer = Stream("A\n\n$$x = 1$$\n\n| Name | Size");
+
+        Assert.Equal(["Name", "Size"], viewer.FindAll("th").Select(cell => cell.TextContent));
+    }
 }
