@@ -130,8 +130,10 @@ public partial class MarkdownEditor
         var ordered = new List<MarkdownReplacement>();
         foreach (var replacement in replacements)
         {
-            ArgumentNullException.ThrowIfNull(replacement, nameof(replacements));
-            ArgumentNullException.ThrowIfNull(replacement.Text, nameof(replacements));
+            if (replacement?.Text is null)
+            {
+                throw new ArgumentNullException(nameof(replacements), "A replacement, or its text, is null.");
+            }
             CheckRange(replacement.Start, replacement.Length, textLength);
             ordered.Add(replacement);
         }
