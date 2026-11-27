@@ -80,10 +80,10 @@ public partial class MarkdownEditor
         Application.Current?.PlatformSettings?.HotkeyConfiguration.CommandModifiers ?? KeyModifiers.Control;
 
     /// <summary>Makes <paramref name="edit"/> as one change, so one undo takes it back, and shows its selection.</summary>
-    private void Apply(MarkdownEdit edit)
+    private void Apply(MarkdownEdit edit) => RunBatch(() =>
     {
         _editor.Document.Replace(edit.Start, edit.Length, edit.Text);
         _editor.Select(edit.SelectionStart, edit.SelectionLength);
         _editor.TextArea.Caret.BringCaretToView();
-    }
+    });
 }

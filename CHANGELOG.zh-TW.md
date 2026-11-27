@@ -9,6 +9,11 @@ Polhem.Markdown 各套件值得注意的變更，每個版本只列幾項重點�
 
 ## [Unreleased]
 
+- Avalonia 的 `MarkdownEditor` 可以讀取與設定選取範圍（`SelectionStart`、`SelectionLength`、`SelectedText`、
+  `Select`），並在選取範圍或游標移動時通知（`SelectionChanged`）。`Replace` 取代一個範圍，或一次取代多個範圍
+  （`MarkdownReplacement`，offset 以取代前的文字為準），都只算一個復原步驟，並保留游標、選取範圍與復原紀錄。
+  Blazor 編輯器尚未提供這些成員。
+
 ## [0.4.1] - 2026-11-27
 
 詳細內容：[docs/zh-TW/changelogs/0.4.1.md](docs/zh-TW/changelogs/0.4.1.md)

@@ -9,6 +9,11 @@ and versions follow [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+- The Avalonia `MarkdownEditor` reads and sets the selection (`SelectionStart`, `SelectionLength`, `SelectedText`,
+  `Select`) and reports when it or the caret moves (`SelectionChanged`). `Replace` changes one range, or several at once
+  (`MarkdownReplacement`, offsets in the text before any of them), as one step to undo, keeping the caret, the
+  selection and the undo history. The Blazor editor does not have these yet.
+
 ## [0.4.1] - 2026-11-27
 
 Details: [docs/en/changelogs/0.4.1.md](docs/en/changelogs/0.4.1.md)

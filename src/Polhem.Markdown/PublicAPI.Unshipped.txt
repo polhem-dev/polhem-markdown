@@ -1,1 +1,17 @@
 #nullable enable
+Polhem.Markdown.MarkdownReplacement
+Polhem.Markdown.MarkdownReplacement.<Clone>$() -> Polhem.Markdown.MarkdownReplacement!
+Polhem.Markdown.MarkdownReplacement.Deconstruct(out int Start, out int Length, out string! Text) -> void
+Polhem.Markdown.MarkdownReplacement.Equals(Polhem.Markdown.MarkdownReplacement? other) -> bool
+Polhem.Markdown.MarkdownReplacement.Length.get -> int
+Polhem.Markdown.MarkdownReplacement.Length.init -> void
+Polhem.Markdown.MarkdownReplacement.MarkdownReplacement(int Start, int Length, string! Text) -> void
+Polhem.Markdown.MarkdownReplacement.Start.get -> int
+Polhem.Markdown.MarkdownReplacement.Start.init -> void
+Polhem.Markdown.MarkdownReplacement.Text.get -> string!
+Polhem.Markdown.MarkdownReplacement.Text.init -> void
+override Polhem.Markdown.MarkdownReplacement.Equals(object? obj) -> bool
+override Polhem.Markdown.MarkdownReplacement.GetHashCode() -> int
+override Polhem.Markdown.MarkdownReplacement.ToString() -> string!
+static Polhem.Markdown.MarkdownReplacement.operator !=(Polhem.Markdown.MarkdownReplacement? left, Polhem.Markdown.MarkdownReplacement? right) -> bool
+static Polhem.Markdown.MarkdownReplacement.operator ==(Polhem.Markdown.MarkdownReplacement? left, Polhem.Markdown.MarkdownReplacement? right) -> bool
