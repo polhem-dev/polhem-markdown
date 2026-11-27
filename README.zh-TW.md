@@ -111,7 +111,9 @@
 - **原始碼中的連結無法從編輯器開啟**，要從會檢查 scheme 的檢視器開啟。
 - **Avalonia 版**建立在 AvaloniaEdit 上，任何主題都能用，不需要宿主提供樣式。宿主可以讀取與設定選取範圍
   （`SelectionStart`、`SelectionLength`、`SelectedText`、`Select`、`SelectionChanged`），並從程式碼取代範圍，
-  一個或多個範圍一起取代都只算一個復原步驟（`Replace`）。
+  一個或多個範圍一起取代都只算一個復原步驟（`Replace`）。宿主也能在範圍上畫自己的標示（底色、底線或刪除線），
+  標示會跟著編輯移動；還能取得範圍在畫面上的位置（`GetTextBounds`、`ViewChanged`），用來在接受修改前以 diff
+  預覽，或在選取範圍旁放彈出視窗。
 - **Blazor 版**在原生的 textarea 裡輸入，輸入法與螢幕閱讀器的行為與頁面上其他地方相同；支援 interactive server、WebAssembly
   與 auto 渲染。目前還沒有搜尋面板。
 

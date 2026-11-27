@@ -10,8 +10,9 @@ namespace MarkdownGallery;
 
 /// <summary>
 /// The sample text in a viewer inside a reader, which adds the table of contents, with a theme switch, a replay that
-/// types the text in chunks as a streamed reply arrives, an edit switch that puts an editor beside the viewer, and a
-/// status line showing the last link to the host's own scheme.
+/// types the text in chunks as a streamed reply arrives, an edit switch that puts an editor beside the viewer, a change
+/// previewed in the editor as a diff before it is accepted, and a status line showing the last link to the host's own
+/// scheme.
 /// </summary>
 public sealed class GalleryView : UserControl
 {
@@ -37,9 +38,12 @@ public sealed class GalleryView : UserControl
 
         var edit = new ToggleSwitch { OnContent = "Edit", OffContent = "Edit", VerticalAlignment = VerticalAlignment.Center };
 
+        var propose = new Button { Content = "Propose change", VerticalAlignment = VerticalAlignment.Center, IsVisible = false };
+
         var bar = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 12, Margin = new Thickness(16, 8) };
         bar.Children.Add(dark);
         bar.Children.Add(edit);
+        bar.Children.Add(propose);
         bar.Children.Add(replay);
         bar.Children.Add(_status);
 
@@ -49,8 +53,14 @@ public sealed class GalleryView : UserControl
         var editor = new MarkdownEditor { Markdown = SampleText.Markdown };
         _ = new SourceSync(editor, _viewer, viewerScroll);
 
+        // A change shown in the editor before it is made, with its buttons on a canvas over the editor.
+        var overlay = new Canvas();
+        var diff = new DiffPreview(editor, overlay);
+        propose.Click += (_, _) =>
+            _status.Text = diff.Show() ? "Accept or reject the change shown in the editor" : "The sentence the change edits is gone";
+
         // The editor sits beside the viewer, or above it on a narrow screen such as a phone's, each in a frame.
-        var editorFrame = Frame(editor);
+        var editorFrame = Frame(new Panel { Children = { editor, overlay } });
         var viewerFrame = Frame(reader);
         editorFrame.IsVisible = false;
         var panes = new Grid { Margin = new Thickness(16, 0, 16, 16) };
@@ -72,6 +82,7 @@ public sealed class GalleryView : UserControl
         {
             editorFrame.IsVisible = edit.IsChecked == true;
             replay.IsEnabled = !editorFrame.IsVisible;
+            propose.IsVisible = editorFrame.IsVisible;
             Arrange();
         };
 

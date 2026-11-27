@@ -13,6 +13,10 @@ Polhem.Markdown 各套件值得注意的變更，每個版本只列幾項重點�
   `Select`），並在選取範圍或游標移動時通知（`SelectionChanged`）。`Replace` 取代一個範圍，或一次取代多個範圍
   （`MarkdownReplacement`，offset 以取代前的文字為準），都只算一個復原步驟，並保留游標、選取範圍與復原紀錄。
   Blazor 編輯器尚未提供這些成員。
+- Avalonia 的 `MarkdownEditor` 可以畫出宿主在原文範圍上加的標示（`AddMark`，以 `MarkdownRangeMarkStyle` 的
+  `Background`、`Underline` 或 `Strikethrough` 加上筆刷），畫在選取範圍底下，與語法顏色互不影響。標示跟著編輯移動、
+  文字刪除時一起消失，並可依 owner key 一起清除（`ClearMarks`）。`GetTextBounds` 取得某個 offset 或範圍在編輯器中的位置，
+  `ViewChanged` 在位置可能改變時通知，方便在文字旁放彈出視窗。範例程式以 diff 預覽一項修改。Blazor 編輯器尚未提供這些成員。
 
 ## [0.4.1] - 2026-11-27
 
