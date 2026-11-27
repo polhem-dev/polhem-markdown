@@ -66,7 +66,7 @@ public class StreamingTests : BunitContext
     {
         var viewer = Stream("A\n\n$$x = 1$$\n\n" + last);
 
-        Assert.Equal(text, viewer.FindAll("p").Last().TextContent);
+        Assert.Equal(text, viewer.FindAll("p")[^1].TextContent);
         Assert.Empty(viewer.FindAll("a"));
     }
 
