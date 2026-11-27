@@ -15,7 +15,7 @@ using Path = Avalonia.Controls.Shapes.Path;
 namespace Polhem.Markdown.Avalonia;
 
 /// <summary>
-/// A code block: a header with the language and a copy button, and the code in a monospaced font that scrolls
+/// A code block: a header with the language, the host's own buttons and a copy button, and the code in a monospaced font that scrolls
 /// sideways instead of wrapping.
 /// </summary>
 internal sealed class CodeBlockView : Border
@@ -25,11 +25,15 @@ internal sealed class CodeBlockView : Border
 
     private static readonly Geometry s_doneIcon = Geometry.Parse("M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4z");
 
+    private readonly MarkdownViewer _viewer;
+    private readonly MarkdownCodeBlock _block;
     private readonly Path _icon;
     private IDisposable? _resetTimer;
 
     public CodeBlockView(MarkdownViewer viewer, CodeBlockNode code)
     {
+        _viewer = viewer;
+        _block = new MarkdownCodeBlock(code.Code, code.Language);
         Code = code.Code;
         CornerRadius = new CornerRadius(4);
         Bind(BackgroundProperty, viewer.GetObservable(MarkdownViewer.CodeBackgroundProperty));
@@ -60,9 +64,13 @@ internal sealed class CodeBlockView : Border
         var header = new Grid { Margin = new Thickness(10, 2, 2, 0) };
         header.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
         header.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Auto));
+        header.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Auto));
         header.Children.Add(language);
-        Grid.SetColumn(CopyButton, 1);
+        Grid.SetColumn(ActionsPanel, 1);
+        header.Children.Add(ActionsPanel);
+        Grid.SetColumn(CopyButton, 2);
         header.Children.Add(CopyButton);
+        UpdateActions();
 
         // The gap around the code is the text's margin rather than the scroll viewer's padding. The scroll content
         // presenter leaves its padding out of the size it asks for but takes it off the room it gives the text, so
@@ -130,6 +138,87 @@ internal sealed class CodeBlockView : Border
     public string Code { get; }
 
     public Button CopyButton { get; }
+
+    /// <summary>The buttons of the host's actions shown on this block, before the copy button.</summary>
+    internal StackPanel ActionsPanel { get; } = new()
+    {
+        Orientation = Orientation.Horizontal,
+        VerticalAlignment = VerticalAlignment.Center,
+    };
+
+    /// <summary>
+    /// Shows a button for each of the viewer's <see cref="MarkdownViewer.CodeBlockActions"/> whose
+    /// <see cref="MarkdownCodeBlockAction.IsVisible"/> allows it on this block.
+    /// </summary>
+    internal void UpdateActions()
+    {
+        ActionsPanel.Children.Clear();
+        foreach (var action in _viewer.CodeBlockActions ?? [])
+        {
+            if (action.IsShownOn(_block))
+            {
+                ActionsPanel.Children.Add(ActionButton(action));
+            }
+        }
+    }
+
+    private Button ActionButton(MarkdownCodeBlockAction action)
+    {
+        var button = new Button
+        {
+            Content = ActionContent(action),
+            Padding = new Thickness(6, 4),
+            Background = Brushes.Transparent,
+            BorderThickness = new Thickness(0),
+            VerticalAlignment = VerticalAlignment.Center,
+        };
+        AutomationProperties.SetName(button, action.Label);
+        if (button.Content is Path)
+        {
+            ToolTip.SetTip(button, action.Label);
+        }
+        button.Click += async (_, _) => await action.InvokeAsync(_block);
+        return button;
+    }
+
+    /// <summary>
+    /// The action's icon, drawn as the copy button's is, or its label as text when it has no icon or the icon is not path
+    /// data Avalonia can read.
+    /// </summary>
+    private Control ActionContent(MarkdownCodeBlockAction action)
+    {
+        if (action.IconPath is { } data && ParseIcon(data) is { } geometry)
+        {
+            var icon = new Path { Data = geometry, Width = 14, Height = 14, Stretch = Stretch.Uniform };
+            icon.Bind(Shape.FillProperty, _viewer.GetObservable(TextElement.ForegroundProperty));
+            return icon;
+        }
+        var label = new TextBlock
+        {
+            Text = action.Label,
+            FontSize = _viewer.GetValue(TextElement.FontSizeProperty) * 0.85,
+            VerticalAlignment = VerticalAlignment.Center,
+        };
+        label.Bind(TextBlock.ForegroundProperty, _viewer.GetObservable(TextElement.ForegroundProperty));
+        return label;
+    }
+
+    private static Geometry? ParseIcon(string data)
+    {
+        try
+        {
+            return Geometry.Parse(data);
+        }
+        catch (FormatException)
+        {
+            return null;
+        }
+        catch (InvalidDataException)
+        {
+            // Avalonia's path parser reports an unknown command this way rather than as a format error.
+            return null;
+        }
+    }
 
     /// <summary>Puts the code on the clipboard and shows a check mark on the button for a moment.</summary>
     internal async Task CopyAsync()

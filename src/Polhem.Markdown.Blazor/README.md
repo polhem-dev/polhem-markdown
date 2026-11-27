@@ -80,6 +80,35 @@ saves it. With `OnImageSaveRequested` set, the host saves the image its own way.
 <MarkdownViewer Markdown="@reply" ZoomImages="true" />
 ```
 
+`CodeBlockActions` adds a host's own buttons to code blocks, before the copy button, such as "Insert at cursor" or
+"Run". Each receives the block's code and its language, and runs on the renderer's dispatcher in WebAssembly and on the
+server alike. A button shows its label, or with `IconPath` an icon (SVG path data in a 24 by 24 box) with the label as
+its tooltip and accessible name; the buttons are styled as the copy button, from the same variables. `IsVisible`
+chooses the blocks that show it; when its answer depends on something else, call `RefreshCodeBlockActionsAsync` when
+that changes. Keep the list in a field: a new list renders every code block again. The buttons are always shown, as the
+copy button is, so they work on a touch screen.
+
+```razor
+<MarkdownViewer @ref="viewer" Markdown="@reply" CodeBlockActions="actions" />
+
+@code {
+    private MarkdownViewer? viewer;
+    private IReadOnlyList<MarkdownCodeBlockAction>? actions;
+
+    protected override void OnInitialized() => actions =
+    [
+        new MarkdownCodeBlockAction("Insert into the draft", block =>
+        {
+            draft += block.Code;
+            StateHasChanged();   // the action is a plain delegate, so the page renders itself again
+        })
+        {
+            IsVisible = block => block.Language == "markdown",
+        },
+    ];
+}
+```
+
 `Headings` lists the text's headings for a table of contents, `OnHeadingsChanged` reports a change in them, and
 `ScrollToHeadingAsync` scrolls one to the top of the view and focuses it:
 

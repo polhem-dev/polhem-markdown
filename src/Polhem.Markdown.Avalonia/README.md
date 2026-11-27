@@ -121,6 +121,25 @@ viewer.ImageSaveRequested += (_, e) =>
 };
 ```
 
+`CodeBlockActions` adds a host's own buttons to code blocks, before the copy button, such as "Insert at cursor" or
+"Run". Each receives the block's code and its language. A button shows its label, or with `IconPath` an icon (SVG path
+data in a 24 by 24 box) with the label as its tooltip and accessible name. `IsVisible` chooses the blocks that show it;
+when its answer depends on something else, such as whether an editor has the focus, call `RefreshCodeBlockActions`
+when that changes. The buttons are always shown, as the copy button is, so they work on a touch screen.
+
+```csharp
+viewer.CodeBlockActions =
+[
+    new MarkdownCodeBlockAction("Insert at cursor", block => editor.Replace(editor.SelectionStart, editor.SelectionLength, block.Code))
+    {
+        IsVisible = block => block.Language == "markdown" && editor.IsKeyboardFocusWithin,
+    },
+    new MarkdownCodeBlockAction("Save as file", block => SaveAsync(block.Code)) { IconPath = "M5 20h14v-2H5zm7-18-5.5 5.5 1.4 1.4L11 5.8V16h2V5.8l3.1 3.1 1.4-1.4z" },
+];
+editor.GotFocus += (_, _) => viewer.RefreshCodeBlockActions();
+editor.LostFocus += (_, _) => viewer.RefreshCodeBlockActions();
+```
+
 Screen readers hear what the Blazor viewer's HTML tells them: headings with their level, links, lists and list items
 with the task state, tables, images by their alternative text, and alerts and quotes as groups. Tab moves through the
 links and buttons in the order of the text, passing over text without links, and Enter follows a link; following a

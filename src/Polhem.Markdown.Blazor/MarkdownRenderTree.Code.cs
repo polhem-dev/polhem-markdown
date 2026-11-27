@@ -25,30 +25,70 @@ internal sealed partial class MarkdownRenderTree
         _builder.AddAttribute(5, ClassAttribute, "pmd-code-lang");
         _builder.AddContent(6, code.Language);
         _builder.CloseElement();
+        CodeBlockActions(7, code);
 
-        _builder.OpenElement(7, ButtonElement);
-        _builder.AddAttribute(8, TypeAttribute, ButtonElement);
-        _builder.AddAttribute(9, ClassAttribute, "pmd-copy");
-        _builder.AddAttribute(10, "title", _viewer.CopyCodeLabel);
-        _builder.AddAttribute(11, "aria-label", _viewer.CopyCodeLabel);
-        _builder.AddAttribute(12, OnClickAttribute, EventCallback.Factory.Create<MouseEventArgs>(_viewer, () => _viewer.CopyAsync(code)));
-        _builder.OpenElement(13, "svg");
-        _builder.AddAttribute(14, "viewBox", "0 0 24 24");
-        _builder.AddAttribute(15, "aria-hidden", "true");
-        _builder.OpenElement(16, "path");
-        _builder.AddAttribute(17, "d", copied ? DoneIcon : CopyIcon);
+        _builder.OpenElement(8, ButtonElement);
+        _builder.AddAttribute(9, TypeAttribute, ButtonElement);
+        _builder.AddAttribute(10, ClassAttribute, "pmd-copy");
+        _builder.AddAttribute(11, "title", _viewer.CopyCodeLabel);
+        _builder.AddAttribute(12, "aria-label", _viewer.CopyCodeLabel);
+        _builder.AddAttribute(13, OnClickAttribute, EventCallback.Factory.Create<MouseEventArgs>(_viewer, () => _viewer.CopyAsync(code)));
+        _builder.OpenElement(14, "svg");
+        _builder.AddAttribute(15, "viewBox", "0 0 24 24");
+        _builder.AddAttribute(16, "aria-hidden", "true");
+        _builder.OpenElement(17, "path");
+        _builder.AddAttribute(18, "d", copied ? DoneIcon : CopyIcon);
         _builder.CloseElement();
         _builder.CloseElement();
-        _builder.CloseElement();
-        _builder.CloseElement();
-
-        _builder.OpenElement(18, "pre");
-        _builder.OpenElement(19, "code");
-        CodeText(20, code);
         _builder.CloseElement();
         _builder.CloseElement();
 
+        _builder.OpenElement(19, "pre");
+        _builder.OpenElement(20, "code");
+        CodeText(21, code);
         _builder.CloseElement();
+        _builder.CloseElement();
+
+        _builder.CloseElement();
+    }
+
+    /// <summary>
+    /// Writes a button for each of the host's actions that <paramref name="code"/> shows, before the copy button: its
+    /// icon, or its label as text when it has none.
+    /// </summary>
+    private void CodeBlockActions(int sequence, CodeBlockNode code)
+    {
+        _builder.OpenRegion(sequence);
+        var block = new MarkdownCodeBlock(code.Code, code.Language);
+        foreach (var action in _viewer.CodeBlockActions ?? [])
+        {
+            if (!action.IsShownOn(block))
+            {
+                continue;
+            }
+            _builder.OpenElement(0, ButtonElement);
+            _builder.AddAttribute(1, TypeAttribute, ButtonElement);
+            _builder.AddAttribute(2, ClassAttribute, "pmd-code-action");
+            _builder.AddAttribute(3, OnClickAttribute, EventCallback.Factory.Create<MouseEventArgs>(_viewer, () => action.InvokeAsync(block)));
+            if (action.IconPath is { } icon)
+            {
+                _builder.AddAttribute(4, "title", action.Label);
+                _builder.AddAttribute(5, "aria-label", action.Label);
+                _builder.OpenElement(6, "svg");
+                _builder.AddAttribute(7, "viewBox", "0 0 24 24");
+                _builder.AddAttribute(8, "aria-hidden", "true");
+                _builder.OpenElement(9, "path");
+                _builder.AddAttribute(10, "d", icon);
+                _builder.CloseElement();
+                _builder.CloseElement();
+            }
+            else
+            {
+                _builder.AddContent(11, action.Label);
+            }
+            _builder.CloseElement();
+        }
+        _builder.CloseRegion();
     }
 
     /// <summary>

@@ -6,7 +6,8 @@ namespace Polhem.Markdown.Blazor;
 
 /// <summary>
 /// One top-level block of a <see cref="MarkdownViewer"/>. It renders again only when its key or the viewer's settings
-/// change, or when the code block whose copy button shows a check mark is in it, so an edit or a reply that grows renders
+/// change, when the code block whose copy button shows a check mark is in it, or when the host's code block actions
+/// change and it has a code block, so an edit or a reply that grows renders
 /// the blocks it changes and leaves the rest alone, as the Avalonia viewer keeps their controls.
 /// </summary>
 internal sealed class MarkdownBlock : ComponentBase, IDisposable
@@ -15,6 +16,8 @@ internal sealed class MarkdownBlock : ComponentBase, IDisposable
     private string? _shownKey;
     private int _shownGeneration;
     private CodeBlockNode? _shownCopied;
+    private int _shownActionsGeneration;
+    private bool _hasCode;
     private bool _changed;
 
     /// <summary>The viewer the block is in.</summary>
@@ -36,6 +39,10 @@ internal sealed class MarkdownBlock : ComponentBase, IDisposable
     /// <summary>The code block whose copy button shows a check mark, if any, in this block or another.</summary>
     [Parameter]
     public CodeBlockNode? Copied { get; set; }
+
+    /// <summary>Changes when the host's code block actions, or which blocks show them, may have changed.</summary>
+    [Parameter]
+    public int ActionsGeneration { get; set; }
 
     /// <summary>The node types this block drew when it last rendered.</summary>
     public IReadOnlySet<Type> RenderedNodeTypes { get; private set; } = new HashSet<Type>();
@@ -60,12 +67,15 @@ internal sealed class MarkdownBlock : ComponentBase, IDisposable
             _shown = Block;
             _shownKey = Key;
             _shownGeneration = Generation;
+            _hasCode = NodeTree.SelfAndDescendants(_shown).Any(node => node is CodeBlockNode);
         }
         else if (!ReferenceEquals(Copied, _shownCopied))
         {
             _changed = Holds(_shownCopied) || Holds(Copied);
         }
+        _changed |= _hasCode && ActionsGeneration != _shownActionsGeneration;
         _shownCopied = Copied;
+        _shownActionsGeneration = ActionsGeneration;
     }
 
     /// <inheritdoc/>

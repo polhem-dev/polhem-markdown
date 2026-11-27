@@ -182,6 +182,35 @@
   fill: currentColor;
 }
 
+/* A host's own buttons on a code block, before the copy button and drawn as it is. The header spreads its children to
+   the two ends, so the first action takes the free space instead, which keeps the actions next to the copy button. */
+.pmd .pmd-code-lang + .pmd-code-action {
+  margin-left: auto;
+}
+
+.pmd .pmd-code-action {
+  display: inline-flex;
+  align-items: center;
+  border: 0;
+  border-radius: 4px;
+  padding: 4px 6px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  line-height: 14px;
+  cursor: pointer;
+}
+
+.pmd .pmd-code-action:hover {
+  background: rgba(128, 128, 128, 0.2);
+}
+
+.pmd .pmd-code-action svg {
+  width: 14px;
+  height: 14px;
+  fill: currentColor;
+}
+
 .pmd .pmd-code pre {
   overflow-x: auto;
   padding: 0 10px 8px;

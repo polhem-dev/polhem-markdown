@@ -9,6 +9,11 @@ and versions follow [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+- Both viewers take a host's own buttons for code blocks (`CodeBlockActions`, of `MarkdownCodeBlockAction`), shown
+  before the copy button: a label or an icon, and work that receives the block's code and language
+  (`MarkdownCodeBlock`). `IsVisible` picks the blocks that show a button, and `RefreshCodeBlockActions`
+  (`RefreshCodeBlockActionsAsync` in Blazor) asks again when what it depends on changes. A viewer without actions looks
+  and behaves as before.
 - The Avalonia `MarkdownEditor` reads and sets the selection (`SelectionStart`, `SelectionLength`, `SelectedText`,
   `Select`) and reports when it or the caret moves (`SelectionChanged`). `Replace` changes one range, or several at once
   (`MarkdownReplacement`, offsets in the text before any of them), as one step to undo, keeping the caret, the
