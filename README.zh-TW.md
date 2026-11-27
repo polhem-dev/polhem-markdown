@@ -41,6 +41,7 @@
 | YAML front matter | 隱藏 | ✓ | ✓ |
 | 連到標題的連結 | `[setup](#setup)` 會捲動到該標題 | ✓ | ✓ |
 | 程式碼區塊 | 顯示語言、複製按鈕，常見語言有語法上色 | ✓ | ✓ |
+| 程式碼區塊動作 | 宿主自己的按鈕放在 Copy 旁，例如「插入到游標處」，可指定出現在哪些區塊（`CodeBlockActions`） | ✓ | ✓ |
 | Mermaid 圖表 | 流程圖與循序圖，不執行腳本 | ✓ | ✓ |
 | 數學公式 | `$…$`、`$$…$$` 與 ` ```math `，不執行腳本 | ✓ | ✓ |
 | README 常用的 HTML | `<div align>`、`<details>`、`<sup>`、`<kbd>`、`<img>`、`<picture>`；其他 HTML 會捨棄 | ✓ | ✓ |
@@ -62,7 +63,8 @@
 - **GitHub Flavored Markdown**：標題、強調、~~刪除線~~、清單與待辦清單、引言、可設定欄位對齊的表格、註腳、
   `:wave:` 這類 emoji 短碼，以及 GitHub 警示區塊（`> [!NOTE]`、`> [!TIP]`、`> [!IMPORTANT]`、`> [!WARNING]`、
   `> [!CAUTION]`）。YAML front matter 會隱藏；連到同一段文字中標題的連結，點下後會捲動到該標題。
-- **程式碼區塊**顯示語言與複製按鈕，C#、JSON、SQL、XML、JavaScript、Python 等常見語言會有語法上色。支援亮色與暗色主題：
+- **程式碼區塊**顯示語言與複製按鈕，C#、JSON、SQL、XML、JavaScript、Python 等常見語言會有語法上色。宿主可以在 Copy
+  旁加上自己的按鈕，例如「插入到游標處」或「執行」，按下時會收到該區塊的程式碼與語言。支援亮色與暗色主題：
 
   ![暗色主題下的表格與語法上色](docs/images/viewer-code-dark.png)
 

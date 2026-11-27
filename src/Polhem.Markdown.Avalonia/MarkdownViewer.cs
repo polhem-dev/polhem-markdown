@@ -348,6 +348,7 @@ public partial class MarkdownViewer : Control
     {
         base.OnPropertyChanged(change);
         OnFindPropertyChanged(change);
+        OnCodeBlockActionsPropertyChanged(change);
 
         // NOTE: a change of theme rebuilds only the blocks with a picture whose source depends on it, since the block key
         // holds the source shown.

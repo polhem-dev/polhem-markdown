@@ -16,9 +16,9 @@ internal static class ViewerStyleSheet
     private const string ResourceName = "Polhem.Markdown.Output.polhem-markdown.css";
 
     // The rules of parts the exported HTML never has: the editor, the reader, the full-size image dialog, the matches of
-    // a search, the button that copies code, and the button that opens an image.
+    // a search, the buttons on code (copying it and a host's own actions), and the button that opens an image.
     private static readonly string[] s_droppedPrefixes = [".pmd-editor", ".pmd-zoom", ".pmd-reader", "::highlight"];
-    private static readonly string[] s_droppedClasses = [".pmd-copy", ".pmd-image-button"];
+    private static readonly string[] s_droppedClasses = [".pmd-copy", ".pmd-code-action", ".pmd-image-button"];
 
     private static readonly Lazy<string> s_content = new(() => Filter(Read()));
 

@@ -9,6 +9,10 @@ Polhem.Markdown 各套件值得注意的變更，每個版本只列幾項重點�
 
 ## [Unreleased]
 
+- 兩個檢視器都可以在程式碼區塊加上宿主自己的按鈕（`CodeBlockActions`，元素為 `MarkdownCodeBlockAction`），放在複製按鈕前面：
+  顯示標籤或圖示，按下時收到該區塊的程式碼與語言（`MarkdownCodeBlock`）。`IsVisible` 決定哪些區塊顯示按鈕，
+  依賴的狀態改變時呼叫 `RefreshCodeBlockActions`（Blazor 為 `RefreshCodeBlockActionsAsync`）重新判斷。沒有設定動作的檢視器
+  外觀與行為不變。
 - Avalonia 的 `MarkdownEditor` 可以讀取與設定選取範圍（`SelectionStart`、`SelectionLength`、`SelectedText`、
   `Select`），並在選取範圍或游標移動時通知（`SelectionChanged`）。`Replace` 取代一個範圍，或一次取代多個範圍
   （`MarkdownReplacement`，offset 以取代前的文字為準），都只算一個復原步驟，並保留游標、選取範圍與復原紀錄。

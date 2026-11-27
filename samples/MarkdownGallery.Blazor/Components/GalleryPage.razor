@@ -25,6 +25,7 @@
             <div class="frame preview" @onpointerenter="() => _leader = Pane.Viewer" @onfocusin="() => _leader = Pane.Viewer">
                 <MarkdownReader @bind-OutlinePinned="_outlinePinned">
                     <MarkdownViewer @ref="_viewer" Markdown="@_preview" Options="_options" ZoomImages="true" IsStreaming="_streaming"
+                                    CodeBlockActions="_codeBlockActions"
                                     OnLinkActivated="OnLinkActivated" FirstVisibleSourceOffsetChanged="ViewerScrolled"
                                     OnSourceRequested="GoToSource" />
                 </MarkdownReader>
@@ -37,7 +38,7 @@
         <div class="frame reader-frame">
             <MarkdownReader @bind-OutlinePinned="_outlinePinned">
                 <MarkdownViewer @ref="_viewer" Markdown="@_markdown" Options="_options" ZoomImages="true" IsStreaming="_streaming"
-                                OnLinkActivated="OnLinkActivated" />
+                                CodeBlockActions="_codeBlockActions" OnLinkActivated="OnLinkActivated" />
             </MarkdownReader>
         </div>
     }
@@ -48,6 +49,7 @@
     private const int ReplayChunk = 12;
 
     private readonly MarkdownOptions _options = CreateOptions();
+    private IReadOnlyList<MarkdownCodeBlockAction>? _codeBlockActions;
     private string _markdown = MarkdownGallery.SampleText.Markdown;
 
     // What the preview shows while editing: the text a moment after typing stops, so the viewer does not rebuild on
@@ -159,6 +161,21 @@
     }
 
     private void OnLinkActivated(MarkdownLinkActivatedEventArgs e) => _status = "Opened " + e.Uri;
+
+    // A host's own button on code blocks, next to Copy, on the blocks that name their language. It is kept in a field, so
+    // the viewer does not render its code blocks again whenever the page renders.
+    protected override void OnInitialized() => _codeBlockActions =
+    [
+        new MarkdownCodeBlockAction("Count lines", block =>
+        {
+            _status = $"{block.Language}: {block.Code.Split('\n').Length} lines";
+            StateHasChanged();
+        })
+        {
+            IconPath = "M3 5h18v2H3zm0 6h18v2H3zm0 6h12v2H3z",
+            IsVisible = block => block.Language.Length > 0,
+        },
+    ];
 
     private async Task Replay()
     {

@@ -38,3 +38,14 @@ Polhem.Markdown.MarkdownImageContent.MediaType.get -> string!
 static Polhem.Markdown.MarkdownHtml.StyleSheet.get -> string!
 static Polhem.Markdown.MarkdownHtml.ToFragment(string! markdown, Polhem.Markdown.MarkdownOptions? options = null, Polhem.Markdown.MarkdownHtmlOptions? htmlOptions = null) -> string!
 static Polhem.Markdown.MarkdownHtml.ToPage(string! markdown, Polhem.Markdown.MarkdownOptions? options = null, Polhem.Markdown.MarkdownHtmlOptions? htmlOptions = null) -> string!
+Polhem.Markdown.MarkdownCodeBlock
+Polhem.Markdown.MarkdownCodeBlock.Code.get -> string!
+Polhem.Markdown.MarkdownCodeBlock.Language.get -> string!
+Polhem.Markdown.MarkdownCodeBlockAction
+Polhem.Markdown.MarkdownCodeBlockAction.IconPath.get -> string?
+Polhem.Markdown.MarkdownCodeBlockAction.IconPath.init -> void
+Polhem.Markdown.MarkdownCodeBlockAction.IsVisible.get -> System.Func<Polhem.Markdown.MarkdownCodeBlock!, bool>?
+Polhem.Markdown.MarkdownCodeBlockAction.IsVisible.init -> void
+Polhem.Markdown.MarkdownCodeBlockAction.Label.get -> string!
+Polhem.Markdown.MarkdownCodeBlockAction.MarkdownCodeBlockAction(string! label, System.Action<Polhem.Markdown.MarkdownCodeBlock!>! invoked) -> void
+Polhem.Markdown.MarkdownCodeBlockAction.MarkdownCodeBlockAction(string! label, System.Func<Polhem.Markdown.MarkdownCodeBlock!, System.Threading.Tasks.Task!>! invoked) -> void

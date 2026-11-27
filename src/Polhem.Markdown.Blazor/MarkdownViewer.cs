@@ -158,7 +158,7 @@ public partial class MarkdownViewer : ComponentBase, IAsyncDisposable
     protected override void BuildRenderTree(RenderTreeBuilder builder)
     {
         var tree = new MarkdownRenderTree(this, builder);
-        tree.Document(_document, _blockKeys, BlockGeneration(), _copiedBlock, Class);
+        tree.Document(_document, _blockKeys, BlockGeneration(), CodeBlockActionsGeneration(), _copiedBlock, Class);
         if (_zoomed is { } zoomed)
         {
             tree.ZoomDialog(zoomed, Class);

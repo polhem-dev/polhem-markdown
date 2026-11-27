@@ -38,7 +38,7 @@ internal sealed partial class MarkdownRenderTree
 
     public IReadOnlySet<Type> RenderedShapeTypes => _renderedShapes;
 
-    public void Document(DocumentNode document, IReadOnlyList<(string Key, int Occurrence)> keys, int generation, CodeBlockNode? copied, string? extraClass)
+    public void Document(DocumentNode document, IReadOnlyList<(string Key, int Occurrence)> keys, int generation, int actionsGeneration, CodeBlockNode? copied, string? extraClass)
     {
         _builder.OpenElement(0, "div");
         _builder.AddAttribute(1, ClassAttribute, string.IsNullOrWhiteSpace(extraClass) ? "pmd" : "pmd " + extraClass);
@@ -60,6 +60,7 @@ internal sealed partial class MarkdownRenderTree
             _builder.AddComponentParameter(3, nameof(MarkdownBlock.Key), keys[index].Key);
             _builder.AddComponentParameter(4, nameof(MarkdownBlock.Generation), generation);
             _builder.AddComponentParameter(5, nameof(MarkdownBlock.Copied), copied);
+            _builder.AddComponentParameter(6, nameof(MarkdownBlock.ActionsGeneration), actionsGeneration);
             _builder.CloseComponent();
         }
         _builder.CloseRegion();

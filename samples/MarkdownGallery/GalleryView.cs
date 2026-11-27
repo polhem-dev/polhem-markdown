@@ -11,7 +11,8 @@ namespace MarkdownGallery;
 /// <summary>
 /// The sample text in a viewer inside a reader, which adds the table of contents, with a theme switch, a replay that
 /// types the text in chunks as a streamed reply arrives, an edit switch that puts an editor beside the viewer, a change
-/// previewed in the editor as a diff before it is accepted, and a status line showing the last link to the host's own
+/// previewed in the editor as a diff before it is accepted, a button on code blocks that inserts the code into the
+/// editor while it is shown, and a status line showing the last link to the host's own
 /// scheme.
 /// </summary>
 public sealed class GalleryView : UserControl
@@ -53,6 +54,20 @@ public sealed class GalleryView : UserControl
         var editor = new MarkdownEditor { Markdown = SampleText.Markdown };
         _ = new SourceSync(editor, _viewer, viewerScroll);
 
+        // A host's own button on code blocks, next to Copy: it inserts the code where the editor's caret is, so it shows
+        // only while the editor does.
+        _viewer.CodeBlockActions =
+        [
+            new MarkdownCodeBlockAction("Insert into editor", block =>
+            {
+                editor.Replace(editor.SelectionStart, editor.SelectionLength, block.Code);
+                editor.Focus();
+            })
+            {
+                IsVisible = _ => edit.IsChecked == true,
+            },
+        ];
+
         // A change shown in the editor before it is made, with its buttons on a canvas over the editor.
         var overlay = new Canvas();
         var diff = new DiffPreview(editor, overlay);
@@ -83,6 +98,7 @@ public sealed class GalleryView : UserControl
             editorFrame.IsVisible = edit.IsChecked == true;
             replay.IsEnabled = !editorFrame.IsVisible;
             propose.IsVisible = editorFrame.IsVisible;
+            _viewer.RefreshCodeBlockActions();
             Arrange();
         };
 

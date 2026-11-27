@@ -53,3 +53,7 @@ static readonly Polhem.Markdown.Avalonia.MarkdownEditor.FindBarLabelsProperty ->
 static readonly Polhem.Markdown.Avalonia.MarkdownEditor.FindCurrentMatchBrushProperty -> Avalonia.StyledProperty<Avalonia.Media.IBrush!>!
 static readonly Polhem.Markdown.Avalonia.MarkdownEditor.FindMatchBrushProperty -> Avalonia.StyledProperty<Avalonia.Media.IBrush!>!
 static readonly Polhem.Markdown.Avalonia.MarkdownEditor.HandleFindShortcutsProperty -> Avalonia.StyledProperty<bool>!
+Polhem.Markdown.Avalonia.MarkdownViewer.CodeBlockActions.get -> System.Collections.Generic.IReadOnlyList<Polhem.Markdown.MarkdownCodeBlockAction!>?
+Polhem.Markdown.Avalonia.MarkdownViewer.CodeBlockActions.set -> void
+Polhem.Markdown.Avalonia.MarkdownViewer.RefreshCodeBlockActions() -> void
+static readonly Polhem.Markdown.Avalonia.MarkdownViewer.CodeBlockActionsProperty -> Avalonia.StyledProperty<System.Collections.Generic.IReadOnlyList<Polhem.Markdown.MarkdownCodeBlockAction!>?>!

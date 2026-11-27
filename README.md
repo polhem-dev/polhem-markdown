@@ -44,6 +44,7 @@ shows the start of the sample text in each.
 | YAML front matter | Hidden | ✓ | ✓ |
 | Links to a heading | `[setup](#setup)` scrolls to it | ✓ | ✓ |
 | Code blocks | Language label, copy button, highlighting for common languages | ✓ | ✓ |
+| Code block actions | A host's own buttons next to Copy, such as "Insert at cursor", on the blocks it chooses (`CodeBlockActions`) | ✓ | ✓ |
 | Mermaid diagrams | Flowcharts and sequence diagrams, drawn without a script | ✓ | ✓ |
 | Math | `$…$`, `$$…$$` and ` ```math `, laid out without a script | ✓ | ✓ |
 | HTML that README files use | `<div align>`, `<details>`, `<sup>`, `<kbd>`, `<img>`, `<picture>`; other HTML is dropped | ✓ | ✓ |
@@ -67,7 +68,8 @@ The sections below and each viewer's README give the details.
   `> [!IMPORTANT]`, `> [!WARNING]`, `> [!CAUTION]`). YAML front matter is hidden, and a link to a heading of the same
   text scrolls to it.
 - **Code blocks** show their language and a copy button, and code in common languages such as C#, JSON, SQL, XML,
-  JavaScript and Python is highlighted. Light and dark themes are both supported:
+  JavaScript and Python is highlighted. A host can add its own buttons next to Copy, such as "Insert at cursor" or
+  "Run", which receive the block's code and language. Light and dark themes are both supported:
 
   ![A table and highlighted code on a dark theme](docs/images/viewer-code-dark.png)
 
