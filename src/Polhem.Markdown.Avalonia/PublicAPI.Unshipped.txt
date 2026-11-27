@@ -1,1 +1,8 @@
 #nullable enable
+Polhem.Markdown.Avalonia.MarkdownEditor.Replace(int start, int length, string! text) -> void
+Polhem.Markdown.Avalonia.MarkdownEditor.Replace(System.Collections.Generic.IEnumerable<Polhem.Markdown.MarkdownReplacement!>! replacements) -> void
+Polhem.Markdown.Avalonia.MarkdownEditor.Select(int start, int length) -> void
+Polhem.Markdown.Avalonia.MarkdownEditor.SelectedText.get -> string!
+Polhem.Markdown.Avalonia.MarkdownEditor.SelectionChanged -> System.EventHandler?
+Polhem.Markdown.Avalonia.MarkdownEditor.SelectionLength.get -> int
+Polhem.Markdown.Avalonia.MarkdownEditor.SelectionStart.get -> int

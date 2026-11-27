@@ -166,6 +166,23 @@ Editor.ApplyFormat(MarkdownFormat.Bold);   // toggles bold on the selection, as 
 Editor.CycleHeading();                     // plain text, then #, ##, ###, then plain text again
 ```
 
+A host that works on part of the text, such as a command that rewrites the selected paragraph, reads and sets the
+selection and replaces ranges from code. Each `Replace` is one step to undo, and several ranges replaced together are one
+step too, with their offsets in the text as it was before any of them:
+
+```csharp
+Editor.SelectionChanged += (_, _) => Status.Text = $"{Editor.SelectionLength} selected";
+var paragraph = Editor.SelectedText;
+
+Editor.Select(start, length);                 // selects a range and scrolls it into view
+Editor.Replace(start, length, "new text");    // one step to undo
+Editor.Replace(
+[
+    new MarkdownReplacement(0, 5, "Title"),
+    new MarkdownReplacement(120, 0, "\n- added item"),
+]);                                           // both in one step to undo
+```
+
 The toolbar's labels are English; give your own, or `null` to keep one. Set `ShowToolbar="False"` to lay out buttons of
 your own instead:
 

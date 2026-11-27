@@ -109,7 +109,9 @@
 - **與檢視器同步**：編輯器回報畫面最上方的原文位置，也能捲動到指定的原文位置；檢視器能在原文位置與畫面位置之間換算，
   按住 Command 鍵點擊時會要求跳到該處的原文。範例程式把兩者接在一起。
 - **原始碼中的連結無法從編輯器開啟**，要從會檢查 scheme 的檢視器開啟。
-- **Avalonia 版**建立在 AvaloniaEdit 上，任何主題都能用，不需要宿主提供樣式。
+- **Avalonia 版**建立在 AvaloniaEdit 上，任何主題都能用，不需要宿主提供樣式。宿主可以讀取與設定選取範圍
+  （`SelectionStart`、`SelectionLength`、`SelectedText`、`Select`、`SelectionChanged`），並從程式碼取代範圍，
+  一個或多個範圍一起取代都只算一個復原步驟（`Replace`）。
 - **Blazor 版**在原生的 textarea 裡輸入，輸入法與螢幕閱讀器的行為與頁面上其他地方相同；支援 interactive server、WebAssembly
   與 auto 渲染。目前還沒有搜尋面板。
 

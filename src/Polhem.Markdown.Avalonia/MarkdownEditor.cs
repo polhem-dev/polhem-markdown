@@ -84,6 +84,9 @@ public partial class MarkdownEditor : Control
         _colorizer = new SyntaxColorizer(this);
         _editor.TextArea.TextView.LineTransformers.Add(_colorizer);
         _editor.Document.Changed += OnDocumentChanged;
+        _editor.Document.UpdateFinished += OnDocumentUpdateFinished;
+        _editor.TextArea.Caret.PositionChanged += (_, _) => ScheduleSelectionReport();
+        _editor.TextArea.SelectionChanged += (_, _) => ScheduleSelectionReport();
         _editor.TextArea.AddHandler(KeyDownEvent, OnTextAreaKeyDown, RoutingStrategies.Tunnel);
         _editor.TemplateApplied += OnEditorTemplateApplied;
         _editor.TextArea.TextView.ScrollOffsetChanged += (_, _) => UpdateFirstVisibleSourceOffset();
@@ -276,11 +279,25 @@ public partial class MarkdownEditor : Control
     {
         _version++;
         _colorizer.Shift(e.Offset, e.RemovalLength, e.InsertionLength);
-        if (!_settingText)
+        if (!_settingText && !_editor.Document.IsInUpdate)
         {
-            SetCurrentValue(MarkdownProperty, _editor.Document.Text);
-            _scanTimer.Stop();
-            _scanTimer.Start();
+            OnTextEdited();
         }
+    }
+
+    /// <summary>Reports a group of changes once it ends, so a binding does not see the text halfway through it.</summary>
+    private void OnDocumentUpdateFinished(object? sender, EventArgs e)
+    {
+        if (!_settingText && _editor.Document.Text != Markdown)
+        {
+            OnTextEdited();
+        }
+    }
+
+    private void OnTextEdited()
+    {
+        SetCurrentValue(MarkdownProperty, _editor.Document.Text);
+        _scanTimer.Stop();
+        _scanTimer.Start();
     }
 }
