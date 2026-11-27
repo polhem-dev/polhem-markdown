@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Rendering;
 using Microsoft.AspNetCore.Components.Web;
 using Polhem.Markdown.Model;
+using Polhem.Markdown.Output;
 
 namespace Polhem.Markdown.Blazor;
 
@@ -102,7 +103,7 @@ internal sealed partial class MarkdownRenderTree
                 break;
             case AlignedBlockNode aligned:
                 _builder.OpenElement(0, "div");
-                _builder.AddAttribute(1, ClassAttribute, aligned.Alignment == BlockAlignment.Right ? "pmd-align-right" : "pmd-align-center");
+                _builder.AddAttribute(1, ClassAttribute, ViewerMarkup.AlignedBlockClass(aligned.Alignment));
                 Blocks(2, aligned.Blocks);
                 _builder.CloseElement();
                 break;
@@ -232,7 +233,7 @@ internal sealed partial class MarkdownRenderTree
             {
                 _builder.OpenRegion(1);
                 _builder.OpenElement(0, cellElement);
-                if (Alignment(alignments[column]) is { } align)
+                if (ViewerMarkup.TextAlign(alignments[column]) is { } align)
                 {
                     _builder.AddAttribute(1, "style", "text-align:" + align);
                 }
@@ -249,14 +250,6 @@ internal sealed partial class MarkdownRenderTree
         _builder.CloseElement();
         _builder.CloseRegion();
     }
-
-    private static string? Alignment(ColumnAlignment alignment) => alignment switch
-    {
-        ColumnAlignment.Left => "left",
-        ColumnAlignment.Center => "center",
-        ColumnAlignment.Right => "right",
-        _ => null,
-    };
 
     private void Element(string name, IReadOnlyList<InlineNode> inlines)
     {

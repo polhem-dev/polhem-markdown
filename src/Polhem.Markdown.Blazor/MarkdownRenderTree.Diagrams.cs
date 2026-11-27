@@ -1,5 +1,5 @@
-using System.Globalization;
 using Polhem.Markdown.Diagrams;
+using static Polhem.Markdown.Output.ViewerMarkup;
 
 namespace Polhem.Markdown.Blazor;
 
@@ -48,13 +48,13 @@ internal sealed partial class MarkdownRenderTree
                 break;
             case DiagramPolygon polygon:
                 _builder.OpenElement(7, "polygon");
-                _builder.AddAttribute(8, ClassAttribute, polygon.IsArrowHead ? "pmd-d-arrow" : "pmd-d-box");
+                _builder.AddAttribute(8, ClassAttribute, PolygonClass(polygon));
                 _builder.AddAttribute(9, "points", Points(polygon.Points));
                 _builder.CloseElement();
                 break;
             case DiagramLine line:
                 _builder.OpenElement(10, "polyline");
-                _builder.AddAttribute(11, ClassAttribute, line.Stroke == DiagramStroke.Rule ? "pmd-d-line pmd-d-rule" : "pmd-d-line");
+                _builder.AddAttribute(11, ClassAttribute, LineClass(line));
                 _builder.AddAttribute(12, "points", Points(line.Points));
                 _builder.AddAttribute(13, "stroke-width", Number(line.Thickness));
                 if (line.Dash > 0)
@@ -77,9 +77,4 @@ internal sealed partial class MarkdownRenderTree
         }
         _renderedShapes.Add(shape.GetType());
     }
-
-    private static string Points(IReadOnlyList<DiagramPoint> points) =>
-        string.Join(' ', points.Select(point => Number(point.X) + "," + Number(point.Y)));
-
-    private static string Number(double value) => value.ToString("0.##", CultureInfo.InvariantCulture);
 }

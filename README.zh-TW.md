@@ -14,7 +14,7 @@
 
 | 套件 | 用途 |
 |------|------|
-| `Polhem.Markdown` | 解析（使用 [Markdig](https://github.com/xoofx/markdig)），以及各檢視器共用的安全政策 |
+| `Polhem.Markdown` | 解析（使用 [Markdig](https://github.com/xoofx/markdig)）、各檢視器共用的安全政策，以及 HTML 匯出 |
 | `Polhem.Markdown.Avalonia` | Avalonia 的檢視器控制項、附目錄的閱讀區控制項，以及原始碼編輯器控制項 |
 | `Polhem.Markdown.Blazor` | Blazor 的檢視器元件，輸出以 CSS 變數設定樣式的語意化 HTML，另有附目錄的閱讀區元件與原始碼編輯器元件 |
 
@@ -122,6 +122,26 @@
 ![範例文字在瀏覽器裡的 Blazor 編輯器中，旁邊是檢視器](docs/images/editor-blazor.png)
 
 編輯器的用法見各套件的 README：[Avalonia](src/Polhem.Markdown.Avalonia/README.md)、[Blazor](src/Polhem.Markdown.Blazor/README.md)。
+
+## 存成 HTML
+
+`Polhem.Markdown` 的 `MarkdownHtml` 從與檢視器相同的 model、套用相同的安全政策，把文字輸出成 HTML，讓宿主把文件存成網頁，
+或交給平台的 web view 列印成 PDF。
+
+```csharp
+var page = MarkdownHtml.ToPage(markdown, options, new MarkdownHtmlOptions
+{
+    // 回傳圖片的位元組就以 data: URI 嵌入；回傳 null 則維持連結。
+    ImageContent = source => source.IsFile
+        ? new MarkdownImageContent("image/png", File.ReadAllBytes(source.LocalPath))
+        : null,
+});
+```
+
+- `ToPage` 輸出外觀與檢視器一致的獨立網頁；`ToFragment` 輸出一個 `div`，放進宿主自己的頁面，頁面需引入 `MarkdownHtml.StyleSheet`。
+- 標記與 Blazor 檢視器相同：程式碼上色、Mermaid 圖表為 inline SVG、數學式為 MathML，不帶 script。stylesheet 沿用相同的
+  `--pmd-*` 變數，匯出的頁面可用同一套方式改主題。
+- 圖片預設維持連結，宿主回傳位元組時才嵌入；套件本身不讀檔、也不連網。
 
 ## 範例
 

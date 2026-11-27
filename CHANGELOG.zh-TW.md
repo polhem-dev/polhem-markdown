@@ -21,6 +21,10 @@ Polhem.Markdown 各套件值得注意的變更，每個版本只列幾項重點�
   或全部取代並只算一個復原步驟，可選擇大小寫相符、全字相符與正規表示式（`MarkdownFindOptions`）。宿主可以從自己的選單
   打開（`OpenFind`、`OpenReplace`）、用程式碼搜尋與取代（`Find`、`ReplaceCurrentMatch`、`ReplaceAllMatches`），或把
   快捷鍵留給自己（`HandleFindShortcuts`）。AvaloniaEdit 原本的搜尋面板不再出現。Blazor 編輯器尚未提供這項功能。
+- `MarkdownHtml` 從檢視器的 model、套用相同的安全政策把文字輸出成 HTML：`ToPage` 輸出外觀與檢視器一致的獨立網頁，
+  可存檔或列印；`ToFragment` 輸出一個 `div`，以 `MarkdownHtml.StyleSheet` 套上樣式。程式碼上色、Mermaid 圖表與數學式
+  都是 Blazor 檢視器的靜態標記，不帶 script，stylesheet 沿用相同的 `--pmd-*` 變數。圖片預設維持連結，宿主回傳位元組時
+  （`MarkdownHtmlOptions.ImageContent`）以 `data:` URI 嵌入。Blazor 檢視器的輸出不變。
 
 ## [0.4.1] - 2026-11-27
 

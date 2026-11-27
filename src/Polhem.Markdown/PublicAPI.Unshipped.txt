@@ -20,3 +20,21 @@ Polhem.Markdown.MarkdownFindOptions.MatchCase = 1 -> Polhem.Markdown.MarkdownFin
 Polhem.Markdown.MarkdownFindOptions.None = 0 -> Polhem.Markdown.MarkdownFindOptions
 Polhem.Markdown.MarkdownFindOptions.RegularExpression = 4 -> Polhem.Markdown.MarkdownFindOptions
 Polhem.Markdown.MarkdownFindOptions.WholeWord = 2 -> Polhem.Markdown.MarkdownFindOptions
+Polhem.Markdown.MarkdownHtml
+Polhem.Markdown.MarkdownHtmlOptions
+Polhem.Markdown.MarkdownHtmlOptions.ImageContent.get -> System.Func<System.Uri!, Polhem.Markdown.MarkdownImageContent?>?
+Polhem.Markdown.MarkdownHtmlOptions.ImageContent.set -> void
+Polhem.Markdown.MarkdownHtmlOptions.Language.get -> string?
+Polhem.Markdown.MarkdownHtmlOptions.Language.set -> void
+Polhem.Markdown.MarkdownHtmlOptions.MarkdownHtmlOptions() -> void
+Polhem.Markdown.MarkdownHtmlOptions.StyleSheet.get -> string?
+Polhem.Markdown.MarkdownHtmlOptions.StyleSheet.set -> void
+Polhem.Markdown.MarkdownHtmlOptions.Title.get -> string?
+Polhem.Markdown.MarkdownHtmlOptions.Title.set -> void
+Polhem.Markdown.MarkdownImageContent
+Polhem.Markdown.MarkdownImageContent.Data.get -> System.ReadOnlyMemory<byte>
+Polhem.Markdown.MarkdownImageContent.MarkdownImageContent(string! mediaType, System.ReadOnlyMemory<byte> data) -> void
+Polhem.Markdown.MarkdownImageContent.MediaType.get -> string!
+static Polhem.Markdown.MarkdownHtml.StyleSheet.get -> string!
+static Polhem.Markdown.MarkdownHtml.ToFragment(string! markdown, Polhem.Markdown.MarkdownOptions? options = null, Polhem.Markdown.MarkdownHtmlOptions? htmlOptions = null) -> string!
+static Polhem.Markdown.MarkdownHtml.ToPage(string! markdown, Polhem.Markdown.MarkdownOptions? options = null, Polhem.Markdown.MarkdownHtmlOptions? htmlOptions = null) -> string!

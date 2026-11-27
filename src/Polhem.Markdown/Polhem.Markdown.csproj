@@ -11,6 +11,14 @@
     <PackageReference Include="Markdig" Version="1.6.0" />
   </ItemGroup>
 
+  <!-- MarkdownHtml styles its HTML with the Blazor viewer's own stylesheet, embedded here so that the two cannot drift
+       apart (see Output/ViewerStyleSheet.cs). -->
+  <ItemGroup>
+    <EmbeddedResource Include="..\Polhem.Markdown.Blazor\wwwroot\polhem-markdown.css"
+                      Link="Output\polhem-markdown.css"
+                      LogicalName="Polhem.Markdown.Output.polhem-markdown.css" />
+  </ItemGroup>
+
   <!-- The model is internal so that it can change without a breaking change; the viewers render it, so they see it. -->
   <ItemGroup>
     <InternalsVisibleTo Include="Polhem.Markdown.Avalonia" />

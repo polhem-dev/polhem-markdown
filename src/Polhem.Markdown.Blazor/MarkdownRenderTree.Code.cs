@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
-using Polhem.Markdown.Highlighting;
 using Polhem.Markdown.Model;
+using Polhem.Markdown.Output;
 
 namespace Polhem.Markdown.Blazor;
 
@@ -66,7 +66,7 @@ internal sealed partial class MarkdownRenderTree
                 _builder.AddContent(0, code.Code[position..token.Start]);
             }
             _builder.OpenElement(1, "span");
-            _builder.AddAttribute(2, ClassAttribute, TokenClass(token.Kind));
+            _builder.AddAttribute(2, ClassAttribute, ViewerMarkup.TokenClass(token.Kind));
             _builder.AddContent(3, code.Code.Substring(token.Start, token.Length));
             _builder.CloseElement();
             position = token.End;
@@ -78,21 +78,10 @@ internal sealed partial class MarkdownRenderTree
         _builder.CloseRegion();
     }
 
-    private static string TokenClass(CodeTokenKind kind) => kind switch
-    {
-        CodeTokenKind.Keyword => "pmd-tk-keyword",
-        CodeTokenKind.String => "pmd-tk-string",
-        CodeTokenKind.Comment => "pmd-tk-comment",
-        CodeTokenKind.Constant => "pmd-tk-constant",
-        CodeTokenKind.Tag => "pmd-tk-tag",
-        _ => "pmd-tk-property",
-    };
-
     private void Alert(AlertNode alert)
     {
-        var kind = alert.Kind.ToString().ToLowerInvariant();
         _builder.OpenElement(0, "div");
-        _builder.AddAttribute(1, ClassAttribute, "pmd-alert pmd-alert-" + kind);
+        _builder.AddAttribute(1, ClassAttribute, ViewerMarkup.AlertClass(alert.Kind));
 
         // The Avalonia viewer shows an alert as a group named by its kind; a note is the role that comes nearest.
         _builder.AddAttribute(2, "role", "note");

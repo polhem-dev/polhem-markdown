@@ -115,6 +115,24 @@ if (missingKinds.Count > 0)
     return 1;
 }
 
+// The HTML export writes the same text from the model, with the viewer's stylesheet, which is an embedded resource the
+// trimmer must keep, and an image embedded through the host's callback.
+var page = MarkdownHtml.ToPage(Markdown, htmlOptions: new MarkdownHtmlOptions
+{
+    ImageContent = _ => new MarkdownImageContent("image/png", new byte[] { 1, 2, 3 }),
+});
+string[] expectedMarkup =
+[
+    "<!DOCTYPE html>", ".pmd .pmd-alert-note {", "<h1 id=\"heading", "<span class=\"pmd-tk-keyword\">var</span>",
+    "<div class=\"pmd-diagram\"><svg", "<math", "src=\"data:image/png;base64,AQID\"", "<section class=\"pmd-footnotes\">",
+];
+var missingMarkup = expectedMarkup.Where(markup => !page.Contains(markup, StringComparison.Ordinal)).ToList();
+if (missingMarkup.Count > 0 || page.Contains("<script", StringComparison.OrdinalIgnoreCase))
+{
+    await Console.Error.WriteLineAsync("Unexpected HTML; missing: " + string.Join(", ", missingMarkup));
+    return 1;
+}
+
 await Console.Out.WriteLineAsync($"Polhem.Markdown AOT smoke test passed ({found.Count} node types).");
 return 0;
 

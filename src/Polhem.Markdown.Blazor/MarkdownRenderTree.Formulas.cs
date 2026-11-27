@@ -1,5 +1,6 @@
 using Polhem.Markdown.Formulas;
 using Polhem.Markdown.Model;
+using Polhem.Markdown.Output;
 
 namespace Polhem.Markdown.Blazor;
 

@@ -24,6 +24,11 @@ and versions follow [Semantic Versioning](https://semver.org/).
   regular expressions (`MarkdownFindOptions`). A host opens it from its own menu (`OpenFind`, `OpenReplace`), finds and
   replaces from code (`Find`, `ReplaceCurrentMatch`, `ReplaceAllMatches`), or leaves the keys to itself
   (`HandleFindShortcuts`). AvaloniaEdit's own search panel no longer opens. The Blazor editor does not have this yet.
+- `MarkdownHtml` writes a text as HTML from the viewers' model and under their safety policy: `ToPage` for a standalone
+  page with the viewers' look, to save or print, and `ToFragment` for one `div` styled by `MarkdownHtml.StyleSheet`.
+  Code highlighting, Mermaid diagrams and math are the Blazor viewer's static markup, with no script, and the
+  stylesheet uses the same `--pmd-*` variables. Images stay links unless the host returns their bytes
+  (`MarkdownHtmlOptions.ImageContent`), which embeds them as `data:` URIs. The Blazor viewer's output is unchanged.
 
 ## [0.4.1] - 2026-11-27
 
