@@ -245,13 +245,16 @@ public class MarkdownEditorMarkTests(HeadlessSession session)
     [InlineData(MarkdownRangeMarkStyle.Strikethrough)]
     public Task LineMark_Drawn(MarkdownRangeMarkStyle style) => session.RunAsync(() =>
     {
-        var (editor, window) = Show("one two three");
-        editor.AddMark(4, 3, style, s_red);
+        // NOTE: the lines are drawn under the glyphs, and where a glyph crosses them depends on the font the platform
+        // falls back to: the crossbar of a "t" sits on the strikethrough in some. Marking spaces keeps the line bare.
+        var (editor, window) = Show("one   three");
+        editor.AddMark(3, 3, style, s_red);
         Dispatcher.UIThread.RunJobs();
-        var bounds = editor.GetTextBounds(4, 3)!.Value;
+        var bounds = editor.GetTextBounds(3, 3)!.Value;
+        var x = bounds.Left + bounds.Width / 2;
 
         var rows = Enumerable.Range((int)bounds.Top, (int)bounds.Height)
-            .Where(y => PixelAt(window, editor, new Point(bounds.Left + 1, y)) == Colors.Red)
+            .Where(y => PixelAt(window, editor, new Point(x, y)) == Colors.Red)
             .ToList();
 
         Assert.NotEmpty(rows);
@@ -266,7 +269,7 @@ public class MarkdownEditorMarkTests(HeadlessSession session)
         }
 
         // Nothing red outside the range on the same line.
-        var after = editor.GetTextBounds(8, 5)!.Value;
+        var after = editor.GetTextBounds(6, 5)!.Value;
         Assert.DoesNotContain(rows, y => PixelAt(window, editor, new Point(after.Left + 2, y)) == Colors.Red);
     });
 
