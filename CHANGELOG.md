@@ -9,9 +9,13 @@ and versions follow [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
-- `IsStreaming` again completes the text after display math written on one line (`$$x = 1$$`). It took the line for
-  the start of a math block that never closed, so a link, image, emphasis or table header row after it showed its
-  Markdown while the reply arrived.
+## [0.4.1] - 2026-11-27
+
+Details: [docs/en/changelogs/0.4.1.md](docs/en/changelogs/0.4.1.md)
+
+- `IsStreaming` completes the text after display math written on one line (`$$x = 1$$`). 0.4.0 took that line for the
+  start of a math block that never closed, so a link, image, emphasis or table header row after it showed its Markdown
+  while the reply arrived.
 
 ## [0.4.0] - 2026-11-26
 
@@ -82,7 +86,8 @@ Details: [docs/en/changelogs/0.2.0.md](docs/en/changelogs/0.2.0.md)
 - `Polhem.Markdown.Blazor` adds `MarkdownViewer`, a component that renders a Markdown text as semantic HTML, with
   `OnLinkActivated` for links, code blocks with a copy button, and a stylesheet set through `--pmd-*` CSS variables.
 
-[Unreleased]: https://github.com/polhem-dev/polhem-markdown/compare/v0.4.0...HEAD
+[Unreleased]: https://github.com/polhem-dev/polhem-markdown/compare/v0.4.1...HEAD
+[0.4.1]: https://github.com/polhem-dev/polhem-markdown/compare/v0.4.0...v0.4.1
 [0.4.0]: https://github.com/polhem-dev/polhem-markdown/compare/v0.3.1...v0.4.0
 [0.3.1]: https://github.com/polhem-dev/polhem-markdown/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/polhem-dev/polhem-markdown/compare/v0.2.1...v0.3.0
