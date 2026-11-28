@@ -1,4 +1,1 @@
 #nullable enable
-Polhem.Markdown.Blazor.MarkdownViewer.CodeBlockActions.get -> System.Collections.Generic.IReadOnlyList<Polhem.Markdown.MarkdownCodeBlockAction!>?
-Polhem.Markdown.Blazor.MarkdownViewer.CodeBlockActions.set -> void
-Polhem.Markdown.Blazor.MarkdownViewer.RefreshCodeBlockActionsAsync() -> System.Threading.Tasks.Task!

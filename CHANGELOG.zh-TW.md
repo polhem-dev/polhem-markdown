@@ -9,26 +9,16 @@ Polhem.Markdown 各套件值得注意的變更，每個版本只列幾項重點�
 
 ## [Unreleased]
 
-- 兩個檢視器都可以在程式碼區塊加上宿主自己的按鈕（`CodeBlockActions`，元素為 `MarkdownCodeBlockAction`），放在複製按鈕前面：
-  顯示標籤或圖示，按下時收到該區塊的程式碼與語言（`MarkdownCodeBlock`）。`IsVisible` 決定哪些區塊顯示按鈕，
-  依賴的狀態改變時呼叫 `RefreshCodeBlockActions`（Blazor 為 `RefreshCodeBlockActionsAsync`）重新判斷。沒有設定動作的檢視器
-  外觀與行為不變。
-- Avalonia 的 `MarkdownEditor` 可以讀取與設定選取範圍（`SelectionStart`、`SelectionLength`、`SelectedText`、
-  `Select`），並在選取範圍或游標移動時通知（`SelectionChanged`）。`Replace` 取代一個範圍，或一次取代多個範圍
-  （`MarkdownReplacement`，offset 以取代前的文字為準），都只算一個復原步驟，並保留游標、選取範圍與復原紀錄。
-  Blazor 編輯器尚未提供這些成員。
-- Avalonia 的 `MarkdownEditor` 可以畫出宿主在原文範圍上加的標示（`AddMark`，以 `MarkdownRangeMarkStyle` 的
-  `Background`、`Underline` 或 `Strikethrough` 加上筆刷），畫在選取範圍底下，與語法顏色互不影響。標示跟著編輯移動、
-  文字刪除時一起消失，並可依 owner key 一起清除（`ClearMarks`）。`GetTextBounds` 取得某個 offset 或範圍在編輯器中的位置，
-  `ViewChanged` 在位置可能改變時通知，方便在文字旁放彈出視窗。範例程式以 diff 預覽一項修改。Blazor 編輯器尚未提供這些成員。
-- Avalonia 的 `MarkdownEditor` 以檢視器的搜尋列在原文中搜尋與取代：Ctrl+F（⌘F）搜尋，Ctrl+H（⌥⌘F）取代目前這一處，
-  或全部取代並只算一個復原步驟，可選擇大小寫相符、全字相符與正規表示式（`MarkdownFindOptions`）。宿主可以從自己的選單
-  打開（`OpenFind`、`OpenReplace`）、用程式碼搜尋與取代（`Find`、`ReplaceCurrentMatch`、`ReplaceAllMatches`），或把
-  快捷鍵留給自己（`HandleFindShortcuts`）。AvaloniaEdit 原本的搜尋面板不再出現。Blazor 編輯器尚未提供這項功能。
-- `MarkdownHtml` 從檢視器的 model、套用相同的安全政策把文字輸出成 HTML：`ToPage` 輸出外觀與檢視器一致的獨立網頁，
-  可存檔或列印；`ToFragment` 輸出一個 `div`，以 `MarkdownHtml.StyleSheet` 套上樣式。程式碼上色、Mermaid 圖表與數學式
-  都是 Blazor 檢視器的靜態標記，不帶 script，stylesheet 沿用相同的 `--pmd-*` 變數。圖片預設維持連結，宿主回傳位元組時
-  （`MarkdownHtmlOptions.ImageContent`）以 `data:` URI 嵌入。Blazor 檢視器的輸出不變。
+## [0.5.0] - 2026-11-28
+
+詳細內容：[docs/zh-TW/changelogs/0.5.0.md](docs/zh-TW/changelogs/0.5.0.md)
+
+- Avalonia 的 `MarkdownEditor` 可以讀取與設定選取範圍，並以一個復原步驟取代一個或多個範圍（`Replace`、`MarkdownReplacement`）。
+- Avalonia 編輯器可以畫出宿主在原文範圍上加的標示（`AddMark`），並告知範圍在畫面上的位置（`GetTextBounds`、`ViewChanged`）。
+- Avalonia 編輯器可以在原文中搜尋與取代，可選擇大小寫相符、全字相符與正規表示式。Ctrl+F（⌘F）改為打開這個搜尋列，
+  不再是 AvaloniaEdit 的搜尋面板。Blazor 編輯器尚未提供這些功能。
+- 兩個檢視器都可以在程式碼區塊加上宿主自己的按鈕（`CodeBlockActions`）。
+- `MarkdownHtml` 依檢視器的安全政策把文字輸出成獨立 HTML 網頁或片段，樣式使用相同的 `--pmd-*` 變數。
 
 ## [0.4.1] - 2026-11-27
 
@@ -100,7 +90,8 @@ Polhem.Markdown 各套件值得注意的變更，每個版本只列幾項重點�
 - `Polhem.Markdown.Blazor` 新增 `MarkdownViewer` 元件，把 Markdown 文字呈現為語意化 HTML：連結以 `OnLinkActivated`
   交給宿主、程式碼區塊附複製鈕，樣式以 `--pmd-*` CSS 變數設定。
 
-[Unreleased]: https://github.com/polhem-dev/polhem-markdown/compare/v0.4.1...HEAD
+[Unreleased]: https://github.com/polhem-dev/polhem-markdown/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/polhem-dev/polhem-markdown/compare/v0.4.1...v0.5.0
 [0.4.1]: https://github.com/polhem-dev/polhem-markdown/compare/v0.4.0...v0.4.1
 [0.4.0]: https://github.com/polhem-dev/polhem-markdown/compare/v0.3.1...v0.4.0
 [0.3.1]: https://github.com/polhem-dev/polhem-markdown/compare/v0.3.0...v0.3.1
