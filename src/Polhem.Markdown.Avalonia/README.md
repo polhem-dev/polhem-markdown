@@ -224,7 +224,21 @@ Editor.ViewChanged += (_, _) =>
 Editor.ClearMarks(this);    // this host's marks only
 ```
 
-The gallery in the repository shows a change this way, with buttons to accept or reject it.
+A host that proposes a change, such as a rewrite from an assistant, shows it before making it with `PreviewReplace`: the
+range is struck through and the new text follows it, until the host accepts or rejects the preview. Accepting leaves one
+step to undo, which turns the range into the new text, and rejecting leaves none; edits the user makes elsewhere
+meanwhile keep their own steps. The user cannot edit the new text while it is shown, and `GetMarkdownWithoutPreview`
+gives the text without it, for a host that saves meanwhile:
+
+```csharp
+var preview = Editor.PreviewReplace(start, length, rewritten);
+preview.PendingChanged += (_, _) => Popup.IsVisible = preview.IsPending;
+
+preview.Accept();    // or preview.Reject()
+```
+
+`PreviewRemovedBrush` and `PreviewAddedBrush` set its colours. The gallery in the repository shows a change this way,
+with buttons to accept or reject it.
 
 Ctrl+F (⌘F on macOS) in the editor opens the viewer's find bar over the source, with buttons for matching case,
 whole words and regular expressions. Every match is highlighted, apart from the host's marks, and the current one is
