@@ -11,7 +11,9 @@ namespace Polhem.Markdown.Avalonia;
 /// the text, and redraws it whenever the view is measured, as it is on every scroll and edit. The layers above are only
 /// redrawn when AvaloniaEdit invalidates them, which it does not do on a vertical scroll.
 /// </remarks>
-internal sealed class RangeMarkRenderer(TextSegmentCollection<RangeMarkSegment> marks) : IBackgroundRenderer
+/// <param name="marks">The marks to draw.</param>
+/// <param name="backgroundOpacity">How opaque the background marks are drawn, over the opacity of their brushes.</param>
+internal sealed class RangeMarkRenderer(TextSegmentCollection<RangeMarkSegment> marks, double backgroundOpacity = 1) : IBackgroundRenderer
 {
     /// <summary>Where the strikethrough runs, as a fraction of the line's height from its top: about the middle of a lowercase letter.</summary>
     private const double StrikethroughPosition = 0.55;
@@ -37,7 +39,10 @@ internal sealed class RangeMarkRenderer(TextSegmentCollection<RangeMarkSegment> 
                 builder.AddSegment(textView, segment);
                 if (builder.CreateGeometry() is { } geometry)
                 {
-                    drawingContext.DrawGeometry(mark.Brush, null, geometry);
+                    using (drawingContext.PushOpacity(backgroundOpacity))
+                    {
+                        drawingContext.DrawGeometry(mark.Brush, null, geometry);
+                    }
                 }
                 continue;
             }

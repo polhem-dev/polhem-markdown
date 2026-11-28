@@ -80,11 +80,14 @@ public partial class MarkdownEditor : Control
         // NOTE: AvaloniaEdit opens URLs in the text on Ctrl+click, outside the scheme check of MarkdownOptions.
         _editor.Options.EnableHyperlinks = false;
         _editor.Options.EnableEmailHyperlinks = false;
+        _previewSections = new PreviewReadOnlySections(this);
+        ApplyPreviewReadOnlySections();
 
         _colorizer = new SyntaxColorizer(this);
         _editor.TextArea.TextView.LineTransformers.Add(_colorizer);
         _editor.TextArea.TextView.BackgroundRenderers.Add(new RangeMarkRenderer(_marks));
         _editor.TextArea.TextView.BackgroundRenderers.Add(new RangeMarkRenderer(_findHighlights));
+        _editor.TextArea.TextView.BackgroundRenderers.Add(new RangeMarkRenderer(_previewMarks, PreviewBackgroundOpacity));
         _editor.Document.Changed += OnDocumentChanged;
         _editor.Document.UpdateFinished += OnDocumentUpdateFinished;
         _editor.TextArea.Caret.PositionChanged += (_, _) =>
@@ -219,6 +222,7 @@ public partial class MarkdownEditor : Control
         {
             _editor.TextArea.TextView.Redraw();
         }
+        OnPreviewPropertyChanged(change);
     }
 
     /// <inheritdoc/>
@@ -277,6 +281,7 @@ public partial class MarkdownEditor : Control
         {
             return;
         }
+        EndPreview();
         _settingText = true;
         try
         {
@@ -296,11 +301,13 @@ public partial class MarkdownEditor : Control
         _version++;
         _colorizer.Shift(e.Offset, e.RemovalLength, e.InsertionLength);
         _marks.UpdateOffsets(e);
+        _previewMarks.UpdateOffsets(e);
+        OnDocumentChangedForPreview(e);
         if (!_editor.Document.IsInUpdate)
         {
             RemoveEmptyMarks();
             KeepFind();
-            if (!_settingText)
+            if (!_settingText && !IsResolvingPreview)
             {
                 OnTextEdited();
             }
@@ -312,7 +319,7 @@ public partial class MarkdownEditor : Control
     {
         RemoveEmptyMarks();
         KeepFind();
-        if (!_settingText && _editor.Document.Text != Markdown)
+        if (!_settingText && !IsResolvingPreview && _editor.Document.Text != Markdown)
         {
             OnTextEdited();
         }

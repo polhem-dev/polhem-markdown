@@ -133,8 +133,9 @@ preview in `MarkdownViewer` beside it, not as rich text. The two editors color a
   options for case, whole words and regular expressions; a host opens them from its own menu or finds and replaces from
   code. It draws the host's own
   marks over ranges (a background, an underline or a strikethrough) that move with the edits, and tells where a range
-  is on the screen (`GetTextBounds`, `ViewChanged`), for a change shown as a diff before it is accepted or a popup
-  next to the selection.
+  is on the screen (`GetTextBounds`, `ViewChanged`), for a popup next to the selection. It shows a replacement as a diff
+  before it is made (`PreviewReplace`): accepting it leaves one step to undo and rejecting it none, while the user's
+  edits elsewhere keep their own.
 - **On Blazor** the text is typed into a native textarea, so input methods and screen readers work as anywhere on the
   page, under interactive server, WebAssembly and auto rendering. It has no search panel yet.
 

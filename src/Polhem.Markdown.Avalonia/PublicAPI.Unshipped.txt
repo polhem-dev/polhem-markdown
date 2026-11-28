@@ -1,1 +1,18 @@
 #nullable enable
+Polhem.Markdown.Avalonia.MarkdownEditor.GetMarkdownWithoutPreview() -> string!
+Polhem.Markdown.Avalonia.MarkdownEditor.PreviewAddedBrush.get -> Avalonia.Media.IBrush!
+Polhem.Markdown.Avalonia.MarkdownEditor.PreviewAddedBrush.set -> void
+Polhem.Markdown.Avalonia.MarkdownEditor.PreviewRemovedBrush.get -> Avalonia.Media.IBrush!
+Polhem.Markdown.Avalonia.MarkdownEditor.PreviewRemovedBrush.set -> void
+Polhem.Markdown.Avalonia.MarkdownEditor.PreviewReplace(int start, int length, string! text) -> Polhem.Markdown.Avalonia.MarkdownReplacementPreview!
+Polhem.Markdown.Avalonia.MarkdownReplacementPreview
+Polhem.Markdown.Avalonia.MarkdownReplacementPreview.Accept() -> bool
+Polhem.Markdown.Avalonia.MarkdownReplacementPreview.IsPending.get -> bool
+Polhem.Markdown.Avalonia.MarkdownReplacementPreview.Length.get -> int
+Polhem.Markdown.Avalonia.MarkdownReplacementPreview.PendingChanged -> System.EventHandler?
+Polhem.Markdown.Avalonia.MarkdownReplacementPreview.ProposedStart.get -> int
+Polhem.Markdown.Avalonia.MarkdownReplacementPreview.Reject() -> bool
+Polhem.Markdown.Avalonia.MarkdownReplacementPreview.Start.get -> int
+Polhem.Markdown.Avalonia.MarkdownReplacementPreview.Text.get -> string!
+static readonly Polhem.Markdown.Avalonia.MarkdownEditor.PreviewAddedBrushProperty -> Avalonia.StyledProperty<Avalonia.Media.IBrush!>!
+static readonly Polhem.Markdown.Avalonia.MarkdownEditor.PreviewRemovedBrushProperty -> Avalonia.StyledProperty<Avalonia.Media.IBrush!>!
