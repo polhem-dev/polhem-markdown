@@ -94,6 +94,7 @@ copy button is, so they work on a touch screen.
 @code {
     private MarkdownViewer? viewer;
     private IReadOnlyList<MarkdownCodeBlockAction>? actions;
+    private string draft = "";
 
     protected override void OnInitialized() => actions =
     [

@@ -131,6 +131,9 @@
 或交給平台的 web view 列印成 PDF。
 
 ```csharp
+// 只有允許的 scheme 會交給 ImageContent，預設只有 https。
+var options = new MarkdownOptions { AllowedImageSchemes = { "file" } };
+
 var page = MarkdownHtml.ToPage(markdown, options, new MarkdownHtmlOptions
 {
     // 回傳圖片的位元組就以 data: URI 嵌入；回傳 null 則維持連結。
@@ -143,12 +146,14 @@ var page = MarkdownHtml.ToPage(markdown, options, new MarkdownHtmlOptions
 - `ToPage` 輸出外觀與檢視器一致的獨立網頁；`ToFragment` 輸出一個 `div`，放進宿主自己的頁面，頁面需引入 `MarkdownHtml.StyleSheet`。
 - 標記與 Blazor 檢視器相同：程式碼上色、Mermaid 圖表為 inline SVG、數學式為 MathML，不帶 script。stylesheet 沿用相同的
   `--pmd-*` 變數，匯出的頁面可用同一套方式改主題。
-- 圖片預設維持連結，宿主回傳位元組時才嵌入；套件本身不讀檔、也不連網。
+- 圖片預設維持連結，宿主回傳位元組時才嵌入；套件本身不讀檔、也不連網。只有 scheme 被允許的圖片才會詢問宿主，
+  所以 `file` 圖片要把 `file` 加進 `AllowedImageSchemes`，相對路徑則要設定 `BaseUri`。
 
 ## 範例
 
 `samples/MarkdownGallery` 以 Semi 主題（亮色或暗色）在附目錄的 `MarkdownReader` 中展示每一種節點，並可「重播」：
-把文字分段打出來，模擬串流回覆。圖片可點開成原尺寸，Ctrl+F（⌘F）可搜尋文字。打開 Edit 開關，編輯器會出現在檢視器旁邊，兩邊同步捲動。
+把文字分段打出來，模擬串流回覆。圖片可點開成原尺寸，Ctrl+F（⌘F）可搜尋文字。打開 Edit 開關，編輯器會出現在檢視器旁邊，兩邊同步捲動；
+此時按「Propose change」會以標示把一項修改呈現成 diff，並附上接受與拒絕按鈕，程式碼區塊的「Insert into editor」按鈕則把程式碼插到游標處。
 
 ```bash
 dotnet run --project samples/MarkdownGallery.Desktop
@@ -156,7 +161,7 @@ dotnet run --project samples/MarkdownGallery.Blazor
 dotnet run --project samples/MarkdownGallery.Wasm
 ```
 
-Blazor 版 Gallery 顯示同一份文字，方便兩個檢視器並排比對，並有一個使用檢視器搜尋 API 的搜尋框；它的 Edit 開關同樣會把 Blazor 編輯器放在檢視器旁邊。
+Blazor 版 Gallery 顯示同一份文字，方便兩個檢視器並排比對，並有一個使用檢視器搜尋 API 的搜尋框；它的 Edit 開關同樣會把 Blazor 編輯器放在檢視器旁邊，標明語言的程式碼區塊則有「Count lines」按鈕。
 `MarkdownGallery.Blazor` 以 interactive server 渲染執行；`MarkdownGallery.Wasm` 是同一個頁面跑在獨立的 Blazor WebAssembly
 上，完全在瀏覽器裡執行、不需要伺服器。Build CI 會以裁剪（trimming）方式發佈它，Blazor 套件若有改動在裁剪後無法運作，建置就會失敗。
 
