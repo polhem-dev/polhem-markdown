@@ -135,24 +135,32 @@ public class FindTests(HeadlessSession session)
         Assert.InRange(viewer.FindBarControl!.TranslatePoint(default, scroller)!.Value.Y, 7, 9);
     });
 
-    /// <summary>Where the current match is in the viewer, as it is laid out now.</summary>
-    private static Rect CurrentMatchBounds(MarkdownViewer viewer, string blockText, string needle)
+    /// <summary>
+    /// A word too long for one row, so a match on it runs across the whole width under the find bar whatever the font.
+    /// </summary>
+    private static readonly string s_wideNeedle = new('q', 160);
+
+    /// <summary>Where the match on <paramref name="block"/> is in the viewer, as it is laid out now.</summary>
+    private static Rect MatchBounds(MarkdownViewer viewer, MarkdownTextBlock block, string needle)
     {
-        var text = Descendants<MarkdownTextBlock>(viewer).First(block => block.AccessibleText == blockText);
-        var bounds = text.MatchBounds((blockText.IndexOf(needle, StringComparison.Ordinal), needle.Length));
-        return new Rect(text.TranslatePoint(bounds.TopLeft, viewer)!.Value, bounds.Size);
+        var bounds = block.MatchBounds((block.AccessibleText!.IndexOf(needle, StringComparison.Ordinal), needle.Length));
+        return new Rect(block.TranslatePoint(bounds.TopLeft, viewer)!.Value, bounds.Size);
     }
+
+    /// <summary>Where the match on the block whose text is <paramref name="blockText"/> is in the viewer.</summary>
+    private static Rect MatchBounds(MarkdownViewer viewer, string blockText, string needle) =>
+        MatchBounds(viewer, Descendants<MarkdownTextBlock>(viewer).First(block => block.AccessibleText == blockText), needle);
 
     [Fact(DisplayName = "A match at the top, which cannot scroll out from under the bar, moves the bar to the bottom of the view")]
     public Task MatchAtTop_UnderBar_MovesBarToBottom() => session.RunAsync(() =>
     {
-        var heading = string.Concat(Enumerable.Repeat("word ", 14)) + "needle";
-        var (_, scroller, viewer) = ShowScrolling("# " + heading + "\n\n" + s_filler + "The needle.\n\n" + s_filler);
+        var middle = "The " + s_wideNeedle + ".";
+        var (_, scroller, viewer) = ShowScrolling("# " + s_wideNeedle + "\n\n" + s_filler + middle + "\n\n" + s_filler);
 
-        viewer.OpenFind("needle");
+        viewer.OpenFind(s_wideNeedle);
         Dispatcher.UIThread.RunJobs();
 
-        var match = CurrentMatchBounds(viewer, heading, "needle");
+        var match = MatchBounds(viewer, s_wideNeedle, s_wideNeedle);
         var bar = viewer.FindBarControl!.Bounds;
         Assert.False(match.Intersects(bar), $"The match at {match} is under the bar at {bar}.");
         Assert.InRange(bar.Bottom, scroller.Viewport.Height - 9, scroller.Viewport.Height - 7);
@@ -160,13 +168,13 @@ public class FindTests(HeadlessSession session)
         viewer.FindNext();
         Dispatcher.UIThread.RunJobs();
 
-        var next = CurrentMatchBounds(viewer, "The needle.", "needle");
+        var next = MatchBounds(viewer, middle, s_wideNeedle);
         bar = viewer.FindBarControl.Bounds;
         Assert.False(next.Intersects(bar), $"The match at {next} is under the bar at {bar}.");
         Assert.InRange(bar.Bottom - scroller.Offset.Y, scroller.Viewport.Height - 9, scroller.Viewport.Height - 7);
 
         viewer.CloseFind();
-        viewer.OpenFind("The needle");
+        viewer.OpenFind(middle);
         Dispatcher.UIThread.RunJobs();
 
         Assert.InRange(viewer.FindBarControl.TranslatePoint(default, scroller)!.Value.Y, 7, 9);
@@ -180,7 +188,7 @@ public class FindTests(HeadlessSession session)
         viewer.OpenFind("needle");
         Dispatcher.UIThread.RunJobs();
 
-        var match = CurrentMatchBounds(viewer, "needle", "needle");
+        var match = MatchBounds(viewer, "needle", "needle");
         var bar = viewer.FindBarControl!.Bounds;
         Assert.False(match.Intersects(bar), $"The match at {match} is under the bar at {bar}.");
         Assert.InRange(bar.Top, 7, 9);

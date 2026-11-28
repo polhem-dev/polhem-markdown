@@ -390,11 +390,14 @@ public class MarkdownEditorFindTests(HeadlessSession session)
         Assert.True(bounds.Value.Bottom <= editor.Bounds.Height, $"The match at {bounds.Value} is below the view.");
     });
 
-    /// <summary>A first line whose last word sits where the find bar does, at the right, above many short lines.</summary>
-    private static readonly string s_textWithNeedleOnFirstLine =
-        string.Concat(Enumerable.Repeat("word ", 14)) + "needle\n" + string.Concat(Enumerable.Repeat("line\n", 200)) + "end";
+    /// <summary>
+    /// A word too long for one row, so a match on it runs across the whole width under the find bar whatever the font.
+    /// </summary>
+    private static readonly string s_wideNeedle = new('q', 120);
 
-    private static int FirstLineNeedle => s_textWithNeedleOnFirstLine.IndexOf("needle", StringComparison.Ordinal);
+    /// <summary>The wide word on the first line, above many short lines.</summary>
+    private static readonly string s_textWithNeedleOnFirstLine =
+        s_wideNeedle + "\n" + string.Concat(Enumerable.Repeat("line\n", 200)) + "end";
 
     [Theory(DisplayName = "A match on the first line, which cannot scroll out from under the bar, moves the bar to the bottom of the text")]
     [InlineData(false)]
@@ -404,15 +407,15 @@ public class MarkdownEditorFindTests(HeadlessSession session)
         var (editor, _) = Show(s_textWithNeedleOnFirstLine, height: 300);
         if (replace)
         {
-            editor.OpenReplace("needle");
+            editor.OpenReplace(s_wideNeedle);
         }
         else
         {
-            editor.OpenFind("needle");
+            editor.OpenFind(s_wideNeedle);
         }
         Dispatcher.UIThread.RunJobs();
 
-        var bounds = editor.GetTextBounds(FirstLineNeedle, 6);
+        var bounds = editor.GetTextBounds(0, s_wideNeedle.Length);
 
         Assert.NotNull(bounds);
         Assert.Equal(replace, editor.IsReplaceOpen);
@@ -422,12 +425,11 @@ public class MarkdownEditorFindTests(HeadlessSession session)
         Assert.True(bar.Bottom <= editor.Bounds.Height, $"The bar at {bar} is below the editor.");
     });
 
-    /// <summary>The first line's match, one in the middle, and one at the very end, each at the right of its line.</summary>
+    /// <summary>The wide word on the first line, in the middle, and at the very end.</summary>
     private static string TextWithThreeNeedles()
     {
-        var words = string.Concat(Enumerable.Repeat("word ", 14));
         var lines = string.Concat(Enumerable.Repeat("line\n", 100));
-        return words + "needle\n" + lines + words + "needle\n" + lines + words + "needle";
+        return s_wideNeedle + "\n" + lines + s_wideNeedle + "\n" + lines + s_wideNeedle;
     }
 
     [Fact(DisplayName = "The bar moved to the bottom stays there while the next matches scroll clear of it")]
@@ -435,7 +437,7 @@ public class MarkdownEditorFindTests(HeadlessSession session)
     {
         var text = TextWithThreeNeedles();
         var (editor, _) = Show(text, height: 300);
-        editor.OpenFind("needle");
+        editor.OpenFind(s_wideNeedle);
         Dispatcher.UIThread.RunJobs();
         var middle = editor.Bounds.Height / 2;
         Assert.True(editor.FindBarControl!.Bounds.Top > middle);
@@ -447,7 +449,7 @@ public class MarkdownEditorFindTests(HeadlessSession session)
         editor.FindNext();
         Dispatcher.UIThread.RunJobs();
 
-        var last = editor.GetTextBounds(text.Length - 6, 6);
+        var last = editor.GetTextBounds(text.Length - s_wideNeedle.Length, s_wideNeedle.Length);
         var bar = editor.FindBarControl.Bounds;
         Assert.NotNull(last);
         Assert.False(last.Value.Intersects(bar), $"The last match at {last.Value} is under the bar at {bar}.");
@@ -461,7 +463,7 @@ public class MarkdownEditorFindTests(HeadlessSession session)
         var (editor, _) = Show(text, height: 300);
         editor.TextEditor.Options.AllowScrollBelowDocument = false;
         Dispatcher.UIThread.RunJobs();
-        editor.OpenFind("needle");
+        editor.OpenFind(s_wideNeedle);
         Dispatcher.UIThread.RunJobs();
         var middle = editor.Bounds.Height / 2;
         Assert.True(editor.FindBarControl!.Bounds.Top > middle);
@@ -469,7 +471,7 @@ public class MarkdownEditorFindTests(HeadlessSession session)
         editor.FindPrevious();
         Dispatcher.UIThread.RunJobs();
 
-        var last = editor.GetTextBounds(text.Length - 6, 6);
+        var last = editor.GetTextBounds(text.Length - s_wideNeedle.Length, s_wideNeedle.Length);
         var bar = editor.FindBarControl.Bounds;
         Assert.NotNull(last);
         Assert.False(last.Value.Intersects(bar), $"The last match at {last.Value} is under the bar at {bar}.");
@@ -496,7 +498,7 @@ public class MarkdownEditorFindTests(HeadlessSession session)
     public Task CloseFind_PutsBarBackAtTop() => session.RunAsync(() =>
     {
         var (editor, _) = Show(s_textWithNeedleOnFirstLine, height: 300);
-        editor.OpenFind("needle");
+        editor.OpenFind(s_wideNeedle);
         Dispatcher.UIThread.RunJobs();
         Assert.True(editor.FindBarControl!.Bounds.Top > editor.Bounds.Height / 2);
 
