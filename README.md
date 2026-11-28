@@ -149,6 +149,9 @@ Each package's README shows how to use its editor: [Avalonia](src/Polhem.Markdow
 viewers, so a host can save a document as a web page, or print that page to PDF from the platform's web view.
 
 ```csharp
+// Only allowed schemes reach ImageContent, and by default that is https alone.
+var options = new MarkdownOptions { AllowedImageSchemes = { "file" } };
+
 var page = MarkdownHtml.ToPage(markdown, options, new MarkdownHtmlOptions
 {
     // Return the bytes of an image to embed it as a data: URI; null keeps it as a link.
@@ -159,16 +162,20 @@ var page = MarkdownHtml.ToPage(markdown, options, new MarkdownHtmlOptions
 ```
 
 - `ToPage` writes a standalone page with the viewers' look; `ToFragment` writes one `div` to place in a page of the
-  host's own, which includes `MarkdownHtml.StyleSheet`.
+  host's own, and that page includes `MarkdownHtml.StyleSheet`.
 - The markup is the Blazor viewer's: highlighted code, Mermaid diagrams as inline SVG and math as MathML, with no
   script. The stylesheet uses the same `--pmd-*` variables, so an exported page is themed the same way.
-- Images stay links unless the host returns their bytes; the package never reads a file or the network itself.
+- Images stay links unless the host returns their bytes; the package never reads a file or the network itself. The
+  host is asked only for images whose scheme is allowed, so a `file` image needs `file` in `AllowedImageSchemes`, and
+  a relative source needs `BaseUri`.
 
 ## Samples
 
 `samples/MarkdownGallery` shows every kind of node on a Semi theme, light or dark, in a `MarkdownReader` with its table
 of contents, with a replay that types the text in chunks as a streamed reply arrives. Images open at full size, and
-Ctrl+F (⌘F) finds text. Its Edit switch puts the editor beside the viewer, scrolling together.
+Ctrl+F (⌘F) finds text. Its Edit switch puts the editor beside the viewer, scrolling together; there, *Propose change*
+shows a change as a diff with marks and Accept and Reject buttons, and a code block's *Insert into editor* button puts
+its code at the caret.
 
 ```bash
 dotnet run --project samples/MarkdownGallery.Desktop
@@ -177,7 +184,8 @@ dotnet run --project samples/MarkdownGallery.Wasm
 ```
 
 The Blazor gallery shows the same text, so the two viewers can be compared side by side, with a find box that uses the
-viewer's find API. Its Edit switch puts the Blazor editor beside the viewer in the same way. `MarkdownGallery.Blazor` runs with interactive server rendering;
+viewer's find API. Its Edit switch puts the Blazor editor beside the viewer in the same way, and a code block that names
+its language has a *Count lines* button. `MarkdownGallery.Blazor` runs with interactive server rendering;
 `MarkdownGallery.Wasm` runs the same page on standalone Blazor WebAssembly, in the browser with no server. Build CI
 publishes it trimmed, so a change that breaks the Blazor package under trimming fails the build.
 
