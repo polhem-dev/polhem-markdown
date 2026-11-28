@@ -23,6 +23,12 @@ public partial class MarkdownEditor : IFindBarOwner
     private const double FindBarMargin = 8;
 
     /// <summary>
+    /// Whether the find bar sits at the bottom of the text, where it moves when the current match is under it at the top
+    /// and scrolling cannot uncover it (polhem-dev/polhem-markdown#108).
+    /// </summary>
+    private bool _findBarAtBottom;
+
+    /// <summary>
     /// Gets or sets the labels of the find bar: the placeholders of its text boxes and the accessible names and tooltips
     /// of its buttons. A <see langword="null"/> label keeps the English one.
     /// </summary>
@@ -72,6 +78,10 @@ public partial class MarkdownEditor : IFindBarOwner
     /// for a host that offers find from its own menu or button. <paramref name="text"/> is put in the text box and found;
     /// without it, the text box keeps what it had, selected.
     /// </summary>
+    /// <remarks>
+    /// When the current match is under the bar and scrolling cannot uncover it, as on the first lines of the text, the
+    /// bar moves to the bottom right of the text, and stays there until a match is under it there or it closes.
+    /// </remarks>
     /// <param name="text">The text to find, or <see langword="null"/> to keep the text box's.</param>
     public void OpenFind(string? text = null) => OpenBar(text, replace: false);
 
@@ -102,6 +112,7 @@ public partial class MarkdownEditor : IFindBarOwner
             bar.IsVisible = false;
             InvalidateMeasure();
         }
+        _findBarAtBottom = false;
         _finder = null;
         _findQuery = null;
         _findMatches.Clear();
@@ -255,7 +266,8 @@ public partial class MarkdownEditor : IFindBarOwner
     }
 
     /// <summary>
-    /// Places the find bar at the top right of the text, below the toolbar and left of the vertical scroll bar.
+    /// Places the find bar at the top right of the text, below the toolbar and left of the vertical scroll bar, or at the
+    /// bottom right, above the horizontal scroll bar, when the current match was under it at the top.
     /// </summary>
     private void ArrangeFindBar(Size finalSize, double top)
     {
@@ -265,7 +277,9 @@ public partial class MarkdownEditor : IFindBarOwner
         }
         var size = _findBar!.DesiredSize;
         var textView = _editor.TextArea.TextView;
-        var right = textView.TranslatePoint(new Point(textView.Bounds.Width, 0), this)?.X ?? finalSize.Width;
-        _findBar.Arrange(new Rect(Math.Max(0, right - size.Width - FindBarMargin), top + FindBarMargin, size.Width, size.Height));
+        var corner = textView.TranslatePoint(new Point(textView.Bounds.Width, textView.Bounds.Height), this)
+            ?? new Point(finalSize.Width, finalSize.Height);
+        var y = _findBarAtBottom ? Math.Max(top, corner.Y - size.Height - FindBarMargin) : top + FindBarMargin;
+        _findBar.Arrange(new Rect(Math.Max(0, corner.X - size.Width - FindBarMargin), y, size.Width, size.Height));
     }
 }
