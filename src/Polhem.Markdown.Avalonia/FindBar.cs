@@ -11,8 +11,9 @@ namespace Polhem.Markdown.Avalonia;
 
 /// <summary>
 /// The find bar of a <see cref="MarkdownViewer"/> or a <see cref="MarkdownEditor"/>, floating at the top right of the
-/// view: a text box, the number of matches, a button that matches case, buttons for the previous and the next match, and
-/// one that closes it. Enter goes to the next match, Shift+Enter to the previous one, and Escape closes it.
+/// view, or at the bottom right while the current match would be under it: a text box, the number of matches, a button
+/// that matches case, buttons for the previous and the next match, and one that closes it. Enter goes to the next match,
+/// Shift+Enter to the previous one, and Escape closes it.
 /// </summary>
 /// <remarks>
 /// In the editor it also has buttons for whole words and regular expressions, and a second row to replace: a text box,

@@ -390,6 +390,123 @@ public class MarkdownEditorFindTests(HeadlessSession session)
         Assert.True(bounds.Value.Bottom <= editor.Bounds.Height, $"The match at {bounds.Value} is below the view.");
     });
 
+    /// <summary>A first line whose last word sits where the find bar does, at the right, above many short lines.</summary>
+    private static readonly string s_textWithNeedleOnFirstLine =
+        string.Concat(Enumerable.Repeat("word ", 14)) + "needle\n" + string.Concat(Enumerable.Repeat("line\n", 200)) + "end";
+
+    private static int FirstLineNeedle => s_textWithNeedleOnFirstLine.IndexOf("needle", StringComparison.Ordinal);
+
+    [Theory(DisplayName = "A match on the first line, which cannot scroll out from under the bar, moves the bar to the bottom of the text")]
+    [InlineData(false)]
+    [InlineData(true)]
+    public Task Find_MatchOnFirstLine_MovesBarOutOfTheWay(bool replace) => session.RunAsync(() =>
+    {
+        var (editor, _) = Show(s_textWithNeedleOnFirstLine, height: 300);
+        if (replace)
+        {
+            editor.OpenReplace("needle");
+        }
+        else
+        {
+            editor.OpenFind("needle");
+        }
+        Dispatcher.UIThread.RunJobs();
+
+        var bounds = editor.GetTextBounds(FirstLineNeedle, 6);
+
+        Assert.NotNull(bounds);
+        Assert.Equal(replace, editor.IsReplaceOpen);
+        var bar = editor.FindBarControl!.Bounds;
+        Assert.False(bounds.Value.Intersects(bar), $"The match at {bounds.Value} is under the bar at {bar}.");
+        Assert.True(bar.Top > bounds.Value.Bottom, $"The bar at {bar} did not move below the match at {bounds.Value}.");
+        Assert.True(bar.Bottom <= editor.Bounds.Height, $"The bar at {bar} is below the editor.");
+    });
+
+    /// <summary>The first line's match, one in the middle, and one at the very end, each at the right of its line.</summary>
+    private static string TextWithThreeNeedles()
+    {
+        var words = string.Concat(Enumerable.Repeat("word ", 14));
+        var lines = string.Concat(Enumerable.Repeat("line\n", 100));
+        return words + "needle\n" + lines + words + "needle\n" + lines + words + "needle";
+    }
+
+    [Fact(DisplayName = "The bar moved to the bottom stays there while the next matches scroll clear of it")]
+    public Task Find_BarMovedToBottom_StaysForLaterMatches() => session.RunAsync(() =>
+    {
+        var text = TextWithThreeNeedles();
+        var (editor, _) = Show(text, height: 300);
+        editor.OpenFind("needle");
+        Dispatcher.UIThread.RunJobs();
+        var middle = editor.Bounds.Height / 2;
+        Assert.True(editor.FindBarControl!.Bounds.Top > middle);
+
+        editor.FindNext();
+        Dispatcher.UIThread.RunJobs();
+        Assert.True(editor.FindBarControl.Bounds.Top > middle, "The bar went back to the top for the match in the middle.");
+
+        editor.FindNext();
+        Dispatcher.UIThread.RunJobs();
+
+        var last = editor.GetTextBounds(text.Length - 6, 6);
+        var bar = editor.FindBarControl.Bounds;
+        Assert.NotNull(last);
+        Assert.False(last.Value.Intersects(bar), $"The last match at {last.Value} is under the bar at {bar}.");
+        Assert.True(bar.Top > middle, "The bar went back to the top for the match at the end.");
+    });
+
+    [Fact(DisplayName = "Without scrolling below the text, a match at the end under the bar at the bottom moves it back to the top")]
+    public Task Find_MatchAtEndUnderBarAtBottom_MovesBarBack() => session.RunAsync(() =>
+    {
+        var text = TextWithThreeNeedles();
+        var (editor, _) = Show(text, height: 300);
+        editor.TextEditor.Options.AllowScrollBelowDocument = false;
+        Dispatcher.UIThread.RunJobs();
+        editor.OpenFind("needle");
+        Dispatcher.UIThread.RunJobs();
+        var middle = editor.Bounds.Height / 2;
+        Assert.True(editor.FindBarControl!.Bounds.Top > middle);
+
+        editor.FindPrevious();
+        Dispatcher.UIThread.RunJobs();
+
+        var last = editor.GetTextBounds(text.Length - 6, 6);
+        var bar = editor.FindBarControl.Bounds;
+        Assert.NotNull(last);
+        Assert.False(last.Value.Intersects(bar), $"The last match at {last.Value} is under the bar at {bar}.");
+        Assert.True(bar.Top < middle, $"The bar at {bar} did not go back to the top for the match at the end at {last.Value}.");
+    });
+
+    [Fact(DisplayName = "A match on the first line clear of the bar leaves the bar at the top")]
+    public Task Find_MatchOnFirstLineClearOfBar_LeavesBar() => session.RunAsync(() =>
+    {
+        var text = "needle\n" + string.Concat(Enumerable.Repeat("line\n", 200));
+        var (editor, _) = Show(text, height: 300);
+        editor.OpenFind("needle");
+        Dispatcher.UIThread.RunJobs();
+
+        var bounds = editor.GetTextBounds(0, 6);
+        var bar = editor.FindBarControl!.Bounds;
+
+        Assert.NotNull(bounds);
+        Assert.False(bounds.Value.Intersects(bar), $"The match at {bounds.Value} is under the bar at {bar}.");
+        Assert.True(bar.Top < bounds.Value.Bottom, $"The bar at {bar} moved although the match at {bounds.Value} is clear of it.");
+    });
+
+    [Fact(DisplayName = "Closing the find bar puts it back at the top for the next time it opens")]
+    public Task CloseFind_PutsBarBackAtTop() => session.RunAsync(() =>
+    {
+        var (editor, _) = Show(s_textWithNeedleOnFirstLine, height: 300);
+        editor.OpenFind("needle");
+        Dispatcher.UIThread.RunJobs();
+        Assert.True(editor.FindBarControl!.Bounds.Top > editor.Bounds.Height / 2);
+
+        editor.CloseFind();
+        editor.OpenFind("end");
+        Dispatcher.UIThread.RunJobs();
+
+        Assert.True(editor.FindBarControl.Bounds.Top < editor.Bounds.Height / 2);
+    });
+
     [Fact(DisplayName = "The bar's labels are English by default and the host can replace them")]
     public Task Labels_CanBeReplaced() => session.RunAsync(() =>
     {

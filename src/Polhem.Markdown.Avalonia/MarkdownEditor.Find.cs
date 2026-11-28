@@ -1,6 +1,8 @@
 using Avalonia;
 using Avalonia.Media;
+using AvaloniaEdit;
 using AvaloniaEdit.Document;
+using AvaloniaEdit.Rendering;
 
 namespace Polhem.Markdown.Avalonia;
 
@@ -251,17 +253,23 @@ public partial class MarkdownEditor
             {
                 _editor.Select(start, length);
                 _editor.TextArea.Caret.BringCaretToView();
-                BringLineIntoView(start, length);
+                BringMatchIntoView(start, length);
             });
         }
         RedrawMarks();
     }
 
     /// <summary>
-    /// Scrolls the lines of a match into view, a third of the way down, when they are out of view or under the find bar,
-    /// so the match does not sit at the very edge.
+    /// Scrolls a match into view, a third of the way down, when it is out of view or under the find bar, so it does not
+    /// sit at the very edge. When scrolling cannot take it out from under the bar, as on the first lines of the text with
+    /// the bar at the top, the bar moves to the other edge of the text (polhem-dev/polhem-markdown#108).
     /// </summary>
-    private void BringLineIntoView(int start, int length)
+    /// <remarks>
+    /// The bar stays at the edge it moved to until a match is under it there, so going through the matches does not move
+    /// it back and forth. The geometry is the text view's, in its own coordinates, so it does not wait for the layout the
+    /// new scroll position brings.
+    /// </remarks>
+    private void BringMatchIntoView(int start, int length)
     {
         if (_scrollViewer is null)
         {
@@ -270,16 +278,50 @@ public partial class MarkdownEditor
         var textView = _editor.TextArea.TextView;
         var document = _editor.Document;
         textView.EnsureVisualLines();
-        var first = document.GetLineByOffset(start);
-        var last = document.GetLineByOffset(start + length);
-        var top = textView.GetVisualTopByDocumentLine(first.LineNumber);
-        var bottom = textView.GetVisualTopByDocumentLine(last.LineNumber) + textView.GetOrConstructVisualLine(last).Height;
+        var startPosition = new TextViewPosition(document.GetLocation(start));
+        var endPosition = new TextViewPosition(document.GetLocation(start + length));
+        var startTop = textView.GetVisualPosition(startPosition, VisualYPosition.LineTop);
+        var endTop = textView.GetVisualPosition(endPosition, VisualYPosition.LineTop);
+        var top = startTop.Y;
+        var bottom = textView.GetVisualPosition(endPosition, VisualYPosition.LineBottom).Y;
         var viewport = _scrollViewer.Viewport.Height;
         var offset = _scrollViewer.Offset.Y;
-        var covered = IsFindOpen ? _findBar!.DesiredSize.Height + FindBarMargin : 0;
-        if (top < offset + covered || bottom > offset + viewport)
+        var covered = 0.0;
+        if (IsFindOpen)
         {
-            _scrollViewer.Offset = new Vector(_scrollViewer.Offset.X, Math.Max(0, top - viewport / 3));
+            _findBar!.Measure(Size.Infinity);
+            covered = _findBar.DesiredSize.Height + FindBarMargin;
+        }
+        var clearTop = _findBarAtBottom ? 0 : covered;
+        var clearBottom = _findBarAtBottom ? covered : 0;
+        if (top < offset + clearTop || bottom > offset + viewport - clearBottom)
+        {
+            var most = Math.Max(0, _scrollViewer.Extent.Height - viewport);
+            offset = Math.Clamp(top - viewport / 3, 0, most);
+            _scrollViewer.Offset = new Vector(_scrollViewer.Offset.X, offset);
+        }
+        if (covered <= 0)
+        {
+            return;
+        }
+
+        // The match's columns: from its start to its end on one row, the whole row when it wraps onto another.
+        var scrollX = _scrollViewer.Offset.X;
+        var (left, right) = Math.Abs(startTop.Y - endTop.Y) < 1
+            ? (startTop.X - scrollX, endTop.X - scrollX)
+            : (double.NegativeInfinity, double.PositiveInfinity);
+        var barRight = textView.Bounds.Width - FindBarMargin;
+        var barLeft = barRight - _findBar!.DesiredSize.Width;
+        if (right < barLeft || left > barRight)
+        {
+            return;
+        }
+        bool UnderTop() => top < offset + covered;
+        bool UnderBottom() => bottom > offset + viewport - covered;
+        if (_findBarAtBottom ? UnderBottom() && !UnderTop() : UnderTop() && !UnderBottom())
+        {
+            _findBarAtBottom = !_findBarAtBottom;
+            InvalidateArrange();
         }
     }
 }

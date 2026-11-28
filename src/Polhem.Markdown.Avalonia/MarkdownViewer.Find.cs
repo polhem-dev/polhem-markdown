@@ -31,6 +31,12 @@ public partial class MarkdownViewer : IFindBarOwner
     private IInputElement? _focusBeforeFind;
     private ScrollViewer? _findScroller;
 
+    /// <summary>
+    /// Whether the find bar sits at the bottom of the part of the viewer in view, where it moves when the current match
+    /// is under it at the top and scrolling cannot uncover it (polhem-dev/polhem-markdown#108).
+    /// </summary>
+    private bool _findBarAtBottom;
+
     /// <summary>Gets or sets the brush behind the matches of a find.</summary>
     public IBrush FindMatchBrush
     {
@@ -89,6 +95,10 @@ public partial class MarkdownViewer : IFindBarOwner
     /// does: for a host that offers find from its own toolbar, menu or button. <paramref name="text"/> is put in the text
     /// box and found; without it, the text box keeps what it had, selected.
     /// </summary>
+    /// <remarks>
+    /// When the current match is under the bar and scrolling cannot uncover it, as at the top of the document, the bar
+    /// moves to the bottom right of the view, and stays there until a match is under it there or it closes.
+    /// </remarks>
     public void OpenFind(string? text = null)
     {
         if (_findBar is null)
@@ -123,6 +133,7 @@ public partial class MarkdownViewer : IFindBarOwner
         (_focusBeforeFind as InputElement)?.Focus(NavigationMethod.Unspecified);
         _focusBeforeFind = null;
         _findBar.IsVisible = false;
+        _findBarAtBottom = false;
         ClearFind();
         _findQuery = null;
     }
@@ -216,7 +227,12 @@ public partial class MarkdownViewer : IFindBarOwner
         {
             var bounds = match.Text.MatchBounds((match.Start, match.Length));
             var room = _findScroller is { Viewport.Height: > 0 } scroller ? scroller.Viewport.Height / 3 : 48;
+            var before = _findScroller?.Offset.Y ?? 0;
             match.Text.BringIntoView(bounds.Inflate(new Thickness(0, room)));
+            if (match.Text.TranslatePoint(bounds.TopLeft, this) is { } topLeft)
+            {
+                PlaceFindBarAround(new Rect(topLeft, bounds.Size), (_findScroller?.Offset.Y ?? 0) - before);
+            }
         }
         if (opened)
         {
@@ -326,7 +342,7 @@ public partial class MarkdownViewer : IFindBarOwner
 
     /// <summary>
     /// Places the find bar at the top right of the part of the viewer in view, so it stays there as the text scrolls in
-    /// the nearest scroll viewer.
+    /// the nearest scroll viewer, or at the bottom right of that part when the current match was under it at the top.
     /// </summary>
     private void ArrangeFindBar(Size finalSize)
     {
@@ -334,13 +350,56 @@ public partial class MarkdownViewer : IFindBarOwner
         {
             return;
         }
-        var top = 0.0;
-        if (_findScroller is { Viewport.Height: > 0 } scroller && this.TranslatePoint(default, scroller) is { } origin)
+        var visible = VisibleRange(finalSize.Height, scrolledBy: 0);
+        _findBar!.Arrange(FindBarRect(_findBarAtBottom, finalSize, visible));
+    }
+
+    /// <summary>
+    /// The part of the viewer in view, from top to bottom in its own coordinates, once the nearest scroll viewer has
+    /// moved <paramref name="scrolledBy"/> past where the viewer was last laid out.
+    /// </summary>
+    private (double Top, double Bottom) VisibleRange(double height, double scrolledBy)
+    {
+        if (_findScroller is not { Viewport.Height: > 0 } scroller || this.TranslatePoint(default, scroller) is not { } origin)
         {
-            top = Math.Clamp(-origin.Y, 0, Math.Max(0, finalSize.Height - _findBar!.DesiredSize.Height));
+            return (0, height);
         }
+        var top = scrolledBy - origin.Y;
+        return (Math.Max(0, top), Math.Min(height, top + scroller.Viewport.Height));
+    }
+
+    /// <summary>Where the find bar goes, at the top or the bottom of the part of the viewer in view.</summary>
+    private Rect FindBarRect(bool atBottom, Size viewer, (double Top, double Bottom) visible)
+    {
         var size = _findBar!.DesiredSize;
-        _findBar.Arrange(new Rect(Math.Max(0, finalSize.Width - size.Width - FindBarMargin), top + FindBarMargin, size.Width, size.Height));
+        var top = Math.Clamp(visible.Top, 0, Math.Max(0, viewer.Height - size.Height));
+        var y = atBottom ? Math.Max(top, visible.Bottom - size.Height - FindBarMargin) : top + FindBarMargin;
+        return new Rect(Math.Max(0, viewer.Width - size.Width - FindBarMargin), y, size.Width, size.Height);
+    }
+
+    /// <summary>
+    /// Moves the find bar to the other edge of the part of the viewer in view when <paramref name="match"/>, in the
+    /// viewer's coordinates, is under it and would not be there (polhem-dev/polhem-markdown#108). The bar stays at the
+    /// edge it moved to until a match is under it there, so going through the matches does not move it back and forth.
+    /// </summary>
+    /// <param name="match">Where the current match is in the viewer.</param>
+    /// <param name="scrolledBy">
+    /// How far the nearest scroll viewer has just moved to bring the match into view, which the layout does not show yet.
+    /// </param>
+    private void PlaceFindBarAround(Rect match, double scrolledBy)
+    {
+        if (!IsFindOpen)
+        {
+            return;
+        }
+        _findBar!.Measure(Size.Infinity);
+        var visible = VisibleRange(Bounds.Height, scrolledBy);
+        if (match.Intersects(FindBarRect(_findBarAtBottom, Bounds.Size, visible))
+            && !match.Intersects(FindBarRect(!_findBarAtBottom, Bounds.Size, visible)))
+        {
+            _findBarAtBottom = !_findBarAtBottom;
+            InvalidateArrange();
+        }
     }
 
     private const double FindBarMargin = 8;
