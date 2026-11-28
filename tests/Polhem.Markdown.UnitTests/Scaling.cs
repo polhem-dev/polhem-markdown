@@ -18,6 +18,12 @@ namespace Polhem.Markdown.UnitTests;
 /// a millisecond changes many times over with a cache miss or a context switch, and one such run made a linear case
 /// look twelve times slower at four times the input. Both stop growing when the larger input would allocate more than
 /// the runtime can reserve (see the next item);</item>
+/// <item>the work on the smaller input runs over as many separate copies of it, in turn, as the larger input is times
+/// larger, so both read the same amount of memory before they come back to the same text. Repeating the work on one
+/// copy kept the smaller input in a cache the larger one did not fit: a single search through the text of SQL made of
+/// line comments ran at about 90 GB/s on the smaller input and 30 GB/s on the larger, which made it look twelve times
+/// slower at four times the input in every round on the build job's machine, and not at all on a machine with a larger
+/// cache;</item>
 /// <item>both inputs run several times before any is timed, so the code being timed has been compiled to its final
 /// tier rather than measured partly before and partly after the JIT recompiles it;</item>
 /// <item>no garbage collection happens during a timed run, when the runtime can reserve the memory the run allocates.
@@ -49,15 +55,16 @@ internal static class Scaling
     /// Asserts that the fastest run of <paramref name="run"/> on <c>input(size * 4)</c> takes less than ten times as long
     /// as the fastest on <c>input(size)</c>, where <c>size</c> starts at <paramref name="start"/> and doubles, up to
     /// <paramref name="largest"/>, until its fastest run takes a few milliseconds or the larger input would allocate too much
-    /// to time without collections. When <paramref name="largest"/> is reached first, each run repeats the work on the same
-    /// input until it takes a few milliseconds, within the same allocation bound.
+    /// to time without collections. When <paramref name="largest"/> is reached first, each run repeats the work until it
+    /// takes a few milliseconds, within the same allocation bound. The smaller input is then read from as many copies, in
+    /// turn, as the larger input is times larger.
     /// </summary>
     public static void AssertLinear(Func<int, string> input, Action<string> run, int start, int largest, string what)
     {
         var size = start;
-        var small = input(size);
+        var small = Copies(input, size);
         var repeats = 1;
-        run(small);
+        run(small[0]);
         while (Fastest(run, small, repeats) < s_shortest)
         {
             var memory = Allocated(run, small, repeats) * 2 * Factor;
@@ -68,14 +75,14 @@ internal static class Scaling
             if (size * 2 <= largest)
             {
                 size *= 2;
-                small = input(size);
+                small = Copies(input, size);
             }
             else
             {
                 repeats *= 2;
             }
         }
-        var large = input(size * Factor);
+        string[] large = [input(size * Factor)];
         for (var warmUp = 0; warmUp < WarmUps; warmUp++)
         {
             Repeat(run, small, repeats);
@@ -99,26 +106,43 @@ internal static class Scaling
         Assert.True(ratio < Limit, $"{what}: {Factor} times the input (size {size}) took {Format(ratio)} times as long, {repeats} calls per run, at best {Milliseconds(smallFastest)} ms against {Milliseconds(largeFastest)} ms (ratios of each round: {string.Join(", ", ratios.Select(Format))}).");
     }
 
+    /// <summary>
+    /// Separate copies of the smaller input, one for each time the larger one is larger, so that repeated runs read as
+    /// much memory on either size.
+    /// </summary>
+    private static string[] Copies(Func<int, string> input, int size)
+    {
+        // NOTE: copied rather than built again, since nothing stops `input` from returning the same string each time.
+        var text = input(size);
+        var copies = new string[Factor];
+        copies[0] = text;
+        for (var copy = 1; copy < Factor; copy++)
+        {
+            copies[copy] = new string(text.AsSpan());
+        }
+        return copies;
+    }
+
     private static string Milliseconds(TimeSpan time) => Format(time.TotalMilliseconds);
 
     private static string Format(double value) => value.ToString("0.0", System.Globalization.CultureInfo.InvariantCulture);
 
     /// <summary>The fastest of a few runs, so that one slow run, compiling or interrupted, does not stop the doubling early.</summary>
-    private static TimeSpan Fastest(Action<string> run, string input, int repeats)
+    private static TimeSpan Fastest(Action<string> run, string[] inputs, int repeats)
     {
         var fastest = TimeSpan.MaxValue;
         for (var attempt = 0; attempt < 3; attempt++)
         {
-            var time = Time(run, input, repeats);
+            var time = Time(run, inputs, repeats);
             fastest = time < fastest ? time : fastest;
         }
         return fastest;
     }
 
-    private static long Allocated(Action<string> run, string input, int repeats)
+    private static long Allocated(Action<string> run, string[] inputs, int repeats)
     {
         var before = GC.GetAllocatedBytesForCurrentThread();
-        Repeat(run, input, repeats);
+        Repeat(run, inputs, repeats);
         return GC.GetAllocatedBytesForCurrentThread() - before;
     }
 
@@ -126,17 +150,17 @@ internal static class Scaling
     /// Times one run, keeping the garbage collector out of it when <paramref name="memory"/>, what the run allocates, can
     /// be reserved beforehand; otherwise the run starts on a collected heap.
     /// </summary>
-    private static TimeSpan TimeWithoutCollection(Action<string> run, string input, int repeats, long memory)
+    private static TimeSpan TimeWithoutCollection(Action<string> run, string[] inputs, int repeats, long memory)
     {
         // NOTE: starting the region collects the whole heap first, so either way the run starts on a collected heap.
         if (!TryStartNoCollection(memory + memory / 2 + (1 << 20)))
         {
             GC.Collect();
-            return Time(run, input, repeats);
+            return Time(run, inputs, repeats);
         }
         try
         {
-            return Time(run, input, repeats);
+            return Time(run, inputs, repeats);
         }
         finally
         {
@@ -148,19 +172,19 @@ internal static class Scaling
         }
     }
 
-    private static TimeSpan Time(Action<string> run, string input, int repeats)
+    private static TimeSpan Time(Action<string> run, string[] inputs, int repeats)
     {
         var watch = Stopwatch.StartNew();
-        Repeat(run, input, repeats);
+        Repeat(run, inputs, repeats);
         watch.Stop();
         return watch.Elapsed;
     }
 
-    private static void Repeat(Action<string> run, string input, int repeats)
+    private static void Repeat(Action<string> run, string[] inputs, int repeats)
     {
         for (var call = 0; call < repeats; call++)
         {
-            run(input);
+            run(inputs[call % inputs.Length]);
         }
     }
 
