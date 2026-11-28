@@ -315,19 +315,27 @@ public partial class MarkdownEditor
     }
 
     /// <summary>Where <paramref name="offset"/> lands once the proposed text in <paramref name="span"/> is removed.</summary>
-    private static int WithoutProposed(int offset, PreviewSpan span) =>
-        offset <= span.ProposedStart ? offset
-        : offset < span.ProposedEnd ? span.ProposedStart
-        : offset - span.ProposedLength;
+    private static int WithoutProposed(int offset, PreviewSpan span)
+    {
+        if (offset <= span.ProposedStart)
+        {
+            return offset;
+        }
+        return offset < span.ProposedEnd ? span.ProposedStart : offset - span.ProposedLength;
+    }
 
     /// <summary>
     /// Where <paramref name="offset"/> lands once <paramref name="length"/> characters from <paramref name="start"/> are
     /// replaced by <paramref name="inserted"/> characters: after them, if it was within the range or at its end.
     /// </summary>
-    private static int AfterReplacement(int offset, int start, int length, int inserted) =>
-        offset <= start ? offset
-        : offset >= start + length ? offset + inserted - length
-        : start + inserted;
+    private static int AfterReplacement(int offset, int start, int length, int inserted)
+    {
+        if (offset <= start)
+        {
+            return offset;
+        }
+        return offset >= start + length ? offset + inserted - length : start + inserted;
+    }
 
     /// <summary>A change an undo made: <see cref="Removed"/> replaced by <see cref="Inserted"/> at <see cref="Offset"/>.</summary>
     private readonly record struct UndoneChange(int Offset, string Removed, string Inserted);
