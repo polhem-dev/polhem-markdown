@@ -1,4 +1,20 @@
 #nullable enable
+Polhem.Markdown.MarkdownCodeBlock
+Polhem.Markdown.MarkdownCodeBlock.Code.get -> string!
+Polhem.Markdown.MarkdownCodeBlock.Language.get -> string!
+Polhem.Markdown.MarkdownCodeBlockAction
+Polhem.Markdown.MarkdownCodeBlockAction.IconPath.get -> string?
+Polhem.Markdown.MarkdownCodeBlockAction.IconPath.init -> void
+Polhem.Markdown.MarkdownCodeBlockAction.IsVisible.get -> System.Func<Polhem.Markdown.MarkdownCodeBlock!, bool>?
+Polhem.Markdown.MarkdownCodeBlockAction.IsVisible.init -> void
+Polhem.Markdown.MarkdownCodeBlockAction.Label.get -> string!
+Polhem.Markdown.MarkdownCodeBlockAction.MarkdownCodeBlockAction(string! label, System.Action<Polhem.Markdown.MarkdownCodeBlock!>! invoked) -> void
+Polhem.Markdown.MarkdownCodeBlockAction.MarkdownCodeBlockAction(string! label, System.Func<Polhem.Markdown.MarkdownCodeBlock!, System.Threading.Tasks.Task!>! invoked) -> void
+Polhem.Markdown.MarkdownFindOptions
+Polhem.Markdown.MarkdownFindOptions.MatchCase = 1 -> Polhem.Markdown.MarkdownFindOptions
+Polhem.Markdown.MarkdownFindOptions.None = 0 -> Polhem.Markdown.MarkdownFindOptions
+Polhem.Markdown.MarkdownFindOptions.RegularExpression = 4 -> Polhem.Markdown.MarkdownFindOptions
+Polhem.Markdown.MarkdownFindOptions.WholeWord = 2 -> Polhem.Markdown.MarkdownFindOptions
 Polhem.Markdown.MarkdownFormat
 Polhem.Markdown.MarkdownFormat.Bold = 0 -> Polhem.Markdown.MarkdownFormat
 Polhem.Markdown.MarkdownFormat.BulletList = 8 -> Polhem.Markdown.MarkdownFormat
@@ -29,6 +45,21 @@ Polhem.Markdown.MarkdownHeading.SourceOffset.get -> int
 Polhem.Markdown.MarkdownHeading.SourceOffset.init -> void
 Polhem.Markdown.MarkdownHeading.Text.get -> string!
 Polhem.Markdown.MarkdownHeading.Text.init -> void
+Polhem.Markdown.MarkdownHtml
+Polhem.Markdown.MarkdownHtmlOptions
+Polhem.Markdown.MarkdownHtmlOptions.ImageContent.get -> System.Func<System.Uri!, Polhem.Markdown.MarkdownImageContent?>?
+Polhem.Markdown.MarkdownHtmlOptions.ImageContent.set -> void
+Polhem.Markdown.MarkdownHtmlOptions.Language.get -> string?
+Polhem.Markdown.MarkdownHtmlOptions.Language.set -> void
+Polhem.Markdown.MarkdownHtmlOptions.MarkdownHtmlOptions() -> void
+Polhem.Markdown.MarkdownHtmlOptions.StyleSheet.get -> string?
+Polhem.Markdown.MarkdownHtmlOptions.StyleSheet.set -> void
+Polhem.Markdown.MarkdownHtmlOptions.Title.get -> string?
+Polhem.Markdown.MarkdownHtmlOptions.Title.set -> void
+Polhem.Markdown.MarkdownImageContent
+Polhem.Markdown.MarkdownImageContent.Data.get -> System.ReadOnlyMemory<byte>
+Polhem.Markdown.MarkdownImageContent.MarkdownImageContent(string! mediaType, System.ReadOnlyMemory<byte> data) -> void
+Polhem.Markdown.MarkdownImageContent.MediaType.get -> string!
 Polhem.Markdown.MarkdownOptions
 Polhem.Markdown.MarkdownOptions.AllowedImageSchemes.get -> System.Collections.Generic.ISet<string!>!
 Polhem.Markdown.MarkdownOptions.AllowedLinkSchemes.get -> System.Collections.Generic.ISet<string!>!
@@ -37,6 +68,17 @@ Polhem.Markdown.MarkdownOptions.BaseUri.set -> void
 Polhem.Markdown.MarkdownOptions.MarkdownOptions() -> void
 Polhem.Markdown.MarkdownOptions.RenderMermaidDiagrams.get -> bool
 Polhem.Markdown.MarkdownOptions.RenderMermaidDiagrams.set -> void
+Polhem.Markdown.MarkdownReplacement
+Polhem.Markdown.MarkdownReplacement.<Clone>$() -> Polhem.Markdown.MarkdownReplacement!
+Polhem.Markdown.MarkdownReplacement.Deconstruct(out int Start, out int Length, out string! Text) -> void
+Polhem.Markdown.MarkdownReplacement.Equals(Polhem.Markdown.MarkdownReplacement? other) -> bool
+Polhem.Markdown.MarkdownReplacement.Length.get -> int
+Polhem.Markdown.MarkdownReplacement.Length.init -> void
+Polhem.Markdown.MarkdownReplacement.MarkdownReplacement(int Start, int Length, string! Text) -> void
+Polhem.Markdown.MarkdownReplacement.Start.get -> int
+Polhem.Markdown.MarkdownReplacement.Start.init -> void
+Polhem.Markdown.MarkdownReplacement.Text.get -> string!
+Polhem.Markdown.MarkdownReplacement.Text.init -> void
 Polhem.Markdown.MarkdownToolbarItem
 Polhem.Markdown.MarkdownToolbarItem.Bold = 0 -> Polhem.Markdown.MarkdownToolbarItem
 Polhem.Markdown.MarkdownToolbarItem.BulletList = 7 -> Polhem.Markdown.MarkdownToolbarItem
@@ -60,5 +102,13 @@ Polhem.Markdown.OutlineSide.Right = 1 -> Polhem.Markdown.OutlineSide
 override Polhem.Markdown.MarkdownHeading.Equals(object? obj) -> bool
 override Polhem.Markdown.MarkdownHeading.GetHashCode() -> int
 override Polhem.Markdown.MarkdownHeading.ToString() -> string!
+override Polhem.Markdown.MarkdownReplacement.Equals(object? obj) -> bool
+override Polhem.Markdown.MarkdownReplacement.GetHashCode() -> int
+override Polhem.Markdown.MarkdownReplacement.ToString() -> string!
 static Polhem.Markdown.MarkdownHeading.operator !=(Polhem.Markdown.MarkdownHeading? left, Polhem.Markdown.MarkdownHeading? right) -> bool
 static Polhem.Markdown.MarkdownHeading.operator ==(Polhem.Markdown.MarkdownHeading? left, Polhem.Markdown.MarkdownHeading? right) -> bool
+static Polhem.Markdown.MarkdownHtml.StyleSheet.get -> string!
+static Polhem.Markdown.MarkdownHtml.ToFragment(string! markdown, Polhem.Markdown.MarkdownOptions? options = null, Polhem.Markdown.MarkdownHtmlOptions? htmlOptions = null) -> string!
+static Polhem.Markdown.MarkdownHtml.ToPage(string! markdown, Polhem.Markdown.MarkdownOptions? options = null, Polhem.Markdown.MarkdownHtmlOptions? htmlOptions = null) -> string!
+static Polhem.Markdown.MarkdownReplacement.operator !=(Polhem.Markdown.MarkdownReplacement? left, Polhem.Markdown.MarkdownReplacement? right) -> bool
+static Polhem.Markdown.MarkdownReplacement.operator ==(Polhem.Markdown.MarkdownReplacement? left, Polhem.Markdown.MarkdownReplacement? right) -> bool

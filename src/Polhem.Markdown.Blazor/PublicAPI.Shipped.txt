@@ -68,6 +68,8 @@ Polhem.Markdown.Blazor.MarkdownViewer
 Polhem.Markdown.Blazor.MarkdownViewer.Class.get -> string?
 Polhem.Markdown.Blazor.MarkdownViewer.Class.set -> void
 Polhem.Markdown.Blazor.MarkdownViewer.ClearFindAsync() -> System.Threading.Tasks.Task!
+Polhem.Markdown.Blazor.MarkdownViewer.CodeBlockActions.get -> System.Collections.Generic.IReadOnlyList<Polhem.Markdown.MarkdownCodeBlockAction!>?
+Polhem.Markdown.Blazor.MarkdownViewer.CodeBlockActions.set -> void
 Polhem.Markdown.Blazor.MarkdownViewer.CopyCodeLabel.get -> string!
 Polhem.Markdown.Blazor.MarkdownViewer.CopyCodeLabel.set -> void
 Polhem.Markdown.Blazor.MarkdownViewer.CurrentFindMatch.get -> int
@@ -97,6 +99,7 @@ Polhem.Markdown.Blazor.MarkdownViewer.OnSourceRequested.get -> Microsoft.AspNetC
 Polhem.Markdown.Blazor.MarkdownViewer.OnSourceRequested.set -> void
 Polhem.Markdown.Blazor.MarkdownViewer.Options.get -> Polhem.Markdown.MarkdownOptions?
 Polhem.Markdown.Blazor.MarkdownViewer.Options.set -> void
+Polhem.Markdown.Blazor.MarkdownViewer.RefreshCodeBlockActionsAsync() -> System.Threading.Tasks.Task!
 Polhem.Markdown.Blazor.MarkdownViewer.ScrollToHeadingAsync(string! id) -> System.Threading.Tasks.Task<bool>!
 Polhem.Markdown.Blazor.MarkdownViewer.ScrollToSourceOffsetAsync(int sourceOffset) -> System.Threading.Tasks.Task!
 Polhem.Markdown.Blazor.MarkdownViewer.ZoomImages.get -> bool

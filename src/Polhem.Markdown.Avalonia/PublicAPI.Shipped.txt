@@ -1,8 +1,12 @@
 #nullable enable
 Polhem.Markdown.Avalonia.MarkdownEditor
+Polhem.Markdown.Avalonia.MarkdownEditor.AddMark(int start, int length, Polhem.Markdown.Avalonia.MarkdownRangeMarkStyle style, Avalonia.Media.IBrush! brush, object? owner = null) -> Polhem.Markdown.Avalonia.MarkdownRangeMark!
 Polhem.Markdown.Avalonia.MarkdownEditor.ApplyFormat(Polhem.Markdown.MarkdownFormat format) -> void
 Polhem.Markdown.Avalonia.MarkdownEditor.CaretOffset.get -> int
 Polhem.Markdown.Avalonia.MarkdownEditor.CaretOffset.set -> void
+Polhem.Markdown.Avalonia.MarkdownEditor.ClearMarks() -> void
+Polhem.Markdown.Avalonia.MarkdownEditor.ClearMarks(object! owner) -> void
+Polhem.Markdown.Avalonia.MarkdownEditor.CloseFind() -> void
 Polhem.Markdown.Avalonia.MarkdownEditor.CodeBrush.get -> Avalonia.Media.IBrush!
 Polhem.Markdown.Avalonia.MarkdownEditor.CodeBrush.set -> void
 Polhem.Markdown.Avalonia.MarkdownEditor.CodeCommentBrush.get -> Avalonia.Media.IBrush!
@@ -19,12 +23,28 @@ Polhem.Markdown.Avalonia.MarkdownEditor.CodeStringBrush.get -> Avalonia.Media.IB
 Polhem.Markdown.Avalonia.MarkdownEditor.CodeStringBrush.set -> void
 Polhem.Markdown.Avalonia.MarkdownEditor.CodeTagBrush.get -> Avalonia.Media.IBrush!
 Polhem.Markdown.Avalonia.MarkdownEditor.CodeTagBrush.set -> void
+Polhem.Markdown.Avalonia.MarkdownEditor.CurrentFindMatch.get -> int
 Polhem.Markdown.Avalonia.MarkdownEditor.CycleHeading() -> void
+Polhem.Markdown.Avalonia.MarkdownEditor.Find(string! text, Polhem.Markdown.MarkdownFindOptions options = Polhem.Markdown.MarkdownFindOptions.None) -> int
+Polhem.Markdown.Avalonia.MarkdownEditor.FindBarLabels.get -> System.Func<Polhem.Markdown.Avalonia.MarkdownFindBarItem, string?>?
+Polhem.Markdown.Avalonia.MarkdownEditor.FindBarLabels.set -> void
+Polhem.Markdown.Avalonia.MarkdownEditor.FindCurrentMatchBrush.get -> Avalonia.Media.IBrush!
+Polhem.Markdown.Avalonia.MarkdownEditor.FindCurrentMatchBrush.set -> void
+Polhem.Markdown.Avalonia.MarkdownEditor.FindMatchBrush.get -> Avalonia.Media.IBrush!
+Polhem.Markdown.Avalonia.MarkdownEditor.FindMatchBrush.set -> void
+Polhem.Markdown.Avalonia.MarkdownEditor.FindMatchCount.get -> int
+Polhem.Markdown.Avalonia.MarkdownEditor.FindNext() -> bool
+Polhem.Markdown.Avalonia.MarkdownEditor.FindPrevious() -> bool
 Polhem.Markdown.Avalonia.MarkdownEditor.FirstVisibleSourceOffset.get -> int
+Polhem.Markdown.Avalonia.MarkdownEditor.GetTextBounds(int start, int length) -> Avalonia.Rect?
+Polhem.Markdown.Avalonia.MarkdownEditor.HandleFindShortcuts.get -> bool
+Polhem.Markdown.Avalonia.MarkdownEditor.HandleFindShortcuts.set -> void
 Polhem.Markdown.Avalonia.MarkdownEditor.HeadingBrush.get -> Avalonia.Media.IBrush!
 Polhem.Markdown.Avalonia.MarkdownEditor.HeadingBrush.set -> void
+Polhem.Markdown.Avalonia.MarkdownEditor.IsFindOpen.get -> bool
 Polhem.Markdown.Avalonia.MarkdownEditor.IsReadOnly.get -> bool
 Polhem.Markdown.Avalonia.MarkdownEditor.IsReadOnly.set -> void
+Polhem.Markdown.Avalonia.MarkdownEditor.IsReplaceOpen.get -> bool
 Polhem.Markdown.Avalonia.MarkdownEditor.LinkForeground.get -> Avalonia.Media.IBrush!
 Polhem.Markdown.Avalonia.MarkdownEditor.LinkForeground.set -> void
 Polhem.Markdown.Avalonia.MarkdownEditor.Markdown.get -> string?
@@ -32,12 +52,25 @@ Polhem.Markdown.Avalonia.MarkdownEditor.Markdown.set -> void
 Polhem.Markdown.Avalonia.MarkdownEditor.MarkdownEditor() -> void
 Polhem.Markdown.Avalonia.MarkdownEditor.MarkerBrush.get -> Avalonia.Media.IBrush!
 Polhem.Markdown.Avalonia.MarkdownEditor.MarkerBrush.set -> void
+Polhem.Markdown.Avalonia.MarkdownEditor.Marks.get -> System.Collections.Generic.IReadOnlyList<Polhem.Markdown.Avalonia.MarkdownRangeMark!>!
 Polhem.Markdown.Avalonia.MarkdownEditor.MathBrush.get -> Avalonia.Media.IBrush!
 Polhem.Markdown.Avalonia.MarkdownEditor.MathBrush.set -> void
+Polhem.Markdown.Avalonia.MarkdownEditor.OpenFind(string? text = null) -> void
+Polhem.Markdown.Avalonia.MarkdownEditor.OpenReplace(string? text = null) -> void
 Polhem.Markdown.Avalonia.MarkdownEditor.Redo() -> bool
+Polhem.Markdown.Avalonia.MarkdownEditor.RemoveMark(Polhem.Markdown.Avalonia.MarkdownRangeMark! mark) -> bool
+Polhem.Markdown.Avalonia.MarkdownEditor.Replace(System.Collections.Generic.IEnumerable<Polhem.Markdown.MarkdownReplacement!>! replacements) -> void
+Polhem.Markdown.Avalonia.MarkdownEditor.Replace(int start, int length, string! text) -> void
+Polhem.Markdown.Avalonia.MarkdownEditor.ReplaceAllMatches(string! replacement) -> int
+Polhem.Markdown.Avalonia.MarkdownEditor.ReplaceCurrentMatch(string! replacement) -> bool
 Polhem.Markdown.Avalonia.MarkdownEditor.ScrollToSourceOffset(int sourceOffset) -> void
+Polhem.Markdown.Avalonia.MarkdownEditor.Select(int start, int length) -> void
+Polhem.Markdown.Avalonia.MarkdownEditor.SelectedText.get -> string!
 Polhem.Markdown.Avalonia.MarkdownEditor.SelectionBrush.get -> Avalonia.Media.IBrush?
 Polhem.Markdown.Avalonia.MarkdownEditor.SelectionBrush.set -> void
+Polhem.Markdown.Avalonia.MarkdownEditor.SelectionChanged -> System.EventHandler?
+Polhem.Markdown.Avalonia.MarkdownEditor.SelectionLength.get -> int
+Polhem.Markdown.Avalonia.MarkdownEditor.SelectionStart.get -> int
 Polhem.Markdown.Avalonia.MarkdownEditor.ShowLineNumbers.get -> bool
 Polhem.Markdown.Avalonia.MarkdownEditor.ShowLineNumbers.set -> void
 Polhem.Markdown.Avalonia.MarkdownEditor.ShowToolbar.get -> bool
@@ -51,6 +84,7 @@ Polhem.Markdown.Avalonia.MarkdownEditor.ToolbarLabels.set -> void
 Polhem.Markdown.Avalonia.MarkdownEditor.Undo() -> bool
 Polhem.Markdown.Avalonia.MarkdownEditor.UrlBrush.get -> Avalonia.Media.IBrush!
 Polhem.Markdown.Avalonia.MarkdownEditor.UrlBrush.set -> void
+Polhem.Markdown.Avalonia.MarkdownEditor.ViewChanged -> System.EventHandler?
 Polhem.Markdown.Avalonia.MarkdownEditor.WordWrap.get -> bool
 Polhem.Markdown.Avalonia.MarkdownEditor.WordWrap.set -> void
 Polhem.Markdown.Avalonia.MarkdownFindBarItem
@@ -59,6 +93,11 @@ Polhem.Markdown.Avalonia.MarkdownFindBarItem.Field = 0 -> Polhem.Markdown.Avalon
 Polhem.Markdown.Avalonia.MarkdownFindBarItem.MatchCase = 1 -> Polhem.Markdown.Avalonia.MarkdownFindBarItem
 Polhem.Markdown.Avalonia.MarkdownFindBarItem.Next = 3 -> Polhem.Markdown.Avalonia.MarkdownFindBarItem
 Polhem.Markdown.Avalonia.MarkdownFindBarItem.Previous = 2 -> Polhem.Markdown.Avalonia.MarkdownFindBarItem
+Polhem.Markdown.Avalonia.MarkdownFindBarItem.RegularExpression = 6 -> Polhem.Markdown.Avalonia.MarkdownFindBarItem
+Polhem.Markdown.Avalonia.MarkdownFindBarItem.Replace = 8 -> Polhem.Markdown.Avalonia.MarkdownFindBarItem
+Polhem.Markdown.Avalonia.MarkdownFindBarItem.ReplaceAll = 9 -> Polhem.Markdown.Avalonia.MarkdownFindBarItem
+Polhem.Markdown.Avalonia.MarkdownFindBarItem.ReplaceField = 7 -> Polhem.Markdown.Avalonia.MarkdownFindBarItem
+Polhem.Markdown.Avalonia.MarkdownFindBarItem.WholeWord = 5 -> Polhem.Markdown.Avalonia.MarkdownFindBarItem
 Polhem.Markdown.Avalonia.MarkdownImageActivatedEventArgs
 Polhem.Markdown.Avalonia.MarkdownImageActivatedEventArgs.AlternativeText.get -> string!
 Polhem.Markdown.Avalonia.MarkdownImageActivatedEventArgs.MarkdownImageActivatedEventArgs(System.Uri! uri, string! alternativeText) -> void
@@ -70,6 +109,17 @@ Polhem.Markdown.Avalonia.MarkdownImageSaveRequestedEventArgs.Uri.get -> System.U
 Polhem.Markdown.Avalonia.MarkdownLinkActivatedEventArgs
 Polhem.Markdown.Avalonia.MarkdownLinkActivatedEventArgs.MarkdownLinkActivatedEventArgs(System.Uri! uri) -> void
 Polhem.Markdown.Avalonia.MarkdownLinkActivatedEventArgs.Uri.get -> System.Uri!
+Polhem.Markdown.Avalonia.MarkdownRangeMark
+Polhem.Markdown.Avalonia.MarkdownRangeMark.Brush.get -> Avalonia.Media.IBrush!
+Polhem.Markdown.Avalonia.MarkdownRangeMark.IsRemoved.get -> bool
+Polhem.Markdown.Avalonia.MarkdownRangeMark.Length.get -> int
+Polhem.Markdown.Avalonia.MarkdownRangeMark.Owner.get -> object?
+Polhem.Markdown.Avalonia.MarkdownRangeMark.Start.get -> int
+Polhem.Markdown.Avalonia.MarkdownRangeMark.Style.get -> Polhem.Markdown.Avalonia.MarkdownRangeMarkStyle
+Polhem.Markdown.Avalonia.MarkdownRangeMarkStyle
+Polhem.Markdown.Avalonia.MarkdownRangeMarkStyle.Background = 0 -> Polhem.Markdown.Avalonia.MarkdownRangeMarkStyle
+Polhem.Markdown.Avalonia.MarkdownRangeMarkStyle.Strikethrough = 2 -> Polhem.Markdown.Avalonia.MarkdownRangeMarkStyle
+Polhem.Markdown.Avalonia.MarkdownRangeMarkStyle.Underline = 1 -> Polhem.Markdown.Avalonia.MarkdownRangeMarkStyle
 Polhem.Markdown.Avalonia.MarkdownReader
 Polhem.Markdown.Avalonia.MarkdownReader.MarkdownReader() -> void
 Polhem.Markdown.Avalonia.MarkdownReader.OutlineLabel.get -> string!
@@ -106,6 +156,8 @@ Polhem.Markdown.Avalonia.MarkdownViewer.CjkFontFamily.set -> void
 Polhem.Markdown.Avalonia.MarkdownViewer.CloseFind() -> void
 Polhem.Markdown.Avalonia.MarkdownViewer.CodeBackground.get -> Avalonia.Media.IBrush!
 Polhem.Markdown.Avalonia.MarkdownViewer.CodeBackground.set -> void
+Polhem.Markdown.Avalonia.MarkdownViewer.CodeBlockActions.get -> System.Collections.Generic.IReadOnlyList<Polhem.Markdown.MarkdownCodeBlockAction!>?
+Polhem.Markdown.Avalonia.MarkdownViewer.CodeBlockActions.set -> void
 Polhem.Markdown.Avalonia.MarkdownViewer.CodeCommentBrush.get -> Avalonia.Media.IBrush!
 Polhem.Markdown.Avalonia.MarkdownViewer.CodeCommentBrush.set -> void
 Polhem.Markdown.Avalonia.MarkdownViewer.CodeConstantBrush.get -> Avalonia.Media.IBrush!
@@ -153,6 +205,7 @@ Polhem.Markdown.Avalonia.MarkdownViewer.MarkdownViewer() -> void
 Polhem.Markdown.Avalonia.MarkdownViewer.OpenFind(string? text = null) -> void
 Polhem.Markdown.Avalonia.MarkdownViewer.Options.get -> Polhem.Markdown.MarkdownOptions?
 Polhem.Markdown.Avalonia.MarkdownViewer.Options.set -> void
+Polhem.Markdown.Avalonia.MarkdownViewer.RefreshCodeBlockActions() -> void
 Polhem.Markdown.Avalonia.MarkdownViewer.RuleBrush.get -> Avalonia.Media.IBrush!
 Polhem.Markdown.Avalonia.MarkdownViewer.RuleBrush.set -> void
 Polhem.Markdown.Avalonia.MarkdownViewer.ScrollToHeading(string! id) -> bool
@@ -183,7 +236,11 @@ static readonly Polhem.Markdown.Avalonia.MarkdownEditor.CodeKeywordBrushProperty
 static readonly Polhem.Markdown.Avalonia.MarkdownEditor.CodePropertyBrushProperty -> Avalonia.StyledProperty<Avalonia.Media.IBrush!>!
 static readonly Polhem.Markdown.Avalonia.MarkdownEditor.CodeStringBrushProperty -> Avalonia.StyledProperty<Avalonia.Media.IBrush!>!
 static readonly Polhem.Markdown.Avalonia.MarkdownEditor.CodeTagBrushProperty -> Avalonia.StyledProperty<Avalonia.Media.IBrush!>!
+static readonly Polhem.Markdown.Avalonia.MarkdownEditor.FindBarLabelsProperty -> Avalonia.StyledProperty<System.Func<Polhem.Markdown.Avalonia.MarkdownFindBarItem, string?>?>!
+static readonly Polhem.Markdown.Avalonia.MarkdownEditor.FindCurrentMatchBrushProperty -> Avalonia.StyledProperty<Avalonia.Media.IBrush!>!
+static readonly Polhem.Markdown.Avalonia.MarkdownEditor.FindMatchBrushProperty -> Avalonia.StyledProperty<Avalonia.Media.IBrush!>!
 static readonly Polhem.Markdown.Avalonia.MarkdownEditor.FirstVisibleSourceOffsetProperty -> Avalonia.DirectProperty<Polhem.Markdown.Avalonia.MarkdownEditor!, int>!
+static readonly Polhem.Markdown.Avalonia.MarkdownEditor.HandleFindShortcutsProperty -> Avalonia.StyledProperty<bool>!
 static readonly Polhem.Markdown.Avalonia.MarkdownEditor.HeadingBrushProperty -> Avalonia.StyledProperty<Avalonia.Media.IBrush!>!
 static readonly Polhem.Markdown.Avalonia.MarkdownEditor.IsReadOnlyProperty -> Avalonia.StyledProperty<bool>!
 static readonly Polhem.Markdown.Avalonia.MarkdownEditor.LinkForegroundProperty -> Avalonia.StyledProperty<Avalonia.Media.IBrush!>!
@@ -212,6 +269,7 @@ static readonly Polhem.Markdown.Avalonia.MarkdownViewer.AlertTipBrushProperty ->
 static readonly Polhem.Markdown.Avalonia.MarkdownViewer.AlertWarningBrushProperty -> Avalonia.StyledProperty<Avalonia.Media.IBrush!>!
 static readonly Polhem.Markdown.Avalonia.MarkdownViewer.CjkFontFamilyProperty -> Avalonia.StyledProperty<Avalonia.Media.FontFamily?>!
 static readonly Polhem.Markdown.Avalonia.MarkdownViewer.CodeBackgroundProperty -> Avalonia.StyledProperty<Avalonia.Media.IBrush!>!
+static readonly Polhem.Markdown.Avalonia.MarkdownViewer.CodeBlockActionsProperty -> Avalonia.StyledProperty<System.Collections.Generic.IReadOnlyList<Polhem.Markdown.MarkdownCodeBlockAction!>?>!
 static readonly Polhem.Markdown.Avalonia.MarkdownViewer.CodeCommentBrushProperty -> Avalonia.StyledProperty<Avalonia.Media.IBrush!>!
 static readonly Polhem.Markdown.Avalonia.MarkdownViewer.CodeConstantBrushProperty -> Avalonia.StyledProperty<Avalonia.Media.IBrush!>!
 static readonly Polhem.Markdown.Avalonia.MarkdownViewer.CodeFontFamilyProperty -> Avalonia.StyledProperty<Avalonia.Media.FontFamily!>!

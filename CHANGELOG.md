@@ -9,31 +9,19 @@ and versions follow [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
-- Both viewers take a host's own buttons for code blocks (`CodeBlockActions`, of `MarkdownCodeBlockAction`), shown
-  before the copy button: a label or an icon, and work that receives the block's code and language
-  (`MarkdownCodeBlock`). `IsVisible` picks the blocks that show a button, and `RefreshCodeBlockActions`
-  (`RefreshCodeBlockActionsAsync` in Blazor) asks again when what it depends on changes. A viewer without actions looks
-  and behaves as before.
-- The Avalonia `MarkdownEditor` reads and sets the selection (`SelectionStart`, `SelectionLength`, `SelectedText`,
-  `Select`) and reports when it or the caret moves (`SelectionChanged`). `Replace` changes one range, or several at once
-  (`MarkdownReplacement`, offsets in the text before any of them), as one step to undo, keeping the caret, the
-  selection and the undo history. The Blazor editor does not have these yet.
-- The Avalonia `MarkdownEditor` draws marks a host puts over ranges of the source (`AddMark`, with
-  `MarkdownRangeMarkStyle` `Background`, `Underline` or `Strikethrough` and a brush), under the selection and apart
-  from the syntax colors. Marks move with the edits, go away with their text, and are cleared together by an owner key
-  (`ClearMarks`). `GetTextBounds` tells where an offset or a range is in the editor, and `ViewChanged` when that may
-  have moved, for a popup placed next to the text. The gallery previews a change as a diff. The Blazor editor does not
-  have these yet.
-- The Avalonia `MarkdownEditor` finds and replaces in the source with the viewer's find bar: Ctrl+F (⌘F) to find,
-  Ctrl+H (⌥⌘F) to replace the current match or every match as one step to undo, with options for case, whole words and
-  regular expressions (`MarkdownFindOptions`). A host opens it from its own menu (`OpenFind`, `OpenReplace`), finds and
-  replaces from code (`Find`, `ReplaceCurrentMatch`, `ReplaceAllMatches`), or leaves the keys to itself
-  (`HandleFindShortcuts`). AvaloniaEdit's own search panel no longer opens. The Blazor editor does not have this yet.
-- `MarkdownHtml` writes a text as HTML from the viewers' model and under their safety policy: `ToPage` for a standalone
-  page with the viewers' look, to save or print, and `ToFragment` for one `div` styled by `MarkdownHtml.StyleSheet`.
-  Code highlighting, Mermaid diagrams and math are the Blazor viewer's static markup, with no script, and the
-  stylesheet uses the same `--pmd-*` variables. Images stay links unless the host returns their bytes
-  (`MarkdownHtmlOptions.ImageContent`), which embeds them as `data:` URIs. The Blazor viewer's output is unchanged.
+## [0.5.0] - 2026-11-28
+
+Details: [docs/en/changelogs/0.5.0.md](docs/en/changelogs/0.5.0.md)
+
+- The Avalonia `MarkdownEditor` reads and sets the selection, and replaces one range or several as one step to undo
+  (`Replace`, `MarkdownReplacement`).
+- The Avalonia editor draws a host's marks over ranges of the source (`AddMark`), and tells where a range is on the
+  screen (`GetTextBounds`, `ViewChanged`).
+- The Avalonia editor finds and replaces in the source, with case, whole-word and regular-expression options. Ctrl+F
+  (⌘F) opens this bar instead of AvaloniaEdit's search panel. The Blazor editor has none of these yet.
+- Both viewers take a host's own buttons on code blocks (`CodeBlockActions`).
+- `MarkdownHtml` writes a text as a standalone HTML page or fragment under the viewers' safety policy, styled with the
+  same `--pmd-*` variables.
 
 ## [0.4.1] - 2026-11-27
 
@@ -112,7 +100,8 @@ Details: [docs/en/changelogs/0.2.0.md](docs/en/changelogs/0.2.0.md)
 - `Polhem.Markdown.Blazor` adds `MarkdownViewer`, a component that renders a Markdown text as semantic HTML, with
   `OnLinkActivated` for links, code blocks with a copy button, and a stylesheet set through `--pmd-*` CSS variables.
 
-[Unreleased]: https://github.com/polhem-dev/polhem-markdown/compare/v0.4.1...HEAD
+[Unreleased]: https://github.com/polhem-dev/polhem-markdown/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/polhem-dev/polhem-markdown/compare/v0.4.1...v0.5.0
 [0.4.1]: https://github.com/polhem-dev/polhem-markdown/compare/v0.4.0...v0.4.1
 [0.4.0]: https://github.com/polhem-dev/polhem-markdown/compare/v0.3.1...v0.4.0
 [0.3.1]: https://github.com/polhem-dev/polhem-markdown/compare/v0.3.0...v0.3.1
